@@ -1,0 +1,273 @@
+---
+title: "Additional stressors in Edad con Salud"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+institute: CCOMS, Universidad Autónoma de Madrid
+output: 
+  html_notebook:
+  toc: yes
+  toc_float: yes
+  keep_md: yes
+---
+
+```{r setup, include = TRUE}
+knitr::opts_chunk$set(echo = TRUE, #Si no queremos que se imprima ningún código
+                      fig.align = "center", #las figuras en el centro
+                      fig.width = 4, # 4 inches
+                      fig.height = 4, #4 inches
+                      dev = "png", #se guardan en PNG.
+                      cache = TRUE) # Save the output results so that they don't need to be run again
+#revisar estas opciones por si son de mi interés o no
+```
+
+```{r library}
+#library calls 
+#puede ser interesante revisar packup package (esto se recomienda que esté arriba)
+library(tidyverse)
+library(haven)
+library(freqtables)
+#install.packages("freqtables")
+```
+
+```{r functions}
+#Aquí van las funciones que creemos para este script
+```
+
+```{r read-data}
+#Aquí se leen todos los archivos de datos
+#¿Cómo se puede utilizar una ruta relativa para OneDrive sin querer trabajar luego en esa carpeta?
+#Una opción es establecer UAM como wd al principio y luego cambiarlo, esto es un poco confuso¿?
+data_2019 <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta')
+
+data_COVID <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta')
+
+mat_dep2019 <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta')
+```
+
+# Stressors in Edad con Salud
+
+Before Elvira left and I came in to replace her, she left one of the tasks pending: to incorporate additional stressors to the [variable_list.xlsx file](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/Shared%20Documents/harmonisation/data%20upload%20preparation/variable_list.xlsx?d=w00de2e80a3d14607bd9b5e702cf94fac&csf=1&web=1&e=vU3sU4).
+
+These variables consisted of:
+
+-   **Sleep problems**, both pre- and pandemic data
+-   **Financial problems**, (material deprivation from the Eurostat; pre-pandemic data)
+-   **Nutritional problems**, (Mini nutritional assessment scale; pre-pandemic data)
+-   **Pain** (both pre-and pandemic data)
+-   **Noise**, (pandemic data)
+
+In this notebook we will document how I have located them and describe what these are.
+
+## Locating the variables
+
+The data we will use are from Wave 3 (2019 cohort) and the COVID sub-study. We have two main sources of information:
+
+-   **Documentation of the variables**. Found at:
+    -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019` &
+
+    -   **COVID SUBESTUDY:** `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes`.
+
+If the variables we are looking for are not found in the Documentation folder, it is necessary to create them (first, with a documentation file; then, with a file in Stata format). To do this, we use the raw data in R (bearing in mind that the file is in Stata format) and the questionnaires to locate the variables we are interested in.
+
+-   **Raw databases**. Found at:
+
+    -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019` &
+    -   **COVID SUBESTUDY:** `~/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID`.
+
+-   **Questionnaires**. Found at
+
+    -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con Salud - Ola 3/Cuestionario`
+
+    -   **COVID SUBESTUDY** `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Cuestionario`
+
+### Sleep problems
+
+#### Pre-pandemic data
+
+In regard to sleep problems, we found the items **q2016** *(q2016_sleep)* and **q2017** *(q2017rested)* relating of the last 30 days, asking about difficulty sleeping and sleeping without resting. These two items are ordinal and their scale ranges from 1 to 5 (None - Mild - Moderate - Severe - Extreme/Could not do it). Missing values are coded as 888.
+
+Items **q7518a** *(q7518a_quality)* y **q7519** *(q7519_sleep)* ask for the quality of sleep in the last month and on the previous day, respectively. Both are ordinal variables. While **q7518a** scale ranges from 1 to 5 (Very well - Well - Regular - Poorly - Very poorly) and NAs are coded as 888, **q7519** ranges from 1-4 (Quite good - Good - Poor - Fairly poor), being 9 the code for Don't know.
+
+```{r}
+data_2019 %>%
+  select(q2016_sleep, q2017_rested, q7518a_quality, q7519_sleep) %>%
+  head()
+
+data_2019 %>%
+  select(q2016_sleep, q2017_rested, q7518a_quality, q7519_sleep) %>%
+  summary()
+
+data_2019 %>%
+  select(q2016_sleep, q2017_rested, q7518a_quality, q7519_sleep) %>%
+  summarise(
+    count = n(),
+    mean_q2016 = mean(q2016_sleep, na.rm = TRUE),
+    mean_q2017 = mean(q2017_rested, na.rm = TRUE),
+    mean_q7518a = mean(q7518a_quality, na.rm = TRUE),
+    mean_q7519 = mean(q7519_sleep, na.rm = TRUE)
+  )
+
+```
+
+#### Pandemic data
+
+**SUE2** and **SUE3** are self-report measures of sleep quality in the last 30 days: *how I have slept* and *overall sleep quality*. Both are ordinal. - For **SUE2** scale, it ranges from 1-5 (Very well - Well - Regular - Poorly - Very poorly) and don't know option is coded as 888. - For **SUE3**, the scale ranges from 1-4 (Quite good - Good - Poor - Fairly poor) and don't know (NAs) is coded as 9.
+
+```{r}
+data_COVID %>%
+  select(SUE2, SUE3) %>%
+  head()
+
+data_COVID %>%
+  select(SUE2, SUE3) %>%
+  summary()
+
+data_COVID %>%
+  select(SUE2, SUE3) %>%
+  summarise(
+    count = n(),
+    mean_SUE2 = mean(SUE2, na.rm = TRUE),
+    mean_SUE3 = mean(SUE3, na.rm = TRUE),
+  )
+```
+
+### Financial problems
+
+There is a combined 'outcome' variable (**material**) to assess material deprivation using data from the Living Conditions Survey (ECV, Encuesta de Condiciones de Vida) designed by the Spanish National Statistics Institute (INE). It is based on 7 items that include non-economic indicators of household deprivation, including problems in making ends meet, level of indebtedness and lack of access to basic necessities. In the questionnaire, material deprivation is defined when the household cannot afford at least 3 of the 7 items.
+
+The original variables include **q0411c, q0411d, q0411e, q0411f, q0411g, q0411h and q0411i**.
+
+It is a dichotomous variable in which 0= No; 1 = Yes.
+
+#### Pre-pandemic data
+
+```{r}
+data_2019 %>%
+  mutate(material = mat_dep2019$material) %>%
+  select(material) %>%
+  freq_table(material)
+```
+
+### Nutrition
+
+#### Pre-pandemic
+
+The next variables are extracted from the Mini Nutritional Assessment (Kaiser et al., 2009). These assess the general perception, over the past three months, of changes in intake (**q3045**) and weight loss experienced (**q3046**). Both variables are ordinal.
+
+The answer format for **q3045** (intake changes) ranges from 0 to 3 ("Ha comido mucho menos" [Has eaten much less] - "Ha comido menos" [Has eaten less] - "Ha comido igual" [Has eaten the same] - "Ha comido más" [Has eaten more]).
+
+In the case of **q3046**, response scale ranges from 0 to 3 as well, while the meaning is slightly different ("Pérdida de peso mayor de 3 kg" [Weight loss greater than 3 kg] - "No lo sabe" [Do not know] - "Pérdida de peso entre 1 y 3 kg" [Weight loss between 1 and 3 kg] - "No ha habido pérdida de peso" [No weight loss])
+
+```{r}
+data_2019 %>%
+  select(q3045, q3046) %>%
+  head()
+
+data_2019 %>%
+  select(q3045, q3046) %>%
+  summary()
+
+data_2019 %>%
+  select(q3045, q3046) %>%
+  summarise(
+    count = n(),
+    mean_q3045 = mean(q3045, na.rm = TRUE),
+    mean_q3046 = mean(q3046, na.rm = TRUE))
+
+data_2019 %>%
+  select(q3045, q3046) %>%
+  freq_table(q3045, q3046)
+```
+
+### Pain
+
+#### Pre-pandemic
+
+As an adaptation from the WO-DAS II questionnaire, which asks for a general evaluation of the last 30 days, information about the amount of physical pain (**q2007_pains**) and pain-associated difficulty (**q2009_difficulty**) is recollected. Both variables are ordinal and have the following answer format:
+
+1.  Ninguno [None]
+2.  Leve [Slight]
+3.  Moderado [Moderate]
+4.  Severo [Severe]
+5.  Extremo [Extreme]
+
+-   888 - No sabe [Don't know].
+
+```{r}
+data_2019 %>%
+  select(q2007_pains, q2009_difficulty) %>%
+  head()
+
+data_2019 %>%
+  select(q2007_pains, q2009_difficulty) %>%
+  summary()
+
+data_2019 %>%
+  select(q2007_pains, q2009_difficulty) %>%
+  summarise(
+    count = n(),
+    mean_q2007 = mean(q2007_pains, na.rm = TRUE),
+    mean_q2009 = mean(q2009_difficulty, na.rm = TRUE))
+
+data_2019 %>%
+  select(q2007_pains, q2009_difficulty) %>%
+  freq_table(q2007_pains, q2009_difficulty)
+
+```
+
+From the '*Sección 4000: Condiciones crónicas y cobertura de servicios de salud*' [Chronic conditions and health care coverage] we found items **q4112** and **q4120** that evaluate chronic low back pain and chronic cervical pain, respectively. Both are binary variables and their answer format ranges as follows:
+
+1.  = Sí [Yes]
+
+2.  = No [No] -888. No sabe [Don't know]
+
+    999\. No contesta [NA]
+
+```{r}
+data_2019 %>%
+  select(q4112, q4120) %>%
+  freq_table(q4112, q4120)
+```
+
+#### Pandemic
+
+Three items that assess the general perception of pain in the last 30 days are collected in the COVID substudy. These correspond to: - **DOLOR1**, *amount of physical pain*. Ordinal variable from 1 to 5 [Ninguno (None) - Leve (Slight) - Moderado [Moderate] - Severo (Severe) - Extremo (Extreme)]. NAs are coded as 888.
+
+-   **DOLOR3**, *worsening of pain*. Binary variable (1 = Yes; 2 = No; 9 = NS/NC).
+
+-   **DOLOR4**, *pain-related difficulty*. Ordinal variable from 1 to 5 [Ninguno (None) - Leve (Slight) - Moderado [Moderate] - Severo (Severe) - Extremo (Extreme)]. NAs are coded as 888.
+
+```{r}
+data_COVID %>%
+  select(DOLOR1, DOLOR3, DOLOR4) %>%
+  head()
+
+data_COVID %>%
+  select(DOLOR1, DOLOR3, DOLOR4) %>%
+  summary()
+
+data_COVID %>%
+  select(DOLOR1, DOLOR4) %>%
+  summarise(
+    count = n(),
+    mean_DOLOR1 = mean(DOLOR1, na.rm = TRUE),
+    mean_DOLOR4 = mean(DOLOR4, na.rm = TRUE),
+  )
+
+data_COVID %>%
+  select(DOLOR3) %>%
+  freq_table(DOLOR3)
+
+```
+
+### Noise
+
+#### Pandemic
+
+There is one item that evaluates too much noise that does not allow rest at home. Binary format: 1 = Yes; 2 = No; 9 = NS/NC.
+
+```{r}
+data_COVID %>%
+  select(ECON1_1) %>%
+  freq_table(ECON1_1)
+```
