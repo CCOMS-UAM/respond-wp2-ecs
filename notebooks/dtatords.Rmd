@@ -1,0 +1,39 @@
+---
+title: "Preparar un archivo .RDS para la subida a Opal"
+output: html_notebook
+---
+
+Vamos a probar a subir un archivo pequeño a Opal en formato .RDS para ver si se mantiene el problema. El archivo seleccionado se encuentra en:
+
+`C:\\Users\\Cris\\UAM\\Marta Miret Garcia - Documentacion Edad con Salud\\Edad\> con salud - Ola 3\\Outcomes\\Cohorte 2019\\Outcome datasets\\Outcome_Loneliness,\> social support and social isolation.dta"`
+
+Los pasos que reúne este script son los siguientes:
+1. Importar la BBDD en .dta
+2. Anonimizar los IDs.
+3. Guardarlo en formato .RDS.
+
+```{r necessary-packages}
+library(haven)
+library(tidyverse)
+library(digest)
+```
+# Import data
+
+```{r read-data}
+BBDD <- read_dta('C:/Users/Cris/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Loneliness, social support and social isolation.dta')
+
+```
+
+# Create hash ID
+
+```{r anonymization}
+
+BBDD$ID_ECS <- sapply(BBDD$ID_ECS, digest, algo = "md5")
+
+```
+
+# Save .RDS
+
+```{r eval = FALSE}
+saveRDS(BBDD, file = "Loneliness_test.RDS") 
+```
