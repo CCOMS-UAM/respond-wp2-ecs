@@ -59,7 +59,7 @@ In this notebook we will document how I have located them and describe what thes
 
 ## Locating the variables
 
-The data we will use are from Wave 3 (2019 cohort) and the COVID sub-study. We have two main sources of information:
+The data we will use are from Wave 1 (2019 cohort) and the COVID sub-study. We have two main sources of information:
 
 -   **Documentation of the variables**. Found at:
     -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019` &
