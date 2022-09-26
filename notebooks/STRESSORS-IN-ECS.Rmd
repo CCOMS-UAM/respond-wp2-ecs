@@ -5,9 +5,8 @@ date: "`r format(lubridate::today(), '%d de %B de %Y')`"
 institute: CCOMS, Universidad Autónoma de Madrid
 output: 
   html_notebook:
-  toc: yes
-  toc_float: yes
-  keep_md: yes
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r setup, include = TRUE}
@@ -17,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, #Si no queremos que se imprima ningún códig
                       fig.height = 4, #4 inches
                       dev = "png", #se guardan en PNG.
                       cache = TRUE) # Save the output results so that they don't need to be run again
-#revisar estas opciones por si son de mi interés o no
+# TODO: revisar estas opciones por si son de mi interés o no
 ```
 
 ```{r library}
@@ -37,11 +36,11 @@ library(freqtables)
 #Aquí se leen todos los archivos de datos
 #¿Cómo se puede utilizar una ruta relativa para OneDrive sin querer trabajar luego en esa carpeta?
 #Una opción es establecer UAM como wd al principio y luego cambiarlo, esto es un poco confuso¿?
-data_2019 <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta')
+data_2019 <- read_dta('~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta')
 
-data_COVID <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta')
+data_COVID <- read_dta('~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta')
 
-mat_dep2019 <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta')
+mat_dep2019 <- read_dta('~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta')
 ```
 
 # Stressors in Edad con Salud
@@ -60,7 +59,7 @@ In this notebook we will document how I have located them and describe what thes
 
 ## Locating the variables
 
-The data we will use are from Wave 3 (2019 cohort) and the COVID sub-study. We have two main sources of information:
+The data we will use are from Wave 1 (2019 cohort) and the COVID sub-study. We have two main sources of information:
 
 -   **Documentation of the variables**. Found at:
     -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019` &
@@ -72,13 +71,13 @@ If the variables we are looking for are not found in the Documentation folder, i
 -   **Raw databases**. Found at:
 
     -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019` &
-    -   **COVID SUBESTUDY:** `~/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID`.
+    -   **COVID SUBSTUDY**: `~/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID`.
 
 -   **Questionnaires**. Found at
 
     -   **2019 COHORT**: `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con Salud - Ola 3/Cuestionario`
 
-    -   **COVID SUBESTUDY** `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Cuestionario`
+    -   **COVID SUBSTUDY**: `~/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Cuestionario`
 
 ### Sleep problems
 
@@ -183,7 +182,7 @@ data_2019 %>%
 
 #### Pre-pandemic
 
-As an adaptation from the WO-DAS II questionnaire, which asks for a general evaluation of the last 30 days, information about the amount of physical pain (**q2007_pains**) and pain-associated difficulty (**q2009_difficulty**) is recollected. Both variables are ordinal and have the following answer format:
+As an adaptation from the WHO-DAS II questionnaire, which asks for a general evaluation of the last 30 days, information about the amount of physical pain (**q2007_pains**) and pain-associated difficulty (**q2009_difficulty**) is recollected. Both variables are ordinal and have the following answer format:
 
 1.  Ninguno [None]
 2.  Leve [Slight]
