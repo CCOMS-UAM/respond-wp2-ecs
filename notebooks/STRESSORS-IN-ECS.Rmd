@@ -36,11 +36,11 @@ library(freqtables)
 #Aquí se leen todos los archivos de datos
 #¿Cómo se puede utilizar una ruta relativa para OneDrive sin querer trabajar luego en esa carpeta?
 #Una opción es establecer UAM como wd al principio y luego cambiarlo, esto es un poco confuso¿?
-data_2019 <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta')
+data_2019 <- read_dta('~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta')
 
-data_COVID <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta')
+data_COVID <- read_dta('~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta')
 
-mat_dep2019 <- read_dta('C:/Users/Crist/UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta')
+mat_dep2019 <- read_dta('~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta')
 ```
 
 # Stressors in Edad con Salud
