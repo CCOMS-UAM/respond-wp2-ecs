@@ -5,9 +5,8 @@ date: "`r format(lubridate::today(), '%d de %B de %Y')`"
 institute: CCOMS, Universidad Autónoma de Madrid
 output: 
   html_notebook:
-  toc: yes
-  toc_float: yes
-  keep_md: yes
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r setup, include = TRUE}
