@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, #Si no queremos que se imprima ningún códig
                       fig.height = 4, #4 inches
                       dev = "png", #se guardan en PNG.
                       cache = TRUE) # Save the output results so that they don't need to be run again
-#revisar estas opciones por si son de mi interés o no
+# TODO: revisar estas opciones por si son de mi interés o no
 ```
 
 ```{r library}
