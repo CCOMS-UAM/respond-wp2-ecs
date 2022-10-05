@@ -1,0 +1,267 @@
+---
+title: "Preparating variable_list.xlsx with Edad con Salud data"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+institute: CCOMS, Universidad Autónoma de Madrid
+output: 
+  html_notebook:
+  toc: yes
+  toc_float: yes
+  keep_md: yes
+---
+
+```{r library}
+#library calls 
+#puede ser interesante revisar packup package (esto se recomienda que esté arriba)
+library(tidyverse)
+library(haven)
+library(freqtables)
+#install.packages("freqtables")
+library(ecs.data)
+```
+
+```{r read-data}
+#Aquí se leen todos los archivos de datos
+#¿Cómo se puede utilizar una ruta relativa para OneDrive sin querer trabajar luego en esa carpeta?
+#Una opción es establecer UAM como wd al principio y luego cambiarlo, esto es un poco confuso¿?
+data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
+
+data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+
+```
+
+A la espera de nuevos correos, vamos a ir haciendo los preparativos para organizar el dataset de Edad con Salud para RESPOND.
+
+# El archivo variable_list.xlsx
+
+Este archivo reúne **todas las variables** que tiene cada estudio. Es necesario comprobar que todos los outcomes están incluidos (ver los archivos [mental health outcomes](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7BA66AD0BE-D072-4CB3-8072-F4FF5C92BF9D%7D&file=mental_health_measures_hs.xlsx&action=default&mobileredirect=true) y [predictores](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7B37F195E1-399B-48CE-9E11-5B2B8B83B210%7D&file=predictor_candidates_by_study_hs.xlsx&action=default&mobileredirect=true) para comprobar que está todo lo que tiene que estar). 
+
+# Cambios a realizar
+
+## Create HC Worker from baseline wave using q1510_occ (wave 1)
+```{r}
+glimpse(data_2019$q1510_occ)
+
+data_2019 %>%
+  select(q1510_occ) %>%
+  distinct()
+
+#Existen 1824 valores únicos para esta variable y se hace necesario filtrarla para ver los que sean "health care workers" (1 = Sí, 0 = No)
+#TODO: Hay alguna manera de automatizar esto?
+#TODO: Revisar la pregunta ISCO que tiene categorizado esto (para no tener que analizar todo el contenido)
+```
+
+##Income quartiles (hhquintile) - wave 1
+```{r}
+#Las preguntas relacionadas con los ingresos son escasas (¿?): q1519 pregunta por la situación financiera en la infancia;las preguntas q0410g, i, j, k, l, n también hablan de ello:
+# g: Ingresos personales brutos de todos los miembros de su familia durante los últimos 12 meses 
+# i: ingresos brutos de su hogar durante los últimos 12 meses procedentes de la pensión de jubilación
+# j: de programas de ayudas oficiales (paro, hijos dependientes, viudedad, orfandad, asistencia general),
+# k: de fuentes privadas (pensiones, inversiones, alimenticias o de mantenimiento). 
+# l: convertir todo en dinero y vende propiedades para pagar hipoteca y otros créditos, préstamos, deudas y su tarjeta de crédito. ¿Le queda dinero después o debe dinero? (1 = le queda dinero; 2 = sigue debiendo dinero)
+# n : preocupación por no poder llegar a fin de mes
+
+#La pregunta q0412 sobre el estatus socioeconómico subjetivo 
+
+#TODO: Quizás sea interesante utilizar q0410g
+#TODO: Una suma de todas esas variables para encontrar los ingresos totales y luego hacer los quintiles?
+data_2019 %>%
+  select(q0410g_total, q0410i_ss, q0410j_government, q0410k_other)
+
+
+data_2019 %>%
+  select(q0410g_total) %>%
+  distinct()
+
+#TODO: preguntar a Dani cómo gestionar esta variable porque se encuentra en rangos (es una variable categórica con 34 niveles a los que pertenece un rango distinto)
+```
+## Stressor (life events)
+```{r}
+# Los ítems son: lte / q4659_ill q4660_illrelative q4661_died q4662_diedrelative q4663_separation q4664_brokeoff q4665_problem q4666_unemployed q4667_sacked q4668_financial q4669_police q4670_stolen
+#TODO: lte es una variable que ya existe. Queda añadir una columna por cada ítem por separado.
+#TODO: ver las variable dictionaries por si habría que añadir algo
+```
+
+
+
+## Living alone (q0401_hh_total) - wave 1
+```{r}
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  freq_table(q0401_hh_total)
+
+#TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+```
+
+##Household size (q0401_hh_total)
+```{r}
+#TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+```
+
+
+## Children household (q0407_age_01-q0407_age_08/q0407_age_10)
+Es necesario combinar todas estas variables en una sola.
+```{r}
+#TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+
+#TODO: crear una nueva variable que combine todos los ítems en uno solo. 
+
+data_2019 %>%
+  select(q0407_age_01, q0407_age_08, q0407_age_10) %>%
+  freq_table(q0407_age_10)
+
+```
+
+## Gender (q1009_sex)
+```{r}
+#TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+data_2019 %>%
+  select(q1009_sex) %>%
+  freq_table(q1009_sex)
+
+
+```
+## Age q1010_birth_date &/OR q1011_age
+```{r}
+#TODO: esperar respuesta de Dani (Elvira quería comentar con él alguna cosa y la cuestión del EPQR-A)
+```
+
+
+
+##Relationship status (q1012_mar_stat)
+```{r}
+data_2019 %>%
+  select(q1012_mar_stat) %>%
+  freq_table(q1012_mar_stat)
+
+#TODO: ver las variable dictionaries
+```
+
+## Education (q1016_highest)
+```{r}
+data_2019 %>% 
+  select(q1016_highest) %>%
+  freq_table(q1016_highest)
+
+#TODO: ver las variable dictionaries
+```
+
+## Migration (q1018_country)
+```{r}
+data_2019 %>% 
+  select(q1018_country) %>%
+  freq_table(q1018_country)
+
+#TODO: ver las variable dictionaries
+```
+
+## Children (q1056/q1058)
+```{r}
+data_2019 %>% 
+  select(q1056) %>%
+  freq_table(q1056)
+
+data_2019 %>% 
+  select(q1058) %>%
+  freq_table(q1058)
+
+#TODO: ver las variable dictionaries
+```
+## N.o. children (q1057/q1059)
+```{r}
+data_2019 %>% 
+  select(q1057) %>%
+  freq_table(q1057)
+
+data_2019 %>% 
+  select(q1059) %>%
+  freq_table(q1059)
+
+#TODO: ver las variable dictionaries
+```
+
+## Employment status
+Hay que crear esta variable a partir de los items `q1503_work_now` y `q1504_reason`.
+```{r}
+#TODO: crear la variable. Ver variable dictionaries.
+```
+
+## Profession (q1510_catoccu)
+Esta variable igual también nos puede ayudar a hacer la variable HC worker. 
+```{r}
+data_2019 %>% 
+  select(q1510_catoccu) %>%
+  freq_table(q1510_catoccu)
+
+#TODO: revisar variable dictionary
+```
+
+## Contract (q1510b_contract_earner)
+```{r}
+data_2019 %>% 
+  select(q1510b_contract_earner) %>%
+  freq_table(q1510b_contract_earner)
+
+#TODO: revisar variable dictionary
+```
+
+
+## Employment type (q1510e_workday)
+```{r}
+#TODO: Comprobar si se han incluido en todas las olas; modificarlo si es necesario. 
+#TODO: Ver variable dictionary. 
+
+data_2019 %>% 
+  select(q1510e_workday) %>%
+  freq_table(q1510e_workday)
+```
+
+## Resilience scale (BRS)
+### Ola 1
+```{r}
+# Tenemos resilience_scale y los ítems individuales: q7537, q7538, q7539, q7540, q7541, q7542
+# TODO: Añadir una fila por cada ítem individual. 
+
+
+```
+
+### Ola 2
+```{r}
+# Tenemos resilience_scale y los ítems individuales: SM26_1, SM26_2, SM26_3, SM26_4, SM26_5, SM26_6
+# TODO: Añadir una fila por cada ítem individual. 
+# TODO duda: ¿hay que cambiar el nombre de los items en la BBDD final? (formato long)
+
+```
+
+
+## Social support
+### Ola 1
+```{r}
+# Tenemos social_support y los ítems individuales: 
+# TODO: Añadir una fila por cada ítem individual. 
+
+
+```
+
+### Ola 2
+```{r}
+# Tenemos social_support y los ítems individuales: 
+# TODO: Añadir una fila por cada ítem individual. 
+# TODO duda: ¿hay que cambiar el nombre de los items en la BBDD final? (formato long)
+# TODO: encontrar los ítems individuales
+
+```
+## c.o. residence
+
+```{r}
+#TODO: To be created (comment from Elvira: this variable should be created)
+#TODO: Ver qué variables pueden formar esta variable.
+```
+
+## Stressor (life events)
+```{r}
+#Tenemos la escala completa: lte. Los ítems individuales: q4659_ill q4660_illrelative q4661_died q4662_diedrelative q4663_separation q4664_brokeoff q4665_problem q4666_unemployed q4667_sacked q4668_financial q4669_police q4670_stolen
+
+#TODO: Crear nuevas filas por cada ítem.
+```
+
