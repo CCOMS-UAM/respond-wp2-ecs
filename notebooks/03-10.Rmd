@@ -8,6 +8,8 @@ output:
   toc: yes
   toc_float: yes
   keep_md: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r library}
@@ -18,6 +20,8 @@ library(haven)
 library(freqtables)
 #install.packages("freqtables")
 library(ecs.data)
+library(labelled)
+install.packages("labelled")
 ```
 
 ```{r read-data}
@@ -27,6 +31,10 @@ library(ecs.data)
 data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
 
 data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+
+#El formato importado desde .dta a R es un formato doble: la clase y la etiqueta (el label). Las labels son parte de los metadatos que tienen los datos (vectores y columnas de un dataframe). Esto dificulta un poco las cosas. Los value labels no suponen una implicación sobre la consideración categórica o continua (no se utilizan para el análisis de datos). Por eso, antes de hacer un análisis de datos es necesario convertir los vectores con value labels en factores o en vectores clásicos numéricos/carácteres. 
+
+#Esto se puede hacer de dos maneras: o ya desde el principio se conviert en factores o en vectores numéricos o carácter con unlabelled(), to_factor() o unclass(), o cuando ya se ha hecho la limpieza de los datos y se quiere mantener esa info para la exportación. 
 
 ```
 
@@ -47,33 +55,176 @@ data_2019 %>%
   distinct()
 
 #Existen 1824 valores únicos para esta variable y se hace necesario filtrarla para ver los que sean "health care workers" (1 = Sí, 0 = No)
-#TODO: Hay alguna manera de automatizar esto?
+
+#TODO: Explorar otras variables/ítems del cuestionario que permitan extraer la ocupación (e.g., códigos ISCO). Contamos principalmente con dos variables que registran la ocupación: q1510_occ (abierta) y q1510cat, que utiliza la estructura de la CIUO-08 (códigos ISCO, de la OIT). A nosotros nos interesa la categorización:
+
+# GRUPO 2 "PROFESIONALES CIENTÍFICOS E INTELECTUALES" > PROFESIONALES DE LA SALUD
+#*Aunque incluso con esto no sabemos si son health care workers (e.g., administrativos?).
+
+
 #TODO: Revisar la pregunta ISCO que tiene categorizado esto (para no tener que analizar todo el contenido)
+glimpse(data_2019$q1510_catoccu)
+
+data_2019 %>%
+  select(q1510_catoccu) %>%
+  distinct()
+
+freq_table(data_2019, q1510_catoccu)
+
+#Vemos cómo sólo contiene la categorización de los 10 grupos principales, no de los subgrupos. 
+
+#Conclusión: Lo descartamos porque no hay una variable que diferencie a los profesionales de la salud. Se tiene que trabajar con la variable q1510.
+
+#TODO: Hay alguna manera de automatizar esto?
+# Probamos con las expresiones regulares. RegExplain es un addin de R para manipular las expresiones regulares. Vemos que algunos de las opciones de texto que nos interesan son:
+
+#SADSERVICIO ATENCION DOMICILIARIA enfermera mÃ©dica cardiÃ³loga medico traumatologo auxiliar enfermera auxiliar de enfermeria MÃ©dico homeÃ³pata
+
+#Sin embargo, sólo se han mostrado las 100 primeras únicas. Necesitamos las 1824:
+
+data_2019 %>% 
+  select(q1510_occ) %>%
+  str_view("enf")
+  
+
 ```
 
 ##Income quartiles (hhquintile) - wave 1
 ```{r}
+# TODO: Buscar ítems relacionados con los ingresos.
+
 #Las preguntas relacionadas con los ingresos son escasas (¿?): q1519 pregunta por la situación financiera en la infancia;las preguntas q0410g, i, j, k, l, n también hablan de ello:
 # g: Ingresos personales brutos de todos los miembros de su familia durante los últimos 12 meses 
 # i: ingresos brutos de su hogar durante los últimos 12 meses procedentes de la pensión de jubilación
 # j: de programas de ayudas oficiales (paro, hijos dependientes, viudedad, orfandad, asistencia general),
 # k: de fuentes privadas (pensiones, inversiones, alimenticias o de mantenimiento). 
-# l: convertir todo en dinero y vende propiedades para pagar hipoteca y otros créditos, préstamos, deudas y su tarjeta de crédito. ¿Le queda dinero después o debe dinero? (1 = le queda dinero; 2 = sigue debiendo dinero)
-# n : preocupación por no poder llegar a fin de mes
 
-#La pregunta q0412 sobre el estatus socioeconómico subjetivo 
-
-#TODO: Quizás sea interesante utilizar q0410g
-#TODO: Una suma de todas esas variables para encontrar los ingresos totales y luego hacer los quintiles?
+#Subset de las variables de interés:
 data_2019 %>%
-  select(q0410g_total, q0410i_ss, q0410j_government, q0410k_other)
+  select(q0410g_total, q0410i_ss, q0410j_government, q0410k_other) %>% 
+  distinct()
 
 
+#Ver cuántos valores únicos hay por cada variable
 data_2019 %>%
   select(q0410g_total) %>%
   distinct()
 
+data_2019 %>%
+  select(q0410i_ss) %>%
+  distinct()
+
+data_2019 %>%
+  select(q0410j_government) %>%
+  distinct()
+
+data_2019 %>%
+  select(q0410k_other) %>%
+  distinct()
+
+
+#Exploración gráfica de las variables
+ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410g_total)) +
+  xlim(0, 40)
+
+ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410i_ss)) +
+  xlim(0, 40)
+
+ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410j_government)) +
+  xlim(0, 40)
+
+ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410k_other)) +
+  xlim(0, 40)
+
+
+
 #TODO: preguntar a Dani cómo gestionar esta variable porque se encuentra en rangos (es una variable categórica con 34 niveles a los que pertenece un rango distinto)
+
+#Dani me pasa el archivo Edad_con_Salud_Data.R. La idea que tengo es la de recodificar estas cuatro variables por la mediana del rango establecido en la codificación, ya que las preguntas q0410 establecen rangos de respuesta. Esta manera de proceder la extraigo de su script de R. 
+
+q0410g_total_r <- q0410g_total
+
+data_2019 %>%
+  mutate(
+  q0410g_total_r = q0410g_total) %>% 
+  recode_factor(q0410g_total_r,
+                                  "999" = -92,
+                                  "888" = -93,
+                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+
+
+data_2019 %>%
+  q0410i_ss = q0410i_ss_r %>%
+  q0410i_ss_r <- recode_factor(q0410i_ss_r,
+                                  "999" = -92,
+                                  "888" = -93,
+                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+
+
+data_2019 %>%
+  q0410j_government = q0410j_government_r %>%
+  q0410j_government_r <- recode_factor(q0410j_government_r,
+                                  "999" = -92,
+                                  "888" = -93,
+                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+
+data_2019 %>%
+  q0410k_other = q0410k_other_r %>%
+  q0410k_other_r <- recode_factor(q0410k_other_r,
+                                  "999" = -92,
+                                  "888" = -93,
+                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+
+#TODO: Qué hacer con los valores perdidos? -92 y -93
+#TODO: Una suma de todas esas variables para encontrar los ingresos totales y luego hacer los quintiles?
+data_2019 %>%
+  select(q0410g_total_r, q0410i_ss_r, q0410j_government_r, q0410k_other_r) %>%
+  filter(!q0410g_total_r == -92, !q0410g_total_r == -93, 
+         !q0410i_ss_r == -92, !q0410i_ss_r == -93,
+         !q0410j_government_r == -92, !q0410j_government_r == -93,
+         !q0410k_other_r == -92, !q0410k_other_r == -93) %>%
+  hh_income_r = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r
+
+
+#TODO: Calculamos los cuantiles con quantile(x)
+quantile(hh_income_r)
+
 ```
 ## Stressor (life events)
 ```{r}
@@ -85,6 +236,9 @@ data_2019 %>%
 
 
 ## Living alone (q0401_hh_total) - wave 1
+#. ¿Cuál es el número total de personas que viven habitualmente en este hogar?
+It has to be categorised as 1 = alone; 2 = not alone.
+En la actualidad es una variable que va del 1 al 10 
 ```{r}
 data_2019 %>%
   select(q0401_hh_total) %>%

@@ -2,11 +2,14 @@
 title: "Additional stressors in Edad con Salud"
 author: "Cristina Rodríguez-Prada"
 date: "`r format(lubridate::today(), '%d de %B de %Y')`"
-institute: CCOMS, Universidad Autónoma de Madrid
-output: 
+output:
+  html_document:
+    toc: yes
+    df_print: paged
   html_notebook:
     toc: yes
     toc_float: yes
+institute: CCOMS, Universidad Autónoma de Madrid
 ---
 
 ```{r setup, include = TRUE}
