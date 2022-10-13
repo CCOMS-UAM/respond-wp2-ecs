@@ -21,7 +21,8 @@ library(freqtables)
 #install.packages("freqtables")
 library(ecs.data)
 library(labelled)
-install.packages("labelled")
+#install.packages("labelled")
+library(stringr)
 ```
 
 ```{r read-data}
@@ -82,10 +83,23 @@ freq_table(data_2019, q1510_catoccu)
 
 #Sin embargo, sólo se han mostrado las 100 primeras únicas. Necesitamos las 1824:
 
-data_2019 %>% 
-  select(q1510_occ) %>%
-  str_view("enf")
-  
+data_2019$q1510_occ %>% 
+  str_extract_all("enf", simplify = T) #Esto no ha funcionado.
+
+
+#La idea es crear una nueva variable de manera que el patrón detectado suponga un 1, y el resto un 0. 
+
+data_2019_test <- data_2019 %>%
+                    mutate( # 1 = mental health worker; 0 = non mental health worker
+                      occ_mhw = if_else(str_detect(q1510_occ, "enf"), 1,
+                                        if_else(str_detect(q1510_occ, "med"), 1,
+                                                if_else(str_detect(q1510_occ, "traum"), 1, 
+                                                        if_else(str_detect(q1510_occ, "aux"), 1,
+                                                                ifelse(str_detect(q1510_occ, "SADSERVICIO"), 1, 0)))))
+                    )
+glimpse(data_2019_test$occ_mhw)  #Funciona
+
+#TODO: Ver cómo conseguir una lista de todos los patrones que nos interesan. 
 
 ```
 
@@ -120,6 +134,13 @@ data_2019 %>%
 
 data_2019 %>%
   select(q0410k_other) %>%
+  distinct()
+
+data_2019 |> 
+  pivot_longer(c(q0410g_total, q0410i_ss, q0410j_government, q0410k_other), names_to = "income", values_to = "value") |> 
+  select(income, value) |> 
+  group_by(income) |> 
+  arrange(.by_group = T) |> 
   distinct()
 
 
