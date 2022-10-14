@@ -23,6 +23,8 @@ library(ecs.data)
 library(labelled)
 #install.packages("labelled")
 library(stringr)
+library(gridExtra)
+#install.packages("gridExtra")
 ```
 
 ```{r read-data}
@@ -116,135 +118,167 @@ glimpse(data_2019_test$occ_mhw)  #Funciona
 #Subset de las variables de interés:
 data_2019 %>%
   select(q0410g_total, q0410i_ss, q0410j_government, q0410k_other) %>% 
-  distinct()
-
 
 #Ver cuántos valores únicos hay por cada variable
 data_2019 %>%
-  select(q0410g_total) %>%
-  distinct()
+  group_by(q0410g_total, q0410i_ss, q0410j_government, q0410k_other) %>% 
+  pivot_longer(c(q0410g_total, q0410i_ss, q0410j_government, q0410k_other),names_to = "income", values_to = "value") %>% 
+  select(income, value) %>% 
+  distinct() %>% 
+  arrange(income, value) %>% 
+  print(n = 150)
 
-data_2019 %>%
-  select(q0410i_ss) %>%
-  distinct()
-
-data_2019 %>%
-  select(q0410j_government) %>%
-  distinct()
-
-data_2019 %>%
-  select(q0410k_other) %>%
-  distinct()
-
-data_2019 |> 
-  pivot_longer(c(q0410g_total, q0410i_ss, q0410j_government, q0410k_other), names_to = "income", values_to = "value") |> 
-  select(income, value) |> 
-  group_by(income) |> 
-  arrange(.by_group = T) |> 
-  distinct()
 
 
 #Exploración gráfica de las variables
-ggplot(data_2019) +
+
+g1 <- ggplot(data_2019) +
   geom_bar(mapping = aes(x = q0410g_total)) +
   xlim(0, 40)
 
-ggplot(data_2019) +
+g2 <- ggplot(data_2019) +
   geom_bar(mapping = aes(x = q0410i_ss)) +
   xlim(0, 40)
 
-ggplot(data_2019) +
+g3 <- ggplot(data_2019) +
   geom_bar(mapping = aes(x = q0410j_government)) +
   xlim(0, 40)
 
-ggplot(data_2019) +
+g4 <- ggplot(data_2019) +
   geom_bar(mapping = aes(x = q0410k_other)) +
   xlim(0, 40)
 
-
+grid.arrange(g1, g2, g3, g4) #Tiene que haber otra manera, pero bueno
 
 #TODO: preguntar a Dani cómo gestionar esta variable porque se encuentra en rangos (es una variable categórica con 34 niveles a los que pertenece un rango distinto)
 
 #Dani me pasa el archivo Edad_con_Salud_Data.R. La idea que tengo es la de recodificar estas cuatro variables por la mediana del rango establecido en la codificación, ya que las preguntas q0410 establecen rangos de respuesta. Esta manera de proceder la extraigo de su script de R. 
 
-q0410g_total_r <- q0410g_total
-
-data_2019 %>%
-  mutate(
-  q0410g_total_r = q0410g_total) %>% 
-  recode_factor(q0410g_total_r,
-                                  "999" = -92,
-                                  "888" = -93,
-                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
-                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
-                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
-                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
-                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
-                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
-                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
-                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
-                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+#El formato de stata es doble: por un lado el valor numérico y por otro la etiqueta. Como del script de Dani ya tenemos los valores numéricos, lo que hacemos es transformarlas a variables numéricas:
 
 
-data_2019 %>%
-  q0410i_ss = q0410i_ss_r %>%
-  q0410i_ss_r <- recode_factor(q0410i_ss_r,
-                                  "999" = -92,
-                                  "888" = -93,
-                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
-                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
-                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
-                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
-                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
-                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
-                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
-                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
-                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+data_2019_test <- data_2019
+data_2019_test$q0410g_total <- as.numeric(data_2019_test$q0410g_total)
+data_2019_test$q0410i_ss <- as.numeric(data_2019_test$q0410i_ss)
+data_2019_test$q0410j_government <- as.numeric(data_2019_test$q0410j_government)
+data_2019_test$q0410k_other <- as.numeric(data_2019_test$q0410k_other) #Tiene que haber una manera más tidy de hacer esto
 
 
-data_2019 %>%
-  q0410j_government = q0410j_government_r %>%
-  q0410j_government_r <- recode_factor(q0410j_government_r,
-                                  "999" = -92,
-                                  "888" = -93,
-                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
-                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
-                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
-                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
-                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
-                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
-                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
-                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
-                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+str(data_2019_test$q0410g_total)
 
-data_2019 %>%
-  q0410k_other = q0410k_other_r %>%
-  q0410k_other_r <- recode_factor(q0410k_other_r,
-                                  "999" = -92,
-                                  "888" = -93,
-                                  "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
-                                  "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
-                                  "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
-                                  "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
-                                  "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
-                                  "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
-                                  "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
-                                  "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
-                                  "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+#También lo podemos recodificar a factor
+
+data_2019_test$q0410g_total <- as.factor(data_2019_test$q0410g_total)
+data_2019_test$q0410i_ss <- as.factor(data_2019_test$q0410i_ss)
+data_2019_test$q0410j_government <- as.factor(data_2019_test$q0410j_government)
+data_2019_test$q0410k_other <- as.factor(data_2019_test$q0410k_other) #Tiene que haber otra forma más tidy de hacer esto
+
+
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(q0410g_total_r = recode_factor(q0410g_total,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+         
+         q0410i_ss_r = recode_factor(q0410i_ss,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410j_government_r = recode_factor(q0410j_government,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+         q0410k_other_r = recode_factor(q0410k_other,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+         )
+
+
+#TODO: Ver por qué no se recodifica bien
 
 #TODO: Qué hacer con los valores perdidos? -92 y -93
+#DONE: Ver las variable_list (refused vs no-disponible)
+
+
+
+
 #TODO: Una suma de todas esas variables para encontrar los ingresos totales y luego hacer los quintiles?
-data_2019 %>%
-  select(q0410g_total_r, q0410i_ss_r, q0410j_government_r, q0410k_other_r) %>%
+#Tenemos las variables en factor:
+
+str(data_2019_test$q0410g_total_r)
+
+#Hay que convertirlas a numeric para poder hacer la suma
+
+data_2019_test <- 
+  data_2019_test %>% 
+    mutate(q0410g_total_r = as.numeric(q0410g_total_r),
+           q0410i_ss_r = as.numeric(q0410i_ss_r),
+           q0410j_government_r = as.numeric(q0410j_government_r),
+           q0410k_other_r = as.numeric(q0410k_other_r))
+
+data_2019_test <- data_2019_test %>%
   filter(!q0410g_total_r == -92, !q0410g_total_r == -93, 
          !q0410i_ss_r == -92, !q0410i_ss_r == -93,
          !q0410j_government_r == -92, !q0410j_government_r == -93,
          !q0410k_other_r == -92, !q0410k_other_r == -93) %>%
-  hh_income_r = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r
+  mutate(hh_income_r = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r)
 
+glimpse(data_2019_test$q0410g_total)
+glimpse(data_2019_test$hh_income_r)
 
 #TODO: Calculamos los cuantiles con quantile(x)
-quantile(hh_income_r)
+quintiles <- quantile(data_2019_test$hh_income_r) #Los quintiles son 4, 6, 22, 33, 106 (esto está mal)
+quintiles <- unname(quintiles)
+
+quintiles[1]
+#Recodificamos en quintiles
+
+data_2019_test <- data_2019_test %>% 
+  mutate(hhquintile = if_else(hh_income_r <= quintiles[1], 1,
+                             if_else(hh_income_r > quintiles[1] & hh_income_r <= quintiles[2], 2,
+                                     if_else(hh_income_r > quintiles[2] & hh_income_r <= quintiles[3], 3,
+                                             if_else(hh_income_r > quintiles[3] & hh_income_r <= quintiles[4], 4,
+                                                    if_else(hh_income_r > quintiles[4] & hh_income_r <= quintiles[5], 5,
+                                                            if_else(hh_income_r == -92, -92,
+                                                                    if_else(hh_income_r == -93, -93, 0))))))))
+
+glimpse(data_2019_test$inc_quint)
+
+#TODO: Falta por corregir la recodificación en variables factor (por qué no salen con la etiqueta asignada y queda la anterior). Falta por corregir el tema de los valores perdidos en la suma (quizás proponer después una regla que sea que los múltiplos de -92 o -93 se vuelvan a codificar por este número)
 
 ```
 ## Stressor (life events)
@@ -252,6 +286,7 @@ quantile(hh_income_r)
 # Los ítems son: lte / q4659_ill q4660_illrelative q4661_died q4662_diedrelative q4663_separation q4664_brokeoff q4665_problem q4666_unemployed q4667_sacked q4668_financial q4669_police q4670_stolen
 #TODO: lte es una variable que ya existe. Queda añadir una columna por cada ítem por separado.
 #TODO: ver las variable dictionaries por si habría que añadir algo
+#TODO: No hay variable dictionaries. Preguntar en la drop-in session (17/10/2022)
 ```
 
 
@@ -265,12 +300,33 @@ data_2019 %>%
   select(q0401_hh_total) %>%
   freq_table(q0401_hh_total)
 
-#TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+data_2019_test <- data_2019_test %>% 
+  mutate(living_alone = if_else(q0401_hh_total == 1, 1, 2)) %>% 
+    glimpse(living_alone) #Por qué esto no funciona?
+
+
+data_2019_test$living_alone
+
+#TODO: Preparada.
+#TODO: Añadir labels
 ```
 
 ##Household size (q0401_hh_total)
 ```{r}
 #TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+#Las categorías son:
+##1: one person
+##2: two persons
+##3: three or four persons
+##4: five or more persons
+##5: live in an institution
+##-91: not assessed
+##-92: refused to answer
+##-93: missing (default)
+
+#El problema es que el ítem q0401_hh_total sólo contempla el número de personas (1-10 hasta 10 personas), no si viven en una institución o no. Eso lo hace el ítem q0400a
+
+data_2019_test$q1007
 ```
 
 
