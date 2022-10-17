@@ -47,6 +47,15 @@ A la espera de nuevos correos, vamos a ir haciendo los preparativos para organiz
 
 Este archivo reúne **todas las variables** que tiene cada estudio. Es necesario comprobar que todos los outcomes están incluidos (ver los archivos [mental health outcomes](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7BA66AD0BE-D072-4CB3-8072-F4FF5C92BF9D%7D&file=mental_health_measures_hs.xlsx&action=default&mobileredirect=true) y [predictores](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7B37F195E1-399B-48CE-9E11-5B2B8B83B210%7D&file=predictor_candidates_by_study_hs.xlsx&action=default&mobileredirect=true) para comprobar que está todo lo que tiene que estar). 
 
+```{r}
+
+# Coding of missing values:
+# -91 specifies a variable has not been assessed in general (eg, at this point of data collection), so it is missing by design.
+# 
+# -93 specifies missings (default) from data collections that actually took place (eg, this exact questionnaire had been assessed at this timepoint, but the participant did not answer for whatever reason).
+```
+
+
 # Cambios a realizar
 
 ## Create HC Worker from baseline wave using q1510_occ (wave 1)
@@ -327,6 +336,8 @@ data_2019_test$living_alone
 #El problema es que el ítem q0401_hh_total sólo contempla el número de personas (1-10 hasta 10 personas), no si viven en una institución o no. Eso lo hace el ítem q0400a
 
 data_2019_test$q1007
+
+#TODO: Hablar con Dani para ver qué podemos hacer a este respecto.
 ```
 
 
@@ -334,6 +345,7 @@ data_2019_test$q1007
 Es necesario combinar todas estas variables en una sola.
 ```{r}
 #TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+#La variable es Are there children in your household? 1 = Yes; 2 = No. 
 
 #TODO: crear una nueva variable que combine todos los ítems en uno solo. 
 
@@ -346,6 +358,8 @@ data_2019 %>%
 ## Gender (q1009_sex)
 ```{r}
 #TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
+# 1 = male; 2 = female; 3 = other/diverse
+# Supongo que el problema viene por género =/= sexo, pero establecer qué es lo que ocurre.
 data_2019 %>%
   select(q1009_sex) %>%
   freq_table(q1009_sex)
@@ -355,39 +369,139 @@ data_2019 %>%
 ## Age q1010_birth_date &/OR q1011_age
 ```{r}
 #TODO: esperar respuesta de Dani (Elvira quería comentar con él alguna cosa y la cuestión del EPQR-A)
+#TODO: Elvira nos cuenta que al revisar el cuestionario de seguimiento de cohorte 2019 se dio cuenta de que había fechas de nacimiento erróneas en la BBDD. No hay datos perdidos en la echa de nacimiento de línea base, pero la fecha de nacimiento q1010_birth_date está mal en los siguientes ID_ECS:
+# 
+# 18702401
+# 5600601
+# 3100602
+# 18702701
+# 2802002
+# 17801501
+# 16602601
+# 5800201
+# 19600501
+# 3300201
+# 7101202
+# 7101401
+# 14300101
+# 16800301
+
+#TODO:Revisar estas variables, crear una nueva variable única
+
 ```
 
 
 
 ##Relationship status (q1012_mar_stat)
 ```{r}
+#TODO: ver las variable dictionaries
+# Tiene que estar codificada como:
+# 1 = Single
+# 2 = Married /in a civil union
+# 3 = in a relationship and living together
+# 4 = in a relationship and living apart
+# 5 = divorced/separated 
+# 6 = widowed
+# 7 = other
+
+#-91: not assessed
+#-92: refused to answer
+#-93: missing (default)
+
+#Nuestra variable está codificada como:
+#1 = never married (and no cohabiting)
+#2 = currently married/law-partner
+#3 = cohabiting
+#4 = separated/divorced
+#5 = widowed
+
+#TODO: Preguntar a Dani qué hacemos con los valores que no tienen exactamente el mismo significado.
 data_2019 %>%
   select(q1012_mar_stat) %>%
   freq_table(q1012_mar_stat)
 
-#TODO: ver las variable dictionaries
+
 ```
 
 ## Education (q1016_highest)
 ```{r}
+#TODO: ver las variable dictionaries
+#Highest achieved level of education according to ISCED classification
+# 1  = primary/basic: (primary education and lower secunday education)
+# 2 = secondary/intermediate: (upper secondary education, post-secondary non-tertiary education)
+# 3 = tertiary/advanced: (short-cicle tertiary education, bachelor's or equivalent level, master's or equivalent level, doctoral or equivalent level)
+# 4 = no formal education / less than basic (no schooling, early childhood education)
+#-93: level not stated
+
+#Nuestra variable está codificada tal que:
+#0 = No formal education
+#1 = Primary education not completed
+#2 = Primary education completed
+#3 = Lower secondary education completed
+#4 = Upper secondary education completed
+#5 = University/college completed
+#6 = Master degree, PhD completed
+
+#TODO: recodificar la variable en una nueva con los valores de la variable dictionary.
+
+
 data_2019 %>% 
   select(q1016_highest) %>%
   freq_table(q1016_highest)
 
-#TODO: ver las variable dictionaries
+
 ```
 
 ## Migration (q1018_country)
 ```{r}
+#TODO: ver las variable dictionaries
+# Country of birth other than country of residence
+# 1 = Yes, 2= No, 3 = No information
+# -91 = not assessed
+# -92 = refused to answer 
+#-93 = missing (default)
+
+#Nuestra variable:
+#1. Spain
+#2. Germany
+#3. Bulgary
+#4. France
+#5. Portugal
+#6. UK
+#7. Romania
+#8. Morocco
+#9. Dominican Republic
+#11. Argentina
+#12. Bolivia
+#13. Brazil
+#14. Colombia
+#15. Ecuador
+#19. Italy
+#21. Pakistan
+#22. Russia
+#23 Paraguay
+#87. Other
+
+#TODO: Propuesta: ¿cambiarlo todo como un 3?
+
 data_2019 %>% 
   select(q1018_country) %>%
   freq_table(q1018_country)
 
-#TODO: ver las variable dictionaries
+
 ```
 
 ## Children (q1056/q1058)
 ```{r}
+#TODO: ver las variable dictionaries
+#Do you have children, live with children or take care of children in your household?
+#1 = yes; 2 = no
+# -91 = not assessed
+# -92 = refused to answer 
+# -93 = missing (default)
+
+#TODO. Nuestras variables responden a la categoría de niños biológicos y niños adoptados (1 = yes; 2 = no). Los deberíamos combinar?
+
 data_2019 %>% 
   select(q1056) %>%
   freq_table(q1056)
@@ -396,10 +510,22 @@ data_2019 %>%
   select(q1058) %>%
   freq_table(q1058)
 
-#TODO: ver las variable dictionaries
 ```
 ## N.o. children (q1057/q1059)
 ```{r}
+#TODO: ver las variable dictionaries
+#How many children do you have? (including children who are not your own but live in the same household or who you care for in your household?)
+# 1 = no children
+#2 = one child
+#3 = two or three
+#4 = four or more
+# -91 = not assessed
+# -92 = refused to answer 
+# -93 = missing (default)
+
+#TODO. Nuestras variables responden a la categoría de niños biológicos y niños adoptados (1+; DK). Los deberíamos combinar?
+
+
 data_2019 %>% 
   select(q1057) %>%
   freq_table(q1057)
@@ -408,27 +534,95 @@ data_2019 %>%
   select(q1059) %>%
   freq_table(q1059)
 
-#TODO: ver las variable dictionaries
+
 ```
 
 ## Employment status
 Hay que crear esta variable a partir de los items `q1503_work_now` y `q1504_reason`.
 ```{r}
 #TODO: crear la variable. Ver variable dictionaries.
+#1 = Have a job (employed or self-employed)
+#2 = In education
+#3 = Care work (familiy) / homeworker/ on parental leave
+#4 = On long-term sick leave/disability
+#5 = Unable to work due to reasosn not mentioned elsewhere in this list
+#6 = unemployed or job-seeking
+#7 = retired
+
+# -91 = not assessed
+# -92 = refused to answer 
+# -93 = missing (default)
+
+
+#Nosotras tenemos:
+#Currently working? (c2019_w1; q1503_work_now): 1 = yes; 2 = no
+#Reason not working (c2019_w1, q1504_reason): 1 = homemaker, 2 = couldn't find a job, 3 = unpaid/voluntary; 4 = studies/training; 5 = health; 6 = care family; 7 = no need; 8 = not permited; 9 = retired/too old; 10 = laid off; 11 = seasonal work; 12 = does not want to for a while; 13 = vacation/sick or maternity leave; 87= other.
+
+#TODO. Establecer paralelismos entre las categorías propuestas y las nuestras.
 ```
 
 ## Profession (q1510_catoccu)
 Esta variable igual también nos puede ayudar a hacer la variable HC worker. 
 ```{r}
+#TODO: revisar variable dictionary
+#Best description of current occupation(s)
+# 1	undergoing education
+# 2	education and research 
+# 3	arts, entertainment, sports and media
+# 4	healthcare
+# 5	first responder (paramedic/firefighter/police)
+# 6	military
+# 7	civil services, politics
+# 8	finance and economy
+# 9	industry
+# 10	sales and services (incl. restaurants and bars)
+# 11	transport (goods and people)
+# 12	installation, maintenance, cleaning, and repairs
+# 13	currently not working
+# 14	other (please specify)
+
+#Nuestra variable:
+# 1	Legislators 
+# 2	Professionals 
+# 3	Technicians
+# 4	Clerks
+# 5	Service workers 
+# 6	Skilled agricultural workers 
+# 7	  Craft workers 
+# 8	 Plant opperators 
+# 9	Elementary occupations 
+# 10	Armed forces 
+
+#TODO: Establecer los paralelismos ocn las categorías existentes y las que nos solicitan, poner NA en el resto?
 data_2019 %>% 
   select(q1510_catoccu) %>%
   freq_table(q1510_catoccu)
 
-#TODO: revisar variable dictionary
+
 ```
 
 ## Contract (q1510b_contract_earner)
 ```{r}
+#Permanent/temporary contract
+# 1	permanent
+# 2	temporary
+# 3	self-employed
+# 4	other
+# Missing values/categories:	
+# -91	not assessed
+# -92	refused to answer
+# -93	missing (default)
+
+#En Edad con Salud:
+# 1	officer
+# 2	 indefinite period (not officer) 
+# 3	temporal or contract of works and services
+# 4	verbal or without contract
+# 888	DK
+# 999	refused to answer
+
+#TODO: Establecer paralelismos entre ambas categorización y hacer los cambios necesarios.
+
 data_2019 %>% 
   select(q1510b_contract_earner) %>%
   freq_table(q1510b_contract_earner)
@@ -487,6 +681,12 @@ data_2019 %>%
 ```{r}
 #TODO: To be created (comment from Elvira: this variable should be created)
 #TODO: Ver qué variables pueden formar esta variable.
+#TODO: variable dictionary:
+# "residence" is a new variable and replaces the formerly included variable "c.o. residence". Note variables NUTS-1 to NUTS-3 (s. variable dictionaries 20 to 22) are  "20_geographics NUTS-1", "21_geographics NUTS-2", and "22_geographics areno NUTS-3" are discarded.
+#Find NUTS territorial unit codes at: https://drzmainz.sharepoint.com/:x:/s/obiba-wp2/Ecl70YGS_79HmKhWAGd3QzsBz9BGEIHRfuIOeSgpqRaYGw?e=4rfPmo
+#Me da error: internal users only
+#Comentario de Elvira: All participants live din Spain. We could create this variable. 
+
 ```
 
 ## Stressor (life events)
