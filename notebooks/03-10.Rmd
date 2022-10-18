@@ -35,6 +35,7 @@ data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Eda
 
 data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
 
+data_2019_test <- data_2019
 #El formato importado desde .dta a R es un formato doble: la clase y la etiqueta (el label). Las labels son parte de los metadatos que tienen los datos (vectores y columnas de un dataframe). Esto dificulta un poco las cosas. Los value labels no suponen una implicación sobre la consideración categórica o continua (no se utilizan para el análisis de datos). Por eso, antes de hacer un análisis de datos es necesario convertir los vectores con value labels en factores o en vectores clásicos numéricos/carácteres. 
 
 #Esto se puede hacer de dos maneras: o ya desde el principio se conviert en factores o en vectores numéricos o carácter con unlabelled(), to_factor() o unclass(), o cuando ya se ha hecho la limpieza de los datos y se quiere mantener esa info para la exportación. 
@@ -296,12 +297,13 @@ glimpse(data_2019_test$inc_quint)
 #TODO: lte es una variable que ya existe. Queda añadir una columna por cada ítem por separado.
 #TODO: ver las variable dictionaries por si habría que añadir algo
 #TODO: No hay variable dictionaries. Preguntar en la drop-in session (17/10/2022)
+#DONE: Se sube simplemente el listado de variables; hay una armonización que se hará dentro de Opal. 
 ```
 
 
 
 ## Living alone (q0401_hh_total) - wave 1
-#. ¿Cuál es el número total de personas que viven habitualmente en este hogar?
+_¿Cuál es el número total de personas que viven habitualmente en este hogar?_
 It has to be categorised as 1 = alone; 2 = not alone.
 En la actualidad es una variable que va del 1 al 10 
 ```{r}
@@ -309,15 +311,24 @@ data_2019 %>%
   select(q0401_hh_total) %>%
   freq_table(q0401_hh_total)
 
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos
+
 data_2019_test <- data_2019_test %>% 
-  mutate(living_alone = if_else(q0401_hh_total == 1, 1, 2)) %>% 
+  mutate(living_alone = if_else(q0401_hh_total == 1, 1, 2),
+         living_alone = factor(x = living_alone,
+                               levels = c("1", "2"),
+                               labels = c("alone", "not alone"))) %>% 
     glimpse(living_alone) #Por qué esto no funciona?
 
 
 data_2019_test$living_alone
+glimpse(data_2019_test$living_alone)
 
 #TODO: Preparada.
 #TODO: Añadir labels
+#DONE!
 ```
 
 ##Household size (q0401_hh_total)
@@ -335,9 +346,102 @@ data_2019_test$living_alone
 
 #El problema es que el ítem q0401_hh_total sólo contempla el número de personas (1-10 hasta 10 personas), no si viven en una institución o no. Eso lo hace el ítem q0400a
 
-data_2019_test$q1007
+data_2019 %>%
+  select(q1007_HH_member) %>%
+  freq_table(q1007_HH_member) #esta indica el número de persona que es en el hogar
+
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  freq_table(q0401_hh_total) #esta indica el nº de personas que hay en el hogar totales
+
+
+glimpse(data_2019_test$q1007_HH_member)
+glimpse(data_2019_test$q1007_HH_member)
+
+data_2019 %>%
+  select(q0405_relation_02) %>%
+  freq_table(q0405_relation_02)
+
+glimpse(data_2019$q0405_relation_02) #estas variables indican el tipo de relación que hay con la persona que recibe más ingresos del hogar
+glimpse(data_2019$q0405_relation_03)
+glimpse(data_2019$q0405_relation_04)
+glimpse(data_2019$q0405_relation_05)
+glimpse(data_2019$q0405_relation_06)
+glimpse(data_2019$q0405_relation_07)
+glimpse(data_2019$q0405_relation_08)
+glimpse(data_2019$q0405_relation_09)
 
 #TODO: Hablar con Dani para ver qué podemos hacer a este respecto.
+#TODO: Correo a Marta
+#TODO: En línea base no se incluyen personas institucionalizadas, por lo que para crear la variable sólo es necesario utilizar q0401_hh_total y en 5 marcar NA
+
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos
+
+#Creamos la variable. Nuestra variable de partida tiene 10 categorías (1-10) y las tenemos que resumir en:
+#Las categorías son:
+##1: one person
+##2: two persons
+##3: three or four persons
+##4: five or more persons
+##5: live in an institution
+##-91: not assessed
+##-92: refused to answer
+##-93: missing (default)
+
+data_2019_test <- data_2019_test %>% 
+  mutate(hh_size = case_when(
+                  q0401_hh_total == 1 ~ "1",
+                  q0401_hh_total == 2 ~ "2",
+                  q0401_hh_total == 3 ~ "3",
+                  q0401_hh_total == 4 ~ "3",
+                  q0401_hh_total >= 5 ~ "4"),
+         
+         hh_size = factor(x = hh_size,
+                          levels= c("1", "2", "3", "4", "5", "-91", "-92", "-93"),
+                          labels= c("one person", 
+                                    "two persons", 
+                                    "three or four persons", 
+                                    "five or more persons", 
+                                    "live in an institution", 
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)"))
+  )
+
+glimpse(data_2019_test$hh_size)
+freq_table(data_2019_test, hh_size)
+freq_table(data_2019_test, q0401_hh_total)
+
+data_2019_test %>%
+  group_by(hh_size) %>% 
+  pivot_longer(hh_size, names_to = "size", values_to = "value") %>% 
+  select(size, value) %>% 
+  distinct() %>% 
+  arrange(size, value) %>% 
+  print(n = 150)
+
+#Esta versión de aquí no funciona, ver por qué.
+# data_2019_test <- data_2019_test %>% 
+#   mutate(hh_size = if_else(q0401_hh_total == 1, 1,
+#                            if_else(q0401_hh_total == 2, 2,
+#                                    if_else(q0401_hh_total == 3, 3,
+#                                            if_else(q0401_hh_total == 4, 3,
+#                                                    if_else >= 5, 4)))),
+#          hh_size = factor(x = hh_size,
+#                           levels= c("1", "2", "3", "4", "5", "-91", "-92", "-93"),
+#                           labels= c("one person", 
+#                                     "two persons", 
+#                                     "three or four persons", 
+#                                     "five or more persons", 
+#                                     "live in an institution", 
+#                                     "not assessed", 
+#                                     "refused to answer", 
+#                                     "missing(default)")))
+#         
+
+#TODO: Done!!
 ```
 
 
@@ -349,9 +453,45 @@ Es necesario combinar todas estas variables en una sola.
 
 #TODO: crear una nueva variable que combine todos los ítems en uno solo. 
 
-data_2019 %>%
-  select(q0407_age_01, q0407_age_08, q0407_age_10) %>%
+
+data_2019 %>% 
+  select(q0407_age_01, q0407_age_08, q0407_age_10) %>% 
+  glimpse()
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(children_hh = case_when(
+    q0407_age_01 < 18 ~ "1",
+    q0407_age_01 >= 18 ~ "2",
+    q0407_age_01 == NA ~ "-93",
+    q0407_age_08 < 18 ~ "1",
+    q0407_age_08 >= 18 ~ "2",
+    q0407_age_08 == NA ~ "-93",
+    q0407_age_10 < 18 ~ "1",
+    q0407_age_10 >= 18 ~ "2",
+    q0407_age_10 == NA ~ "-93"
+  ),
+        children_hh = factor(x = children_hh,
+                          levels= c("1", "2", "-91", "-92", "-93"),
+                          labels= c("Yes", 
+                                    "No",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)"))
+  )
+  
+  glimpse(data_2019$q0407_age_10)
+  
+glimpse(data_2019_test$children_hh)
+
+  freq_table(data_2019_test, children_hh)
+
+data_2019 %>% 
+  freq_table(q0407_age_08)
+
+data_2019 %>% 
   freq_table(q0407_age_10)
+
 
 ```
 
