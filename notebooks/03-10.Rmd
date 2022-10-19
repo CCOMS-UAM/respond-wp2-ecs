@@ -452,24 +452,48 @@ Es necesario combinar todas estas variables en una sola.
 #La variable es Are there children in your household? 1 = Yes; 2 = No. 
 
 #TODO: crear una nueva variable que combine todos los ítems en uno solo. 
+#Vamos a ver qué tiene cada variable:
+freq_table(data_2019_test, q0407_age_01)
+data_2019_test %>% 
+  select(q0407_age_01) %>% 
+  arrange(q0407_age_01) #No hay menores de edad
+
+freq_table(data_2019_test, q0407_age_08)
+data_2019_test %>% 
+  select(q0407_age_08) %>% 
+  arrange(q0407_age_08) #Aquí aparecen cuatro menores de edad que no se están codificando bien. También hay NAs que no cambian su comportamiento (a -93)
+
+freq_table(data_2019_test, q0407_age_10)
+data_2019_test %>% 
+  select(q0407_age_10) %>% 
+  arrange(q0407_age_10) #Hay un menor de edad y el resto son NAs. 
+
 
 
 data_2019 %>% 
   select(q0407_age_01, q0407_age_08, q0407_age_10) %>% 
   glimpse()
 
+#FIXME!!!! No funciona (no se convierten a NAs)
 data_2019_test <-
   data_2019_test %>% 
   mutate(children_hh = case_when(
-    q0407_age_01 < 18 ~ "1",
-    q0407_age_01 >= 18 ~ "2",
-    q0407_age_01 == NA ~ "-93",
-    q0407_age_08 < 18 ~ "1",
-    q0407_age_08 >= 18 ~ "2",
-    q0407_age_08 == NA ~ "-93",
-    q0407_age_10 < 18 ~ "1",
-    q0407_age_10 >= 18 ~ "2",
-    q0407_age_10 == NA ~ "-93"
+    # q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
+    # q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
+    # q0407_age_01 == NA | q0407_age_08 == NA | q0407_age_10 == NA ~ -93
+    
+    
+    
+    # q0407_age_01 < 18 ~ "1",
+    # q0407_age_01 >= 18 ~ "2",
+    # q0407_age_01 == NA ~ "-93",
+    # q0407_age_08 < 18 ~ "1",
+    # q0407_age_08 >= 18 ~ "2",
+    # q0407_age_08 == NA ~ "-93",
+    # q0407_age_10 < 18 ~ "1",
+    # q0407_age_10 >= 18 ~ "2",
+    # 
+    # q0407_age_10 == NA_integer_ ~ "-93"
   ),
         children_hh = factor(x = children_hh,
                           levels= c("1", "2", "-91", "-92", "-93"),
@@ -478,19 +502,17 @@ data_2019_test <-
                                     "not assessed", 
                                     "refused to answer", 
                                     "missing (default)"))
+  ) #Este no me funciona. Voy a probar con if_else
+
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(
+    children_hh = if_else()
   )
-  
-  glimpse(data_2019$q0407_age_10)
-  
-glimpse(data_2019_test$children_hh)
 
-  freq_table(data_2019_test, children_hh)
-
-data_2019 %>% 
-  freq_table(q0407_age_08)
-
-data_2019 %>% 
-  freq_table(q0407_age_10)
+#Aquí vemos el resultado
+freq_table(data_2019_test, children_hh)
 
 
 ```
@@ -499,13 +521,28 @@ data_2019 %>%
 ```{r}
 #TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
 # 1 = male; 2 = female; 3 = other/diverse
-# Supongo que el problema viene por género =/= sexo, pero establecer qué es lo que ocurre.
+# Supongo que el problema viene por género =/= sexo, pero establecer qué es lo que ocurre. Nuestra categorización es 1 = male; 2 = female
+
 data_2019 %>%
   select(q1009_sex) %>%
-  freq_table(q1009_sex)
+  freq_table(q1009_sex) #Ya está codificado como debería. No hay NAS.
 
+data_2019_test <- data_2019_test %>% 
+  mutate(gender = factor(x = q1009_sex,
+                          levels= c("1", "2", "3", "-91", "-92", "-93"),
+                          labels= c("male", 
+                                    "female",
+                                    "other/diverse",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)")))
+data_2019_test %>%
+  select(gender) %>%
+  freq_table(gender)
 
+#TODO: Done!!
 ```
+
 ## Age q1010_birth_date &/OR q1011_age
 ```{r}
 #TODO: esperar respuesta de Dani (Elvira quería comentar con él alguna cosa y la cuestión del EPQR-A)
@@ -528,13 +565,70 @@ data_2019 %>%
 
 #TODO:Revisar estas variables, crear una nueva variable única
 
+data_2019 %>%  
+  filter(ID_ECS == 18702401|
+         ID_ECS == 5600601 |
+         ID_ECS == 3100602 |
+         ID_ECS == 18702701| 
+         ID_ECS == 2802002 |
+         ID_ECS == 17801501| 
+         ID_ECS == 16602601| 
+         ID_ECS == 5800201 |
+         ID_ECS == 19600501| 
+         ID_ECS == 3300201 |
+         ID_ECS == 7101202 |
+         ID_ECS == 7101401 |
+         ID_ECS == 14300101| 
+         ID_ECS == 16800301) %>% 
+  select(q1010_birth_date, q1011_age)
+
+#Efectivamente las fechas están mal. ¿Podemos utilizar sólo la variable edad?
+data_2019_test %>%
+  select(q1011_age) %>%
+  freq_table(q1011_age) %>% 
+  print(n = 82)
+
+#Comprobamos que no tiene valores perdidos:
+data_2019 %>%
+  select(q1011_age) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos. 
+
+#La variable 'age_continuous' va de 1-100, pero tenemos un caso con 101. 
+#TODO. Ver qué hacer con esto. 
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(age_continuous = q1011_age,
+         age_cat = case_when(
+           q1011_age < 18 ~ 1,
+           q1011_age >= 18 & q1011_age <= 44 ~ 2,
+           q1011_age >= 45 & q1011_age <= 64 ~ 3,
+           q1011_age >= 65 & q1011_age <= 94 ~ 4, 
+           q1011_age >= 95 ~ 5
+         ), 
+         age_cat = factor(x = age_cat,
+                          levels= c("1", "2", "3", "4", "5", "-91", "-92", "-93"),
+                          labels= c("below 18 years", 
+                                    "18-44",
+                                    "45-64",
+                                    "65-94",
+                                    "95 years or older",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)"))) 
+data_2019_test %>% 
+  select(age_cat) %>% 
+  freq_table(age_cat)
+
+#TODO. Done!!
+
 ```
 
 
 
 ##Relationship status (q1012_mar_stat)
 ```{r}
-#TODO: ver las variable dictionaries
+#TODO: ver las variable dictionaries (relationship)
 # Tiene que estar codificada como:
 # 1 = Single
 # 2 = Married /in a civil union
@@ -560,20 +654,55 @@ data_2019 %>%
   select(q1012_mar_stat) %>%
   freq_table(q1012_mar_stat)
 
+data_2019 %>%
+  select(q1012_mar_stat) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos.
 
+#Propuesta: Tenemos que cambiar la codificación de las últimas 4 categorías. En la final, 4 = in a relationship and living apart va a tener NAs (-91) porque en nuestra variable no recogemos esa información; 5 = divorced/separated va a ser nuestra categoría 4; la categoría 6 = widowed es nuestra categoría 5 y hay que crear una categoría 7. 
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(relationship = case_when(
+           q1012_mar_stat == 1 ~ 1,
+           q1012_mar_stat == 2 ~ 2,
+           q1012_mar_stat == 3 ~ 3,
+           q1012_mar_stat == 4 ~ 5, 
+           q1012_mar_stat == 5 ~ 6,
+         ), 
+         relationship = factor(x = relationship,
+                          levels= c("1", "2", "3", "4", "5", "6", "7", "-91", "-92", "-93"),
+                          labels= c("single", 
+                                    "married/in a civil union",
+                                    "in a relationship and living together",
+                                    "in a relationship and living apart",
+                                    "divorced/separated",
+                                    "widowed",
+                                    "other",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)")))
+
+#¿Es necesario asignar 4 == -91? ¿Cómo se podría hacer?
+data_2019_test %>% 
+  select(relationship) %>% 
+  freq_table(relationship)
+
+#TODO. Done!!
 ```
 
 ## Education (q1016_highest)
 ```{r}
 #TODO: ver las variable dictionaries
 #Highest achieved level of education according to ISCED classification
-# 1  = primary/basic: (primary education and lower secunday education)
+# 1  = primary/basic: (primary education and lower secundary education)
 # 2 = secondary/intermediate: (upper secondary education, post-secondary non-tertiary education)
 # 3 = tertiary/advanced: (short-cicle tertiary education, bachelor's or equivalent level, master's or equivalent level, doctoral or equivalent level)
 # 4 = no formal education / less than basic (no schooling, early childhood education)
-#-93: level not stated
+#-91 = not assessed
+#-92 = refused to answer
+#-93: level not stated - siguiendo el cuadrado amarillo, si no debería ser "missing(default)"
 
-#Nuestra variable está codificada tal que:
+#Nuestra variable está codificada tal que: (nuestra variable NO recoge non-tertiary education)
 #0 = No formal education
 #1 = Primary education not completed
 #2 = Primary education completed
@@ -581,6 +710,7 @@ data_2019 %>%
 #4 = Upper secondary education completed
 #5 = University/college completed
 #6 = Master degree, PhD completed
+#888 = don't know
 
 #TODO: recodificar la variable en una nueva con los valores de la variable dictionary.
 
@@ -589,6 +719,33 @@ data_2019 %>%
   select(q1016_highest) %>%
   freq_table(q1016_highest)
 
+data_2019 %>%
+  select(q1016_highest) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos, pero 888 es DK.
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(education = case_when(
+           q1016_highest == 0 ~ 4,
+           q1016_highest == 1 | q1016_highest == 2 | q1016_highest == 3 ~ 1,
+           q1016_highest == 4 ~ 2, 
+           q1016_highest == 5 | q1016_highest == 6 ~ 3,
+           q1016_highest == 888 ~ -93,
+         ), 
+         education = factor(x = education,
+                          levels= c("1", "2", "3", "4", "-91", "-92", "-93"),
+                          labels= c("primary/basic", 
+                                    "secondary/intermediate",
+                                    "tertiary/advanced",
+                                    "no formal education",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "level not stated")))
+data_2019_test %>% 
+  select(education) %>%
+  freq_table(education)
+
+#TODO: Done!!!
 
 ```
 
@@ -622,13 +779,34 @@ data_2019 %>%
 #23 Paraguay
 #87. Other
 
-#TODO: Propuesta: ¿cambiarlo todo como un 3?
+#TODO: Propuesta: Estamos en España recogiendo muestra; por tanto, todo distinto a España es migración.
 
 data_2019 %>% 
   select(q1018_country) %>%
   freq_table(q1018_country)
 
+data_2019 %>%
+  select(q1018_country) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay datos perdidos
 
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(
+    migration = if_else(q1018_country == 1, 2, 1),
+    migration = factor(x = migration,
+                       levels= c("1", "2", "3", "-91", "-92", "-93"),
+                          labels= c("yes", 
+                                    "no",
+                                    "no information",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)")))
+
+data_2019_test %>% 
+  select(migration) %>%
+  freq_table(migration)
+
+#TODO. Done!!!!!
 ```
 
 ## Children (q1056/q1058)
@@ -640,16 +818,41 @@ data_2019 %>%
 # -92 = refused to answer 
 # -93 = missing (default)
 
-#TODO. Nuestras variables responden a la categoría de niños biológicos y niños adoptados (1 = yes; 2 = no). Los deberíamos combinar?
+#TODO. Explorar ambas variables.
+
+data_2019 %>%
+  select(q1056, q1058) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos
 
 data_2019 %>% 
   select(q1056) %>%
-  freq_table(q1056)
+  freq_table(q1056) #1 = yes; #2 = no
 
 data_2019 %>% 
-  select(q1058) %>%
-  freq_table(q1058)
+  select(q1058) %>% #1 = yes; #2 = no
+  freq_table(q1058) 
 
+#TODO. Estos resultados no cuadran con la variable children household (por la que no hay menores en casa y aquí sí que los hay?)
+#TODO. Nuestras variables responden a la categoría de niños biológicos y niños adoptados (1 = yes; 2 = no). Los deberíamos combinar? Propuesta: sí
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(children = case_when(
+           q1056 == 1 | q1058 == 1 ~ 1,
+           q1056 == 2 | q1058 == 2 ~ 2
+         ), 
+         children = factor(x = children,
+                          levels= c("1", "2", "-91", "-92", "-93"),
+                          labels= c("yes", 
+                                    "no",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)")))
+data_2019_test %>% 
+  select(children) %>%
+  freq_table(children)
+
+#TODO. Done!!!!
 ```
 ## N.o. children (q1057/q1059)
 ```{r}
@@ -664,16 +867,48 @@ data_2019 %>%
 # -93 = missing (default)
 
 #TODO. Nuestras variables responden a la categoría de niños biológicos y niños adoptados (1+; DK). Los deberíamos combinar?
+#TODO. Qué diferencia hay con la de children household? (la anterior es categórica y esta es continua.)
+#TODO. Debido al error que también señalaba en la variable anterior (children), propongo crear children household a partir de esta variable. 
 
+#Exploramos las variables.
+
+
+data_2019 %>%
+  select(q1057, q1059) %>%
+  summarise_all(funs(sum(is.na(.)))) #Existen valores perdidos
 
 data_2019 %>% 
   select(q1057) %>%
-  freq_table(q1057)
+  freq_table(q1057) #variable cuanti (1 = 1... Etc.) 888 = Don't know (sustituir esto por -93 ¿?. Los NAs hay que sustituirlos por 1)
 
 data_2019 %>% 
-  select(q1059) %>%
-  freq_table(q1059)
+  select(q1059) %>% #variable cuanti (1 = 1, 2 = 2, 3 = 3, 2978 NAs, que hay que sustituirlos por 1 (No children))
+  freq_table(q1059) 
 
+#Creamos la nueva variable
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(nofchildren = case_when(
+           q1057 == NA | q1059 == NA ~ 1, #no children
+           q1057 == 1 | q1059 == 1 ~ 2, #one children
+           q1057 == 2 | q1059 == 2 | q1057 == 3 | q1059 == 3 ~ 3, #two or three children
+           q1057 >= 4 | q1059 >= 4 ~ 4, # four or more
+           q1057 == 888 | q1059 == 888 ~ -93
+         ), 
+         nofchildren = factor(x = nofchildren,
+                          levels= c("1", "2", "3", "4", "-91", "-92", "-93"),
+                          labels= c("no children", 
+                                    "one child",
+                                    "two or three",
+                                    "four or more",
+                                    "not assessed", 
+                                    "refused to answer", 
+                                    "missing (default)")))
+data_2019_test %>% 
+  select(nofchildren) %>%
+  freq_table(nofchildren)
+
+#TODO. Resolver duda general al transformar NAs con case_when. Queda resolver esto para poder terminar la variable. 
 
 ```
 
@@ -690,19 +925,78 @@ Hay que crear esta variable a partir de los items `q1503_work_now` y `q1504_reas
 #7 = retired
 
 # -91 = not assessed
-# -92 = refused to answer 
+# -92 = refused to answer
 # -93 = missing (default)
 
 
 #Nosotras tenemos:
 #Currently working? (c2019_w1; q1503_work_now): 1 = yes; 2 = no
-#Reason not working (c2019_w1, q1504_reason): 1 = homemaker, 2 = couldn't find a job, 3 = unpaid/voluntary; 4 = studies/training; 5 = health; 6 = care family; 7 = no need; 8 = not permited; 9 = retired/too old; 10 = laid off; 11 = seasonal work; 12 = does not want to for a while; 13 = vacation/sick or maternity leave; 87= other.
+#Reason not working (c2019_w1, q1504_reason): 
+#1 = homemaker, 2 = couldn't find a job, 3 = unpaid/voluntary; 4 = studies/training; 5 = health; 6 = care family; 7 = no need; 8 = not permited; 9 = retired/too old; 10 = laid off; 11 = seasonal work; 12 = does not want to for a while; 13 = vacation/sick or maternity leave; 87= other.
 
 #TODO. Establecer paralelismos entre las categorías propuestas y las nuestras.
+# 1 = Have a job (employed or self-employed) == 1 (q1503_work_now)
+# 2 = In education (currently studying) == 4 (q1504_reason)
+# 3 = Care work (family) / homeworker / on parental leave == 1, 6, 13 (q1504_reason), - cuidado con 13 porque se solapa con la opción "4" de vardict
+# 4 = On long-term sick leave/disability == 13 (q1504_reason), 5 (health), 
+# 5 = Unable to work due to reasons not mentioned elsewhere in this list (other) == 3 (unpaid/voluntary), 7 (no need), 8 (not permitted),  12 (does not want to for a while), 87
+# 6 = unemployed or job-seeking == 2 (couldn't find a job), 10 (laid off), 11 (seasonal work),
+# 7 = retired == 9
+
+#Exploramos las variables.
+
+data_2019 %>%
+  select(q1503_work_now, q1504_reason) %>%
+  summarise_all(funs(sum(is.na(.)))) #Existen valores perdidos (347 en work-now y 1387 en reason)
+
+data_2019 %>% 
+  select(q1503_work_now) %>%
+  freq_table(q1503_work_now) #1 = yes; 2 = no; NAs = -93
+
+data_2019 %>% 
+  select(q1504_reason) %>% #Sustituiremos los NA como -93
+  freq_table(q1504_reason) 
+
+#Creamos la variable
+
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(employment_st = case_when(
+           q1503_work_now == 1 ~ 1, #have a job
+           q1504_reason == 4 ~ 2, #studying
+           q1504_reason == 1 | q1504_reason == 6 ~ 3, #care work (eliminamos la 13 para meterla en la siguiente - LA 13 es vacation/sick or maternity leave)
+           q1504_reason == 13 | q1504_reason == 5 ~ 4, # on long term sick leave disability
+           q1504_reason == 3 | q1504_reason == 7 | q1504_reason == 8 | q1504_reason == 11 | q1504_reason == 12 | q1504_reason == 87 ~ 5, #other reasons
+           q1504_reason == 2 | q1504_reason == 10 |q1057 == 11 ~ 6, #unemployed or job-seeking
+           q1504_reason == 9 ~ 7,
+           q1504_reason == NA | q1503_work_now == NA ~ -93
+         ), 
+          employment_st = factor(x = employment_st,
+                          levels= c("1", "2", "3", "4", "5", "6", "7", "-91", "-92", "-93"),
+                          labels= c("Have a job (employed or self-employed)", 
+                                    "In education",
+                                    "Care work (familiy) / homeworker/ on parental leave",
+                                    "On long-term sick leave/disability",
+                                    "Unable to work due to reasons not mentioned elsewhere in this list", 
+                                    "unemployed or job-seeking", 
+                                    "retired",
+                                    "not assessed",
+                                    "refused to answer",
+                                    "missing (default)"
+                                    )))
+
+
+data_2019_test %>% 
+  select(employment_st) %>%
+  freq_table(employment_st) #Sigue el problema de los NAs.
+
+#TODO. Resolver el problema de los NAs para cerrar esta variable.
+
 ```
 
 ## Profession (q1510_catoccu)
 Esta variable igual también nos puede ayudar a hacer la variable HC worker. 
+
 ```{r}
 #TODO: revisar variable dictionary
 #Best description of current occupation(s)
@@ -722,27 +1016,62 @@ Esta variable igual también nos puede ayudar a hacer la variable HC worker.
 # 14	other (please specify)
 
 #Nuestra variable:
-# 1	Legislators 
-# 2	Professionals 
+# 1	Legislators -----> 7 (civil services, politics)
+# 2	Professionals ----> 
 # 3	Technicians
-# 4	Clerks
+# 4	Clerks ------> 12 (installation, maintenance, cleaning and repairs)
 # 5	Service workers 
 # 6	Skilled agricultural workers 
-# 7	  Craft workers 
-# 8	 Plant opperators 
+# 7 Craft workers 
+# 8	Plant operators 
 # 9	Elementary occupations 
-# 10	Armed forces 
+# 10	Armed forces -----> 6 (military)
 
 #TODO: Establecer los paralelismos ocn las categorías existentes y las que nos solicitan, poner NA en el resto?
+#TODO: Ninguna coincide con ninguna?! Qué hacer
+
+#Exploramos la variable.
 data_2019 %>% 
   select(q1510_catoccu) %>%
-  freq_table(q1510_catoccu)
+  freq_table(q1510_catoccu) #Hay 347 NAs.
+
+#Creamos la variable
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(profession = case_when(
+           
+         ), 
+          profession = factor(x = profession,
+                          levels= c("1", "2", "3", "4", "5", "6", "7", "-91", "-92", "-93"),
+                          labels= c("undergoing education", 
+                                    "education and research",
+                                    "arts, entertainment, sports and media",
+                                    "healthcare",
+                                    "first responder (paramedic/firefighter/police)", 
+                                    "military", 
+                                    "civil services, politics",
+                                    "finance and economy",
+                                    "sales and services (incl. restaurants and bars)",
+                                    "transport (goods and people)",
+                                    "installation, maintenance, cleaning, and repairs",
+                                    "currently not working",
+                                    "other",
+                                    "not assessed",
+                                    "refused to answer",
+                                    "missing (default)"
+                                    )))
+
+
+data_2019_test %>% 
+  select(pofession) %>%
+  freq_table(profession) #Sigue el problema de los NAs.
 
 
 ```
 
 ## Contract (q1510b_contract_earner)
 ```{r}
+#TODO: revisar variable dictionary
 #Permanent/temporary contract
 # 1	permanent
 # 2	temporary
@@ -753,28 +1082,70 @@ data_2019 %>%
 # -92	refused to answer
 # -93	missing (default)
 
-#En Edad con Salud:
-# 1	officer
-# 2	 indefinite period (not officer) 
-# 3	temporal or contract of works and services
-# 4	verbal or without contract
-# 888	DK
-# 999	refused to answer
-
 #TODO: Establecer paralelismos entre ambas categorización y hacer los cambios necesarios.
+
+#En Edad con Salud:
+# 1	officer ----> 1 permanent
+# 2	 indefinite period (not officer) ----> 3 self-employed
+# 3	temporal or contract of works and services ---> 2 temporary
+# 4	verbal or without contract ---> 4
+# 888	DK --> -93
+# 999	refused to answer ---> -92
+
+#TODO: Esclarecer categorización.
+
+#Exploramos la variable
 
 data_2019 %>% 
   select(q1510b_contract_earner) %>%
-  freq_table(q1510b_contract_earner)
+  freq_table(q1510b_contract_earner) #Hay NAs que codificar a -93
 
-#TODO: revisar variable dictionary
+# Creamos la nueva variable.
+#Creamos la variable
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(contract = case_when(
+           
+         ), 
+          contract = factor(x = contract,
+                          levels= c("1", "2", "3", "4", "-91", "-92", "-93"),
+                          labels= c("permanent",
+                                    "temporary",
+                                    "self-employed",
+                                    "other",
+                                    "not assessed",
+                                    "refused to answer",
+                                    "missing (default)"
+ )))
+
+
+
 ```
 
 
 ## Employment type (q1510e_workday)
 ```{r}
-#TODO: Comprobar si se han incluido en todas las olas; modificarlo si es necesario. 
 #TODO: Ver variable dictionary. 
+# 1 - Full time
+# 2 - Part time
+# 3 - No paid work
+# 4 - Other
+# -91 not assessed
+# -92 refused to answer
+# -93 missing (default)
+
+#Nuestra variable: 
+# 
+# 1	 Part time (morning and afternoon) ---> 2
+# 2	 Continuous morning working day ---> 1
+# 3	 Continuous afternoon working day ----> 1
+# 4	Continuous night working day ----> 1
+# 5	 Reduced work day ---> 4
+# 6	Shift work / irregular or variable work --> 2
+# 7	 Other type  ---> 4
+# 888	DK ---> -92 
+#TODO: Comprobar si se han incluido en todas las olas; modificarlo si es necesario. 
+
 
 data_2019 %>% 
   select(q1510e_workday) %>%
