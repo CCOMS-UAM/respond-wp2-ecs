@@ -35,7 +35,8 @@ data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Eda
 
 data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
 
-data_2019_test <- data_2019
+data_2019_test <- data_2019 #Hago una copia del dataset original para probar cosas.
+
 #El formato importado desde .dta a R es un formato doble: la clase y la etiqueta (el label). Las labels son parte de los metadatos que tienen los datos (vectores y columnas de un dataframe). Esto dificulta un poco las cosas. Los value labels no suponen una implicación sobre la consideración categórica o continua (no se utilizan para el análisis de datos). Por eso, antes de hacer un análisis de datos es necesario convertir los vectores con value labels en factores o en vectores clásicos numéricos/carácteres. 
 
 #Esto se puede hacer de dos maneras: o ya desde el principio se conviert en factores o en vectores numéricos o carácter con unlabelled(), to_factor() o unclass(), o cuando ya se ha hecho la limpieza de los datos y se quiere mantener esa info para la exportación. 
@@ -112,6 +113,8 @@ data_2019_test <- data_2019 %>%
 glimpse(data_2019_test$occ_mhw)  #Funciona
 
 #TODO: Ver cómo conseguir una lista de todos los patrones que nos interesan. 
+#Filtrar por el grupo 2, crear un dataset sólo con esa variable filtrada por la del grupo 2. 
+#Revisar UTF-8
 
 ```
 
@@ -290,6 +293,13 @@ glimpse(data_2019_test$inc_quint)
 
 #TODO: Falta por corregir la recodificación en variables factor (por qué no salen con la etiqueta asignada y queda la anterior). Falta por corregir el tema de los valores perdidos en la suma (quizás proponer después una regla que sea que los múltiplos de -92 o -93 se vuelvan a codificar por este número)
 
+
+
+#Una variable tipo factor recodificada anterior pero con las etiquetas correctas. 
+#Crear otra variable a partir de esta con integer, filtrar convirtiendo en missing con valores no válidos (NAs)
+#Operar. 
+#na_if()
+#Crear un objeto con constantes en MAYÚSCULAS: NON-RESPONSE = -92. 
 ```
 ## Stressor (life events)
 ```{r}
@@ -447,6 +457,7 @@ data_2019_test %>%
 
 ## Children household (q0407_age_01-q0407_age_08/q0407_age_10)
 Es necesario combinar todas estas variables en una sola.
+
 ```{r}
 #TODO: revisar las variable dictionaries para ver qué es lo que ocurre con esta
 #La variable es Are there children in your household? 1 = Yes; 2 = No. 
@@ -478,9 +489,9 @@ data_2019 %>%
 data_2019_test <-
   data_2019_test %>% 
   mutate(children_hh = case_when(
-    # q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
-    # q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
-    # q0407_age_01 == NA | q0407_age_08 == NA | q0407_age_10 == NA ~ -93
+    q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
+    q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
+    q0407_age_01 == NA | q0407_age_08 == NA | q0407_age_10 == NA ~ -93
     
     
     
@@ -505,14 +516,14 @@ data_2019_test <-
   ) #Este no me funciona. Voy a probar con if_else
 
 
-data_2019_test <-
-  data_2019_test %>% 
-  mutate(
-    children_hh = if_else()
-  )
+# data_2019_test <-
+#   data_2019_test %>% 
+#   mutate(
+#     children_hh = if_else()
+#   )
 
 #Aquí vemos el resultado
-freq_table(data_2019_test, children_hh)
+freq_table(data_2019_test, children_hh) #5 personas sólo tienen niños en su casa? No coincide con el resto de variables
 
 
 ```

@@ -1,0 +1,587 @@
+---
+title: "Preparando el archivo variable_list con los datos de Edad con Salud"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+institute: CCOMS, Universidad Autónoma de Madrid
+output: 
+  html_notebook:
+  toc: yes
+  toc_float: yes
+  keep_md: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Preparación
+
+## Librerías necesarias
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(freqtables)
+#install.packages("freqtables")
+library(ecs.data)
+library(labelled)
+#install.packages("labelled")
+library(stringr)
+library(gridExtra)
+#install.packages("gridExtra")
+```
+
+## Constantes en la armonización de variables
+
+Valores perdidos: Coding of missing values: -91 specifies a variable has not
+been assessed in general (eg, at this point of data collection), so it is
+missing by design. -93 specifies missings (default) from data collections that
+actually took place (eg, this exact questionnaire had been assessed at this
+timepoint, but the participant did not answer for whatever reason).
+
+```{r constantes}
+
+MISSING_DESIGN <- -991
+NON_RESPONSE <- -993
+
+```
+
+## Lectura de datos
+
+Los datos se extraen de las carpetas de OneDrive "Bases de datos maestras". Se
+encuentran en formato .dta, que es un formato doble - por un lado, tipo de
+variable (class) y por otro, la etiqueta (label, parte de los metadatos). Esto
+hace que sea un poco complicado trabajar con estas variales, ya que los
+`value- labels` no se utilizan para el análisis de los datos (no suponen una
+implicación) sobre la consideración categórica o continua de las variables.
+
+**Antes de hacer un análisis de datos es necesario convertir los vectores con**
+**value_labels en factores, numéricos o caracteres**. Es un paso que se puede
+hacer desde el principio con `unlabelled()`, `to_factor()` o `unclass()`, o
+cuando ya se ha hecho la limpieza de datos y se quiere mantener esa info en la
+exportación.
+
+A continuación se importan las BBDD originales y se duplican para probar cosas.
+
+```{r}
+data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
+
+data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+
+data_2019_test <- data_2019 #Hago una copia del dataset original para probar cosas.
+```
+
+Tareas pendientes:
+
+-   [ ] Revisar codificación UTF-8
+
+# El archivo variable_list
+
+Este archivo reúne **todas las variables** que tiene cada estudio. Es necesario
+comprobar que todos los outcomes están incluidos (ver los archivos [mental
+health
+outcomes](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7BA66AD0BE-D072-4CB3-8072-F4FF5C92BF9D%7D&file=mental_health_measures_hs.xlsx&action=default&mobileredirect=true)
+y
+[predictores](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7B37F195E1-399B-48CE-9E11-5B2B8B83B210%7D&file=predictor_candidates_by_study_hs.xlsx&action=default&mobileredirect=true)
+para comprobar que está todo lo que tiene que estar).
+
+# Cambios a realizar
+
+## CREATE HC WORKER from baseline wave using q1510_occ -wave 1)
+
+HC Workers (health-care workers) es una variable dicotómica (1 = yes, 2 = no)
+que se crea a partir de `q1510_occ` con los datos de la línea base. Este ítem de
+formato abierto indica la ocupación en texto libre de los participantes.
+
+Para proceder con esta variable establecemos distintos pasos.
+
+1.  Explorar los valores únicos que tiene esta variable u otras que puedan ser
+    de utilidad.
+2.  Filtrar aquellos relativos a los "HC-workers"
+3.  Crear la nueva variable.
+
+### Exploración de variables
+
+Exploramos la variable `q1510_occ`:
+
+```{r}
+glimpse(data_2019$q1510_occ)
+
+data_2019 %>%
+  select(q1510_occ) %>%
+  distinct()
+```
+
+Esta variable contiene 1824 valores únicos. Exploramos otras variables del
+cuestionario que permitan extraer la ocupación. En la BBDD hay otra variable,
+`q1510_catoccu` que utiliza la estructura de la CIUO-08 (códigos ISCO, de la
+OIT). Nos interesa la categorización:
+
+**GRUPO 2: "PROFESIONALES CIENTÍFICOS E INTELECTUALES" \> PROFESIONALES DE LA
+SALUD**
+
+Exploramos `q1510_catoccu`
+
+```{r}
+glimpse(data_2019$q1510_catoccu)
+
+data_2019 %>%
+  select(q1510_catoccu) %>%
+  distinct()
+
+freq_table(data_2019, q1510_catoccu)
+```
+
+Esta variable sólo contiene la categorización de los 10 grupos principales, no
+de los subgrupos. Por tanto, tenemos que descartar esta variable porque no nos
+permite diferenciar los profesionales de la salud de otros profesionales y se
+tiene que trabajar con la variable `q1510_occ`.
+
+### Utilizando expresiones regulares
+
+`RegExplain` es un *addin* de R para manipular expresiones regulares y analizar
+variables de texto libres (los valores únicos). Algunos de los primeros valores
+que nos resultan de interés para la creación de esta variable son:
+
+*SADSERVICIO ATENCION DOMICILIARIA enfermera mÃ©dica cardiÃ³loga* *medico
+traumatologo auxiliar enfermera auxiliar de enfermeria* *MÃ©dico homeÃ³pata*
+
+Estas han sido extraídas manualmente de los 100 primeros valores de los valores
+únicos que tiene esta variable, pero necesitamos las 1824 disponibles:
+
+```{r}
+data_2019$q1510_occ %>% 
+  str_extract_all("enf", simplify = T) #Esto no ha funcionado.
+```
+
+Esto no ha funcionado.
+
+-   [ ] Buscar una manera de automatizarlo.
+-   [ ] Crear un dataset sólo con la variable `q1510_occ` filtrada a través de
+    `q1510_catoccu` == 2, que resuma las ocupaciones de las personas que han
+    marcado esa categoría.
+-   [ ] Revisar los valores perdidos de ambas categorías.
+
+### Creación de la variable
+
+La idea es crear una nueva variable de manera que el patrón detectado suponga un
+1, y el resto un 0:
+
+```{r}
+data_2019_test <- data_2019 %>%
+                    mutate( # 1 = mental health worker; 0 = non mental health worker
+                      occ_mhw = if_else(str_detect(q1510_occ, "enf"), 1,
+                                        if_else(str_detect(q1510_occ, "med"), 1,
+                                                if_else(str_detect(q1510_occ, "traum"), 1, 
+                                                        if_else(str_detect(q1510_occ, "aux"), 1,
+                                                                ifelse(str_detect(q1510_occ, "SADSERVICIO"), 1, 0)))))
+                    )
+glimpse(data_2019_test$occ_mhw)  #Funciona
+```
+
+Tareas pendientes:
+
+-   [ ] Terminar de incluir todos los valores únicos.
+
+## CREATE INCOME QUINTILES (HHQUINTILE) - wave 1
+
+Las variables relacionadas con los ingresos que se manejan en esta BBDD son:
+
+-   `q0410g_total`: ingresos personales brutos de todos los miembros de su
+    familia durante los últimos 12M.
+-   `q0410i_ss`: ingresos brutos de su hogar durante los últimos 12M procedentes
+    de la pensión de jubilación.
+-   `q0410j_government`: ingresos brutos de su hogar (...) procedentes de progra
+    mas oficiales (paro, hijos dependientes, viudedad, orfan- dad, asistencia
+    general)
+-   `q0410k_other`: de fuentes privadas (pensiones, inversiones, alimenticias o
+    de mantenimiento).
+
+Se descarta `q1519` para este fin porque pregunta por la situación financiera en
+la infancia.
+
+### Exploración de variables
+
+Vemos cuántos valores únicos hay por cada variable y las representamos gráfica-
+mente. Se trata de una variable categórica que representa rangos. Se encuentran
+34 valores distintos dentro de esta variable.
+
+```{r}
+data_2019 %>%
+  group_by(q0410g_total, q0410i_ss, q0410j_government, q0410k_other) %>% 
+  pivot_longer(c(q0410g_total, q0410i_ss, q0410j_government, q0410k_other),
+               names_to = "income", 
+               values_to = "value") %>% 
+  select(income, value) %>% 
+  distinct() %>% 
+  arrange(income, value) %>% 
+  print(n = 150)
+```
+
+```{r}
+g1 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410g_total)) +
+  xlim(0, 40)
+
+g2 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410i_ss)) +
+  xlim(0, 40)
+
+g3 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410j_government)) +
+  xlim(0, 40)
+
+g4 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410k_other)) +
+  xlim(0, 40)
+
+grid.arrange(g1, g2, g3, g4)
+```
+
+-   [ ] Ver si existe alguna manera de simplificar este proceso.
+
+#### Recodificación de la variable
+
+Para proceder con el tratamiento de esta variable, Dani me envía su script
+`Edad_con_Salud_Data.R`. La idea que se extrae de ese script es recodificar
+estas cuatro variables por la mediana del rango establecido para poder sumarlas
+y crear los quintiles en base a esto.
+
+Debido al doble formato de Stata, primero convertimos las variables a numéricas
+y luego a factores.
+
+```{r}
+data_2019_test %>% 
+  mutate(
+    q0410g_total = as.numeric(q0410g_total),
+    q0410i_ss = as.numeric(q0410i_ss),
+    q0410j_government = as.numeric(q0410j_government),
+    q0410k_other = as.numeric(q0410k_other),
+    
+    q0410g_total = as.factor(q0410g_total),
+    q0410i_ss = as.factor(q0410i_ss),
+    q0410j_government = as.factor(q0410j_government),
+    q0410k_other = as.factor(q0410k_other)
+  )
+```
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(q0410g_total_r = recode_factor(q0410g_total,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+         
+         q0410i_ss_r = recode_factor(q0410i_ss,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410j_government_r = recode_factor(q0410j_government,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410k_other_r = recode_factor(q0410k_other,
+                                          "999" = -92,
+                                          "888" = -93,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+         )
+```
+
+Encontramos que la recodificación que se ha hecho no es la que buscábamos,
+aunque si seleccionamos dos variables (original y recodificada) vemos que
+podemos hacer otras cosas para seguir operando:
+
+```{r}
+data_2019_test %>% 
+  select(q0410g_total, q0410g_total_r) %>% 
+  View()
+```
+
+Se han modificado los levels, pero no las labels. En cualquier cosa, para seguir
+avanzando, tenemos que convertirlo a carácter y luego a integer:
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+        q0410g_total_r = as.character(q0410g_total_r),
+        q0410i_ss_r = as.character(q0410i_ss_r),
+        q0410j_government_r = as.character(q0410j_government_r),
+        q0410k_other_r = as.character(q0410k_other_r),
+        
+        q0410g_total_r = as.integer(q0410g_total_r),
+        q0410i_ss_r = as.integer(q0410i_ss_r),
+        q0410j_government_r = as.integer(q0410j_government_r),
+        q0410k_other_r = as.integer(q0410k_other_r)
+  )
+```
+
+Necesitamos crear otra variable a partir de esta teniendo en cuenta los -92 y
+-93 con missing para que no se tengan en cuenta a la hora de calcular los
+quintiles, utilizando na_if().
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+        q0410g_tot_NA = na_if(q0410g_total_r, -92),
+        q0410g_tot_NA = na_if(q0410g_total_r, -93),
+        q0410i_ss_NA = na_if(q0410i_ss_r, -92),
+        q0410i_ss_NA = na_if(q0410i_ss_r, -93),
+        q0410j_gov_NA = na_if(q0410j_government_r, -92),
+        q0410j_gov_NA = na_if(q0410j_government_r, -93),
+        q0410k_other_NA = na_if(q0410k_other_r, -92),
+        q0410k_other_NA = na_if(q0410k_other_r, -93)
+)
+```
+
+Una vez que tenemos esto, ya podemos continuar operando.
+
+#### Creación de la variable
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+    hh_income_r_NA = q0410g_tot_NA + q0410i_ss_NA + q0410j_gov_NA + q0410k_other_NA)
+
+glimpse(data_2019_test$q0410g_total)
+glimpse(data_2019_test$hh_income_r_NA)
+```
+
+Calculamos los quintiles con `quantile(x)` y guardamos únicamente los valores de
+los quintiles para acceder a través de ellos con los corchetes.
+
+```{r}
+quintiles <- quantile(data_2019_test$hh_income_r_NA)
+quintiles <- unname(quintiles)
+```
+
+Recodificamos en quintiles:
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(hhquintile = 
+           if_else(hh_income_r <= quintiles[1], 1,
+                    if_else(hh_income_r_NA > quintiles[1] & hh_income_r_NA <= quintiles[2], 2,
+                            if_else(hh_income_r_NA > quintiles[2] & hh_income_r_NA <= quintiles[3], 3,
+                                    if_else(hh_income_r_NA > quintiles[3] & hh_income_r_NA <= quintiles[4], 4,
+                                            if_else(hh_income_r_NA > quintiles[4] & hh_income_r_NA <= quintiles[5], 5, NA
+                                                    ))))))
+
+glimpse(data_2019_test$inc_quint)
+```
+
+-   [ ] Ver si se puede utilizar con case_when()
+-   [ ] Hacer otra reconversión teniendo en cuenta el valor de hh_income_r para
+    volver a los -993 (última codificación a 20/10/2022)
+
+## STRESSOR (LIFE EVENTS)
+La variable combinada es `lte` (está creada y habrá que importarla en la base de datos final). 
+Las variables individuales son:
+
+- q4659_ill
+- q4660_illrelative 
+- q4661_died 
+- q4662_diedrelative 
+- q4663_separation 
+- q4664_brokeoff 
+- q4665_problem 
+- q4666_unemployed 
+- q4667_sacked 
+- q4668_financial 
+- q4669_police
+- q4670_stolen
+
+No se necesita armonización previa; se trabajará una vez que esté en Opal. 
+- [ ] Añadir en variable_list.xlsx una fila por cada ítem por separado. 
+
+## LIVING ALONE (q0401_hh_total) - wave 1
+__¿Cuál es el número total de personas que viven habitualmente en este hogar?__
+Dos categorías:
+- 1 = alone;
+- 2 = not alone.
+
+En ECS partimos de `q0401_hh_total`, que es una variable cuantitativa del 1 al 10. 
+
+### Exploración de variables
+```{r}
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  freq_table(q0401_hh_total)
+
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  summarise_all(funs(sum(is.na(.)))) #No hay valores perdidos
+```
+
+### Creación de la variable
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(living_alone = if_else(q0401_hh_total == 1, 1, 2),
+         living_alone = factor(x = living_alone,
+                               levels = c("1", "2"),
+                               labels = c("alone", "not alone"))) %>%
+  select(living_alone) %>% 
+    glimpse()
+
+
+# data_2019_test$living_alone
+# glimpse(data_2019_test$living_alone)
+
+str(data_2019_test$living_alone)
+
+var_label(data_2019_test$living_alone) <- "Living alone"
+
+```
+
+## HOUSEHOLD SIZE (q0401_hh_total)
+__¿Cuántas personas viven en el hogar?__ Con categorías:
+- 1: one person
+- 2: two persons
+- 3: three or four persons
+- 4: five or more persons
+- 5: live in an institution
+
+La variable `q0401_hh_total` sólo contempla el número de personas (1-10 hasta 10 personas),
+no si viven institucionalizadas o no. Esto lo hace el ítem `q0400a` que no se encuentra en 
+línea base porque ningún participante era institucionalizado en línea base. Por tanto, simplemente se trata de no incluir ningún valor etiquetado como 5.
+
+- [ ] Revisar si está en Ola 2 (subestudio COVID)
+
+### Exploración de variables
+```{r}
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  summarise_all(funs(sum(is.na(.)))) #No NAs
+
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  freq_table(q0401_hh_total) 
+```
+
+### Creación de la variable
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(hh_size = case_when(
+                  q0401_hh_total == 1 ~ "1",
+                  q0401_hh_total == 2 ~ "2",
+                  q0401_hh_total == 3 ~ "3",
+                  q0401_hh_total == 4 ~ "3",
+                  q0401_hh_total >= 5 ~ "4"),
+         
+         hh_size = factor(x = hh_size,
+                          levels= c("1", "2", "3", "4", "5", "-91", MISSING_DESIGN, NON_RESPONSE),
+                          labels= c("one person", 
+                                    "two persons", 
+                                    "three or four persons", 
+                                    "five or more persons", 
+                                    "live in an institution", 
+                                    "not assessed", 
+                                    "missing (default)"))
+  )
+
+var_label(data_2019_test$hh_size) <- "Household size"
+
+```
+
+### Comprobación del funcionamiento de la nueva variable
+```{r}
+freq_table(data_2019_test, hh_size)
+
+data_2019_test %>%
+  group_by(hh_size) %>% 
+  pivot_longer(hh_size, names_to = "size", values_to = "value") %>% 
+  select(size, value) %>% 
+  distinct() %>% 
+  arrange(size, value) %>% 
+  print(n = 150)
+```
+
+
+## CHILDREN HOUSEHOLD (q0407_age_01-q0407_age_08/q0407_age_10)
+__Are there children in your household?__
+- 1 = Yes;
+- 2 = No.
+
+Según los comentarios encontrados en variable_list.xlsx, es necesario
+combinar las tres variables: (q0407_age_01-q0407_age_08/q0407_age_10)
+
+### Exploración de variables
+```{r}
+freq_table(data_2019_test, q0407_age_01)
+data_2019_test %>% 
+  select(q0407_age_01) %>% 
+  arrange(q0407_age_01) #No hay menores de edad
+
+freq_table(data_2019_test, q0407_age_08)
+data_2019_test %>% 
+  select(q0407_age_08) %>% 
+  arrange(q0407_age_08) #Aquí aparecen cuatro menores de edad que no se están codificando bien. También hay NAs que no cambian su comportamiento (a -93)
+
+freq_table(data_2019_test, q0407_age_10)
+data_2019_test %>% 
+  select(q0407_age_10) %>% 
+  arrange(q0407_age_10) #Hay un menor de edad y el resto son NAs. 
+
+data_2019 %>% 
+  select(q0407_age_01, q0407_age_08, q0407_age_10) %>% 
+  glimpse()
+```
+
+### Creación de variables
+```{r}
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(children_hh = case_when(
+    q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
+    q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
+    q0407_age_01 == is.na(q0407_age_01) | q0407_age_08 == is.na(q0407_age_08) | q0407_age_10 == is.na(q0407_age_01) ~ NON_RESPONSE
+  ),
+        children_hh = factor(x = children_hh,
+                          levels= c("1", "2", MISSING_DESIGN, NON_RESPONSE),
+                          labels= c("Yes", 
+                                    "No",
+                                    "not assessed", 
+                                    "missing (default)"))
+  )
+```
+
+### Comprobación
+```{r}
+freq_table(data_2019_test, children_hh) 
+```
+
+
