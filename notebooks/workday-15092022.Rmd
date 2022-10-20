@@ -23,16 +23,20 @@ problem.
 We need to log in to the Linux console via SSH. To do this, we start PuTTY. As
 this is the first time we get in here, it is necessary to save the session info:
 
-`Host name: ccomsccc.mor.uam.es`
-`Connection type: SSH`
-`Port: 22`
+```
+Host name: ccomsccc.mor.uam.es
+Connection type: SSH
+Port: 22
+```
 
 The following attempts you can directly open it as "Opal". By clicking Open,
 Linux console will appear in your screen and it will ask you for your
 credentials:
 
-`user: root`
-`password: (see post-it at Despacho UAM)`
+```
+user: root
+password: (see post-it at Despacho UAM)
+```
 
 We now have access to the Linux administration console. A version of R is
 installed here.
