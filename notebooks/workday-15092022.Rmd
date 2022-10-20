@@ -1,7 +1,7 @@
 ---
 title: "Creating a new user, installing tidyverse and restarting the server"
 author: "Cristina Rodríguez-Prada"
-date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+date: "15-09-2022"
 institute: CCOMS, Universidad Autónoma de Madrid
 output: 
   html_notebook:
