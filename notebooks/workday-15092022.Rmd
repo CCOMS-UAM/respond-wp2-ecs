@@ -5,8 +5,8 @@ date: "15-09-2022"
 institute: CCOMS, Universidad Autónoma de Madrid
 output: 
   html_notebook:
-  toc: yes
-  toc_float: yes
+    toc: yes
+    toc_float: yes
 ---
 
 In this R notebook we will document what happened on 14/09/2022. 
