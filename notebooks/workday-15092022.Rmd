@@ -7,7 +7,6 @@ output:
   html_notebook:
   toc: yes
   toc_float: yes
-  keep_md: yes
 ---
 
 In this R notebook we will document what happened on 14/09/2022. 
