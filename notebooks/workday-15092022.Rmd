@@ -110,7 +110,10 @@ down your user before the hashed password. Then, upload it again on the server
 (it will overwrite the previous file).
 
 To check and restart the Opal Server and Linux session, type:
-`service opal restart`
-`service opal status`
-`service rock restart`
-`service rock status`
+
+```bash
+service opal restart
+service opal status
+service rock restart
+service rock status
+```
