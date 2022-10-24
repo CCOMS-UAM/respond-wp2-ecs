@@ -1,0 +1,91 @@
+---
+title: "Creating a new user, installing tidyverse and restarting the server"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+institute: CCOMS, Universidad Autónoma de Madrid
+output: 
+  html_notebook:
+  toc: yes
+  toc_float: yes
+  keep_md: yes
+---
+
+In this R notebook we will document what happened on 14/09/2022. 
+
+_Context_: Rober has been testing the uploading of .RDS files to Opal so that they keep their attributes. The file reads fine by columns, but not by rows (we get No values). 
+
+The R server needs to have tidyverse updated, so we think that might be the problem. 
+
+# Log in to the Linux console
+We need to log in to the Linux console via SSH. To do this, we start PuTTY. As this is the first time we get in here, it is necessary to save the session info:
+
+`Host name: ccomsccc.mor.uam.es`
+`Connection type: SSH`
+`Port: 22`
+
+The following attempts you can directly open it as "Opal". By clicking Open, Linux console will appear in your screen and it will ask you for your credentials:
+
+`user: root`
+`password: (see post-it at Despacho UAM)`
+
+We now have access to the Linux administration console. A version of R is installed here.
+
+# Entering R
+By tiping 'R' you enter into R ("raw version"). Is the console itself. 
+
+Using the command `sessionInfo()` we have information about the current session and R version. We noted that tidyverse was not there, so we installed it by using `install.packages(tidyverse)`. There was a problem with two of the libraries, xml2 and rvest. 
+
+In order to solve this, we looked at the version of de Linux distributor: `cat /etc/os-release` and we found it was Rocky Linux Fedora. Knowing this, we executed the following line: `sudo dnf install libxml2-devel ` (after looking on google how to solve this problem). 
+
+Then we went back to R and install xml2 and rvest with no further problems. 
+
+**Important**: Choose 1: 0-Cloud as Secure CRAN Mirror.
+
+To exit R, type q().
+
+# Creating a new user in Opal
+We have to enter into Opal server tools:
+`cd /usr/share/opal/tools`
+
+Then
+`./shiro-hasher -p`
+
+In that moment you have to write a personal password (it won't be shown on the screen). If you want to exit, just type delete ¿? and repeat again this last command. After your password is written, pulse 'enter' and your password has been 'hashed'. On the screen will appear a long code that you had to modify on /shiro.ini file:
+`cat /etc/opal/shiro.ini`
+
+```{r}
+# =======================
+# Shiro INI configuration
+# =======================
+
+#[main]
+# Objects and their properties are defined here,
+# Such as the securityManager, Realms and anything else needed to build the SecurityManager
+
+
+#[users]
+# The 'users' section is for simple deployments
+# when you only need a small number of statically-defined set of User accounts.
+#
+# Password here must be encrypted!
+# Use shiro-hasher tools to encrypt your passwords:
+#   DEBIAN:
+#     cd /usr/share/opal/tools && ./shiro-hasher -p
+#   UNIX:
+#     cd <OPAL_DIST_HOME>/tools && ./shiro-hasher -p
+#   WINDOWS:
+#     cd <OPAL_DIST_HOME>/tools && shiro-hasher.bat -p
+#
+# Format is:
+# username=password[,role]*
+```
+
+The next step is to open WinSCP and login in to the R server. WinSCP is useful for administrating files on the server. (It is recommended also to install Notepad ++).
+
+In WinSCP, go to `etc/opal/shiro.ini` and download this file on your computen (Escritorio works fine). Then, edit it with Bloc de Notas (Notepad++) and write down your user before the hashed password. Then, upload it again on the server (it will overwrite the previous file). 
+
+To check and restart the Opal Server and Linux session, type: 
+`service opal restart`
+`service opal status`
+`service rock restart`
+`service rock status` 
