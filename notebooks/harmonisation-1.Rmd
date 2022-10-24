@@ -149,7 +149,7 @@ Estas han sido extraídas manualmente de los 100 primeros valores de los valores
 
 ```{r}
 data_2019$q1510_occ %>% 
-  str_extract_all("enf", simplify = T) #Esto no ha funcionado.
+  str_extract_all("enf", simplify = T) 
 ```
 
 Esto no ha funcionado.
@@ -267,8 +267,9 @@ data_2019_test %>%
 data_2019_test <- 
   data_2019_test %>% 
   mutate(q0410g_total_r = recode_factor(q0410g_total,
-                                          "999" = -92,
-                                          "888" = -93,
+                                          is.na(q0410g_total) = NON_RESPONSE,
+                                          "999" = NON_RESPONSE,
+                                          "888" = NON_RESPONSE,
                                           "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
                                           "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
                                           "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
@@ -280,8 +281,9 @@ data_2019_test <-
                                           "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
          
          q0410i_ss_r = recode_factor(q0410i_ss,
-                                          "999" = -92,
-                                          "888" = -93,
+                                          is.na(q0410i_ss) = NON_RESPONSE,
+                                          "999" = NON_RESPONSE,
+                                          "888" = NON_RESPONSE,
                                           "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
                                           "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
                                           "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
@@ -292,8 +294,9 @@ data_2019_test <-
                                           "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
                                           "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
         q0410j_government_r = recode_factor(q0410j_government,
-                                          "999" = -92,
-                                          "888" = -93,
+                                          is.na(q0410j_government) = NON_RESPONSE,
+                                          "999" = NON_RESPONSE,
+                                          "888" = NON_RESPONSE,
                                           "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
                                           "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
                                           "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
@@ -304,8 +307,9 @@ data_2019_test <-
                                           "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
                                           "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
         q0410k_other_r = recode_factor(q0410k_other,
-                                          "999" = -92,
-                                          "888" = -93,
+                                          is.na(q0410k_other) = NON_RESPONSE,
+                                          "999" = NON_RESPONSE,
+                                          "888" = NON_RESPONSE, 
                                           "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
                                           "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
                                           "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
