@@ -1,0 +1,275 @@
+---
+title: "Documenting Children's variables issues in Edad con Salud"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+institute: CCOMS, Universidad Autónoma de Madrid
+output: 
+  html_notebook:
+  toc: yes
+  toc_float: yes
+  keep_md: yes
+editor_options: 
+  
+  chunk_output_type: console
+---
+
+# Required libraries
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(freqtables)
+#install.packages("freqtables")
+library(ecs.data)
+library(labelled)
+#install.packages("labelled")
+library(stringr)
+library(gridExtra)
+#install.packages("gridExtra")
+# install.packages("RcmdrMisc")
+library(RcmdrMisc)
+```
+
+# Constants in variable harmonization
+- -991: speciefies a variable has not been assessed in general (eg., at this
+point of data collection), so it is missing by design.
+- -993: specifies missings (default) from data collections that actually took
+place (e.g., this exact questionnaire had been assessed at this timepoint, but
+the participant did not answer for whatever reason).
+```{r constants}
+
+MISSING_DESIGN <- -991
+NON_RESPONSE <- -993
+
+```
+
+# Data importation
+```{r}
+data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
+
+data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+
+data_2019_test <- data_2019 
+```
+
+# Issue description
+
+In variable_list we were asked to make changes in three variables related to the
+presence of children in the household:
+
+- __children household__: _Are there children in your household?_ (1 = yes; 
+2 = no)
+- __children__: _Do you have children, live with children or take care of_ 
+_children in your household?_ (1 = yes; 2 = no)_
+- __Number of children__: _How many children do you have (including children_ 
+_who are not your own but live in the same household or who you care for in_
+_your household)?_
+
+To create `children household`, Elvira left a comment suggesting that three 
+variables had to be combined `q0407_age_01`, `q0407_age_08` and `q0407_age_10`. 
+These variables, apparently, the age of the household members by number of 
+members within the household, so they are continuous variables. We will assume
+that children are all persons under 18. 
+
+To create `children`, variables `q1056`and `q1058` had to be combined 
+(they indicate whether one has biological or adopted children separately.)
+
+To create `number of children` the same procedure as above has to be followed,
+but with variables `q1057`and `q1059`(they indicate the number of children, 
+whether biological or adopted, separately)
+
+The issue arises when we make the new variables. The results of the latter two 
+do not match those of the former:
+
+## CHILDREN HOUSEHOLD (q0407_age_01-q0407_age_08/q0407_age_10)
+__Are there children in your household?__
+- 1 = Yes;
+- 2 = No.
+
+
+### Variable exploration
+```{r}
+freq_table(data_2019_test, q0407_age_01)
+
+data_2019_test %>% 
+  select(q0407_age_01) %>% 
+  arrange(q0407_age_01) #No children
+
+freq_table(data_2019_test, q0407_age_08)
+
+data_2019_test %>% 
+  select(q0407_age_08) %>% 
+  arrange(q0407_age_08) # 4 children
+
+freq_table(data_2019_test, q0407_age_10)
+
+data_2019_test %>% 
+  select(q0407_age_10) %>% 
+  arrange(q0407_age_10) #1 children
+
+data_2019 %>%
+  select(q0407_age_01, q0407_age_08, q0407_age_10) %>%
+  summarise_all(funs(sum(is.na(.)))) #A lot of NAs
+
+data_2019 %>% 
+  select(q0407_age_01, q0407_age_08, q0407_age_10) %>% 
+  glimpse()
+```
+
+### Variable creation
+```{r}
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(children_hh = 
+           case_when(
+              q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
+              q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
+              is.na(q0407_age_01) | is.na(q0407_age_08) | is.na(q0407_age_10) ~ NON_RESPONSE
+  ),
+        children_hh = factor(x = children_hh,
+                          levels = c("1", "2", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("yes", 
+                                    "no",
+                                    "not assessed", 
+                                    "missing (default)"))
+  )
+```
+
+### Comprobación
+```{r}
+freq_table(data_2019_test, children_hh) #5 households with children
+```
+
+## CHILDREN (q1056/q1058)
+
+**Do you have children, live with children or take care of children in your**
+**household?** - 1 = yes, - 2 = no - 991 - 993
+
+Our variables `q1056` & `q1058` ask about biological and adopted children
+(separated) (1 = yes; 2 = no). Elvira suggested to combine them and we'll follow
+this approach.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1056, q1058) %>%
+  summarise_all(funs(sum(is.na(.)))) #No NAs
+
+data_2019 %>% 
+  select(q1056) %>%
+  freq_table(q1056) #1 = yes (2241); #2 = no (761)
+
+data_2019 %>% 
+  select(q1058) %>% #1 = yes (24); #2 = no (2978)
+  freq_table(q1058) 
+
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(children = case_when(
+           q1056 == 1 | q1058 == 1 ~ 1,
+           q1056 == 2 | q1058 == 2 ~ 2
+         ), 
+         children = factor(x = children,
+                          levels= c("1", "2", MISSING_DESIGN, NON_RESPONSE),
+                          labels= c("yes", 
+                                    "no",
+                                    "not assessed", 
+                                    "missing (default)")))
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(children) %>%
+  freq_table(children) #2253 = yes; 749 = no  
+```
+
+## N. O. CHILDREN (q1057/q1059)
+
+Is the same as the previous one but in a continuous way: \_\_How many children
+do you have? (including children who are not your own but live in the same
+household or who you care for in your household?) - 1 = no children - 2 = one
+child - 3 = two or three - 4 = four or more - 991 - 993
+
+Variables in ECS makes a differentiation between biological and adopted children
+(1+, DK). As a proposal, it is suggested to combine the two variables.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1057, q1059) %>%
+  summarise_all(funs(sum(is.na(.)))) #NAs
+
+data_2019 %>% 
+  select(q1057) %>%
+  freq_table(q1057) 
+
+data_2019 %>% 
+  select(q1059) %>% 
+  freq_table(q1059) 
+
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(
+         q1057_NA = na_if(q1057, 888),
+         q1057_NA = replace_na(q1057_NA, 0),
+         q1059_NA = replace_na(q1059, 0),
+         add_children = q1057_NA + q1059_NA, 
+         
+         nofchildren = case_when(
+                                  add_children == 0 ~  1, #no children
+                                  add_children == 1 ~ 2, #one children
+                                  add_children == 2 | add_children == 3 ~ 3, #two or three children
+                                  add_children >= 4 ~ 4 # four or more
+                                 
+         ), 
+         nofchildren = factor(x = nofchildren,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("no children", 
+                                    "one child",
+                                    "two or three",
+                                    "four or more",
+                                    "not assessed", 
+                                    "missing (default)")))
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(nofchildren) %>%
+  freq_table(nofchildren)
+```
+
+
+# Variable comparison
+```{r}
+freq_table(data_2019_test, children_hh) #5 households with children
+```
+
+```{r}
+data_2019_test %>% 
+  select(children) %>%
+  freq_table(children) #2253 = yes; 749 = no  
+```
+
+```{r}
+data_2019_test %>% 
+  select(nofchildren) %>%
+  freq_table(nofchildren)
+```

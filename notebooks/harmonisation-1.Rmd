@@ -687,7 +687,7 @@ data_2019_test <-
   mutate(children_hh = case_when(
     q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
     q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
-    q0407_age_01 == is.na(q0407_age_01) | q0407_age_08 == is.na(q0407_age_08) | q0407_age_10 == is.na(q0407_age_01) ~ NON_RESPONSE
+    is.na(q0407_age_01) | is.na(q0407_age_08) | is.na(q0407_age_10) ~ NON_RESPONSE
   ),
         children_hh = factor(x = children_hh,
                           levels = c("1", "2", MISSING_DESIGN, NON_RESPONSE),
@@ -703,6 +703,8 @@ data_2019_test <-
 freq_table(data_2019_test, children_hh) 
 ```
 
+<!-- Con la cosa de TRUE ~ NON_RESPONSE queda solucionado parcialmente, pero es una -->
+<!-- solución torticera. -->
 ## GENDER (q1009_sex)
 
 **Self-identified gvender** - 1: male - 2: female - 3: other/diverse -991: not
@@ -779,19 +781,19 @@ data_2019 %>%
   summarise_all(funs(sum(is.na(.))))
 
 data_2019 %>%  
-  filter(ID_ECS == 18702401|
+  filter(ID_ECS == 18702401 |
          ID_ECS == 5600601 |
          ID_ECS == 3100602 |
-         ID_ECS == 18702701| 
+         ID_ECS == 18702701 | 
          ID_ECS == 2802002 |
-         ID_ECS == 17801501| 
-         ID_ECS == 16602601| 
+         ID_ECS == 17801501 | 
+         ID_ECS == 16602601 | 
          ID_ECS == 5800201 |
-         ID_ECS == 19600501| 
+         ID_ECS == 19600501 | 
          ID_ECS == 3300201 |
          ID_ECS == 7101202 |
          ID_ECS == 7101401 |
-         ID_ECS == 14300101| 
+         ID_ECS == 14300101 | 
          ID_ECS == 16800301) %>% 
   select(q1010_birth_date, q1011_age) %>% 
   View()
@@ -1021,7 +1023,7 @@ data_2019_test %>%
   freq_table(migration)
 ```
 
-## Children (q1056/q1058)
+## CHILDREN (q1056/q1058)
 
 **Do you have children, live with children or take care of children in your
 household?** - 1 = yes, - 2 = no - 991 - 993
@@ -1057,8 +1059,8 @@ data_2019_test <-
            q1056 == 2 | q1058 == 2 ~ 2
          ), 
          children = factor(x = children,
-                          levels= c("1", "2", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("yes", 
+                          levels = c("1", "2", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("yes", 
                                     "no",
                                     "not assessed", 
                                     "missing (default)")))
@@ -1109,27 +1111,34 @@ data_2019 %>%
 ```{r}
 data_2019_test <-
   data_2019_test %>% 
-  mutate(nofchildren = case_when(
-           q1057 == is.na(q1057) | q1059 == is.na(q1059) ~ 1, #no children
-           q1057 == 1 | q1059 == 1 ~ 2, #one children
-           q1057 == 2 | q1059 == 2 | q1057 == 3 | q1059 == 3 ~ 3, #two or three children
-           q1057 >= 4 | q1059 >= 4 ~ 4, # four or more
-           q1057 == 888 | q1059 == 888 ~ NON_RESPONSE
+  mutate(
+         q1057_NA = na_if(q1057, 888),
+         q1057_NA = replace_na(q1057_NA, 0),
+         q1059_NA = replace_na(q1059, 0),
+         add_children = q1057_NA + q1059_NA, 
+         
+         nofchildren = case_when(
+                                  add_children == 0 ~  1, #no children
+                                  add_children == 1 ~ 2, #one children
+                                  add_children == 2 | add_children == 3 ~ 3, #two or three children
+                                  add_children >= 4 ~ 4 # four or more
+                                 
          ), 
          nofchildren = factor(x = nofchildren,
-                          levels= c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("no children", 
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("no children", 
                                     "one child",
                                     "two or three",
                                     "four or more",
                                     "not assessed", 
                                     "missing (default)")))
 
+
 ```
 
 -   [ ] Darle una segunda vuelta a esto, porque igual hay gente que tiene hijos
     adoptados e hijos biológicos al mismo tiempo. En ese caso hay que sumarlos.
-    -   [ ] Ver qué filas tienen casos en los dos mayores o iguales a 1.
+    -   [ ] Darle otra vuelta a la no coincidencia de los NAs. (--> Link a children-issue.Rmd)
 
 ### Checking new variable
 
@@ -1206,8 +1215,8 @@ data_2019_test <-
            q1504_reason == is.na(q1504_reason) | q1503_work_now == is.na(q1503_work_now) ~ NON_RESPONSE
          ), 
           employment_st = factor(x = employment_st,
-                          levels= c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("Have a job (employed or self-employed)", 
+                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("Have a job (employed or self-employed)", 
                                     "In education",
                                     "Care work (familiy) / homeworker/ on parental leave",
                                     "On long-term sick leave/disability",
@@ -1271,8 +1280,8 @@ data_2019_test <-
            
          ), 
           profession = factor(x = profession,
-                          levels= c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("undergoing education", 
+                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("undergoing education", 
                                     "education and research",
                                     "arts, entertainment, sports and media",
                                     "healthcare",
@@ -1334,8 +1343,8 @@ data_2019_test <-
            
          ), 
           contract = factor(x = contract,
-                          levels= c("1", "2", "3", "4",  MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("permanent",
+                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("permanent",
                                     "temporary",
                                     "self-employed",
                                     "other",
