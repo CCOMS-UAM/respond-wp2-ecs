@@ -533,9 +533,26 @@ Las variables individuales son:
 - q4670_stolen
 
 No se necesita armonización previa; se trabajará una vez que esté en Opal. 
-- [ ] Añadir en variable_list.xlsx una fila por cada ítem por separado. 
 
 
+```{r}
+data_2019_test %>% 
+  select(q4659_ill,
+          q4660_illrelative, 
+          q4661_died, 
+          q4662_diedrelative, 
+          q4663_separation, 
+          q4664_brokeoff, 
+          q4665_problem, 
+          q4666_unemployed, 
+          q4667_sacked, 
+          q4668_financial, 
+          q4669_police,
+          q4670_stolen) %>% 
+  View()
+```
+
+- [x] Añadir en variable_list.xlsx una fila por cada ítem por separado. 
 
 
 ## LIVING ALONE (q0401_hh_total) - wave 1
@@ -1136,7 +1153,7 @@ data_2019_test <-
 
 ```
 
--   [ ] Darle una segunda vuelta a esto, porque igual hay gente que tiene hijos
+-   [X] Darle una segunda vuelta a esto, porque igual hay gente que tiene hijos
     adoptados e hijos biológicos al mismo tiempo. En ese caso hay que sumarlos.
     -   [ ] Darle otra vuelta a la no coincidencia de los NAs. (--> Link a children-issue.Rmd)
 
@@ -1402,26 +1419,49 @@ data_2019 %>%
 ### Ola 1
 
 Tenemos resilience_scale y los ítems individuales: q7537, q7538, q7539, q7540,
-q7541, q7542 TODO: Añadir una fila por cada ítem individual.
+q7541, q7542 
+
+- [X] TODO: Añadir una fila por cada ítem individual.
 
 ### Ola 2
 
 Tenemos resilience_scale y los ítems individuales: SM26_1, SM26_2, SM26_3,
-SM26_4, SM26_5, SM26_6 - [ ] TODO: Añadir una fila por cada ítem individual. - [
-] duda: ¿hay que cambiar el nombre de los items en la BBDD final? (formato long)
+SM26_4, SM26_5, SM26_6 
+
+- [X] TODO: Añadir una fila por cada ítem individual. 
+- [X] duda: ¿hay que cambiar el nombre de los items en la BBDD final? (formato long)
 
 ## Social support
 
 ### Ola 1
 
-Tenemos social_support y los ítems individuales: - [ ] TODO: Añadir una fila por
+Tenemos social_support y los ítems individuales: 
+
+
+  - [X] TODO: encontrar los ítems individuales
+  
+```{r}
+data_2019_test %>% 
+  select(q6310_help_neig, q6320_close, q6330_concern) %>% 
+  View()
+```
+
+  - [X] TODO: Añadir una fila por
 cada ítem individual.
 
 ### Ola 2
 
-Tenemos social_support y los ítems individuales: - [ ] TODO: Añadir una fila por
-cada ítem individual. - [ ] TODO duda: ¿hay que cambiar el nombre de los items
-en la BBDD final? (formato long) - [ ] TODO: encontrar los ítems individuales
+Tenemos social_support y los ítems individuales: 
+
+```{r}
+data_COVID %>% 
+  select(SOLO9A, SOLO9B, SOLO9C) %>% 
+  View()
+```
+
+  - [x] TODO: Añadir una fila por
+cada ítem individual. 
+  - [x] TODO: encontrar los ítems individuales
 
 ## C.O RESIDENCE
 
@@ -1445,5 +1485,4 @@ q4660_illrelative q4661_died q4662_diedrelative q4663_separation q4664_brokeoff
 q4665_problem q4666_unemployed q4667_sacked q4668_financial q4669_police
 q4670_stolen
 
--   [] TODO: Crear nuevas filas por cada ítem.
-
+-   [x] TODO: Crear nuevas filas por cada ítem.
