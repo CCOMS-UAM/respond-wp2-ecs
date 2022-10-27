@@ -91,28 +91,32 @@ __Are there children in your household?__
 ```{r}
 freq_table(data_2019_test, q0407_age_01)
 
-data_2019_test %>% 
-  select(q0407_age_01) %>% 
-  arrange(q0407_age_01) #No children
+freq_table(data_2019_test, q0407_age_02)
+
+freq_table(data_2019_test, q0407_age_03)
+
+freq_table(data_2019_test, q0407_age_04)
+
+freq_table(data_2019_test, q0407_age_05)
+
+freq_table(data_2019_test, q0407_age_06)
+
+freq_table(data_2019_test, q0407_age_07)
 
 freq_table(data_2019_test, q0407_age_08)
 
-data_2019_test %>% 
-  select(q0407_age_08) %>% 
-  arrange(q0407_age_08) # 4 children
+freq_table(data_2019_test, q0407_age_09)
 
 freq_table(data_2019_test, q0407_age_10)
 
-data_2019_test %>% 
-  select(q0407_age_10) %>% 
-  arrange(q0407_age_10) #1 children
+
 
 data_2019 %>%
   select(q0407_age_01, q0407_age_08, q0407_age_10) %>%
   summarise_all(funs(sum(is.na(.)))) #A lot of NAs
 
 data_2019 %>% 
-  select(q0407_age_01, q0407_age_08, q0407_age_10) %>% 
+  select(q0407_age_01, q0407_age_02, q0407_age_03, q0407_age_04, q0407_age_05, q0407_age_06, q0407_age_07, q0407_age_08, q0407_age_10) %>% 
   glimpse()
 ```
 
@@ -122,9 +126,12 @@ data_2019_test <-
   data_2019_test %>% 
   mutate(children_hh = 
            case_when(
-              q0407_age_01 < 18 | q0407_age_08 < 18 | q0407_age_10 < 18 ~ 1,
-              q0407_age_01 >= 18 | q0407_age_08 >= 18 | q0407_age_10 >= 18 ~ 2,
-              is.na(q0407_age_01) | is.na(q0407_age_08) | is.na(q0407_age_10) ~ NON_RESPONSE
+              q0407_age_01 < 18 | q0407_age_02 < 18 | q0407_age_03 < 18 | q0407_age_04 < 18 | q0407_age_05 < 18 | q0407_age_06 < 18 | q0407_age_07 < 18 | q0407_age_08 < 18 |  q0407_age_09 < 18 | q0407_age_10 < 18 ~ 1,
+              
+              q0407_age_01 >= 18 | q0407_age_02 >= 18 | q0407_age_03 >= 18 | q0407_age_04 >= 18 | q0407_age_05 >= 18 | q0407_age_06 >= 18 | q0407_age_07 >= 18 | q0407_age_08 >= 18 |  q0407_age_09 >= 18 | q0407_age_10 >= 18 ~ 2,
+              
+           
+              is.na(q0407_age_01) | is.na(q0407_age_02) | is.na(q0407_age_03) | is.na(q0407_age_04) |is.na(q0407_age_05) | is.na(q0407_age_06) | is.na(q0407_age_07) | is.na(q0407_age_08) | is.na(q0407_age_09) |is.na(q0407_age_10) ~ NON_RESPONSE
   ),
         children_hh = factor(x = children_hh,
                           levels = c("1", "2", MISSING_DESIGN, NON_RESPONSE),
