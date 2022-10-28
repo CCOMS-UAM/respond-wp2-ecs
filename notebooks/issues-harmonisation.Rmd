@@ -1,0 +1,409 @@
+---
+title: "Work-related variables re-categorization in Edad con Salud"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+output:
+  html_document:
+    df_print: paged
+  toc: yes
+  toc_float: yes
+  keep_md: yes
+  html_notebook: null
+institute: CCOMS, Universidad Autónoma de Madrid
+editor_options:
+  markdown: 
+    wrap: 80
+  chunk_output_type: inline
+---
+
+# Pre-requisites
+
+## Required libraries
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(freqtables)
+#install.packages("freqtables")
+library(ecs.data)
+library(labelled)
+#install.packages("labelled")
+library(stringr)
+library(gridExtra)
+#install.packages("gridExtra")
+# install.packages("RcmdrMisc")
+library(RcmdrMisc)
+```
+
+## Constants in variable harmonization
+
+-   -991: specifies a variable has not been assessed in general (eg., at this
+    point of data collection), so it is missing by design.
+-   -993: specifies missings (default) from data collections that actually took
+    place (e.g., this exact questionnaire had been assessed at this timepoint,
+    but the participant did not answer for whatever reason).
+
+```{r constants}
+
+MISSING_DESIGN <- -991
+NON_RESPONSE <- -993
+
+```
+
+## Data importation
+
+```{r}
+data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
+
+data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+
+data_2019_test <- data_2019 
+```
+
+
+# EMPLOYMENT STATUS (`q1503_work_now` & `q1504_reason`.)
+
+**Employment status** has the following levels:
+
+-   1 = Have a job (employed or self-employed)
+-   2 = In education
+-   3 = Care work (family) / homeworker/ on parental leave
+-   4 = On long-term sick leave/disability
+-   5 = Unable to work due to reasons not mentioned elsewhere in this list
+-   6 = unemployed or job-seeking
+-   7 = retired
+
+-991 = not assessed -993 = missing (default)
+
+`q1503_work_now` (c2019_w1) *Currently working?*: - 1 = Yes - 2 = No
+
+`q1504_reason` (c2019_w1) *Reason not working*:
+
+-   1 = homemaker
+-   2 = couldn't find a job
+-   3 = unpaid/voluntary
+-   4 = studies/training
+-   5 = health
+-   6 = care family
+-   7 = no need
+-   8 = not permitted
+-   9 = retired/too old
+-   10 = laid off
+-   11 = seasonal work
+-   12 = does not want to for a while
+-   13 = vacation/sick or maternity leave
+-   87 = other.
+
+As a proposal, I suggest the following combination of both variables:
+
+-   1 = Have a job (employed or self-employed) == `1 (q1503_work_now)`
+-   2 = In education (currently studying) == `4 (q1504_reason)`
+-   3 = Care work (family) / homeworker / on parental leave == `1, 6, 13`
+    `(q1504_reason)`** 
+-   4 = On long-term sick leave/disability == `13, 5 (health) (q1504_reason)`,
+-   5 = Unable to work due to reasons not mentioned elsewhere in this list
+    (other) == `3 (unpaid/voluntary), 7 (no need), 8 (not permitted), 12 (does`
+    `not want to for a while), 87 (other)`
+-   6 = unemployed or job-seeking == `2 (couldn't find a job), 10 (laid off)`, 
+`11 (seasonal work)`,
+-   7 = retired == `9 (retired/too old)`
+
+**Our category 13 (vacation/sick or maternity leave) overlaps with the 
+proposed categories 3 (care work/homeworker/or parental leave) and 
+4(On long-term sick leave/disability)
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1503_work_now, q1504_reason) %>%
+  summarise_all(funs(sum(is.na(.)))) #NAs (347 en work-now y 1387 en reason)
+
+data_2019 %>% 
+  select(q1503_work_now) %>%
+  freq_table(q1503_work_now) #1 = yes; 2 = no; NAs = -93
+
+data_2019 %>% 
+  select(q1504_reason) %>% 
+  freq_table(q1504_reason) 
+
+```
+
+### Variable creation
+
+```{r}
+
+data_2019_test <-
+  data_2019_test %>%
+  mutate(employment_st = case_when(
+                  q1503_work_now == 1 ~ 1, #have a job
+                  q1504_reason == 4 ~ 2, #studying
+           q1504_reason == 1 | q1504_reason == 6 ~ 3, #care work 
+           q1504_reason == 13 | q1504_reason == 5 ~ 4, # on long term sick leave disability
+           q1504_reason == 3 | q1504_reason == 7 | q1504_reason == 8 | q1504_reason == 11 | q1504_reason == 12 | q1504_reason == 87 ~ 5, #other reasons
+           q1504_reason == 2 | q1504_reason == 10 |q1057 == 11 ~ 6, #unemployed or job-seeking
+           q1504_reason == 9 ~ 7, #retired,
+           is.na(q1504_reason) | is.na(q1503_work_now) ~ NON_RESPONSE
+         ),
+          employment_st = factor(x = employment_st,
+                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("Have a job (employed or self-employed)",
+                                    "In education",
+                                    "Care work (familiy) / homeworker/ on parental leave",
+                                    "On long-term sick leave/disability",
+                                    "Unable to work due to reasons not mentioned elsewhere in this list",
+                                    "unemployed or job-seeking",
+                                    "retired",
+                                    "not assessed",
+                                    "missing (default)"
+                                    )))
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(employment_st) %>%
+  freq_table(employment_st)
+```
+
+# PROFESSION (q1510_catoccu)
+
+**Best description of current occupation(s)**
+
+-   1 = undergoing education
+-   2 = education and research
+-   3 = arts, entertainment, sports and media
+-   4 = healthcare
+-   5 = first responder (paramedic/firefighter/police)
+-   6 = military
+-   7 = civil services, politics
+-   8 = finance and economy
+-   9 = industry
+-   10 = sales and services (incl. restaurants and bars)
+-   11 = transport (goods and people)
+-   12 = installation, maintenance, cleaning, and repairs
+-   13 = currently not working
+-   14 = other (please specify)
+
+`q1510_catoccu` follows the OIT categorization; differs almost in every level
+with the one proposed for RESPOND. What to do?
+
+-   1 Legislators === 7 (civil services, politics)
+-   2 Professionals === 2 (education and research),
+-   3 Technicians ==== 8 (finance and economy)
+-   4 Clerks ===== 12 (installation, maintenance, cleaning and repairs)
+-   5 Service workers ==== 5 (first responder: paramedic/firefighter/police)
+-   6 Skilled agricultural workers ==== 11 (transport - goods and people)
+-   7 Craft workers ==== 3 (arts, entertainment, sports and media)
+-   8 Plant operators ==== 14 (other)
+-   9 Elementary occupations ==== 10 (sales and services)
+-   10 Armed forces === 6 (military)
+
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1510_catoccu) %>%
+  summarise_all(funs(sum(is.na(.))))
+
+data_2019 %>% 
+  select(q1510_catoccu) %>%
+  freq_table(q1510_catoccu) 
+```
+
+### Variable creation
+
+```{r}
+#Creamos la variable
+data_2019_test <-
+  data_2019_test %>%
+  mutate(profession = case_when(
+                      q1510_catoccu ==  2  ~  2 , #professionals --> education & research
+                      q1510_catoccu ==  7  ~  3 , #craft workers --> arts, entertainment, sports & media
+                      q1510_catoccu ==  5  ~  5 , #service workers --> first responders: paramedic/firefighter/police
+                      q1510_catoccu ==  10  ~  6 , #armed forces --> military
+                      q1510_catoccu ==  1  ~  7 , #legislators --> civil services, politics
+                      q1510_catoccu ==  3  ~  8 , # technicians --> finance & economy
+                      q1510_catoccu ==  9  ~  10 , #elementary occupations --> sales and services
+                      q1510_catoccu ==  6  ~  11 , #skilled agricultural workers --> transport (goods and people)
+                      q1510_catoccu ==  4  ~  12 , #clerks --> installation, maintenance, cleaning and reparis
+                      q1510_catoccu ==  8  ~  14, #plant operators --> other,
+                      is.na(q1510_catoccu) ~ NON_RESPONSE
+                      
+         ), 
+         profession = factor(x = profession,
+                                  levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+                                             MISSING_DESIGN, NON_RESPONSE),
+                                  labels = c("undergoing education",
+                                            "education and research",
+                                            "arts, entertainment, sports and media",
+                                            "healthcare",
+                                            "first responder (paramedic/firefighter/police)",
+                                            "military",
+                                            "civil services, politics",
+                                            "finance and economy",
+                                            "industry",
+                                            "sales and services (incl. restaurants and bars)",
+                                            "transport (goods and people)",
+                                            "installation, maintenance, cleaning, and repairs",
+                                            "currently not working",
+                                            "other",
+                                            "not assessed",
+                                            "missing (default)"
+                                            )))
+
+```
+
+
+### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(profession) %>%
+  freq_table(profession)
+```
+
+## CONTRACT (q1510b_contract_earner)
+
+**Permanent/temporary contract** -
+
+-   1 permanent
+-   2 temporary
+-   3 self-employed
+-   4 other
+-   Missing values/categories:\
+    -   -991 not assessed - -993 missing (default)
+
+In EcS:
+
+-   1 officer ===== 1 permanent
+-   2 indefinite period (not officer) ===== 3 self-employed
+-   3 temporal or contract of works and services ===== 2 temporary
+-   4 verbal or without contract ===== 4
+-   888 DK ===== -993
+-   999 refused to answer ===== -993
+-   [ ] As the variables are not exactly the same, there's a need to clarify and
+    agree on a combination proposal.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1510b_contract_earner) %>%
+  summarise_all(funs(sum(is.na(.))))
+
+data_2019 %>% 
+  select(q1510b_contract_earner) %>%
+  freq_table(q1510b_contract_earner)
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(contract = case_when(
+        q1510b_contract_earner == 1 ~ 1, #officer --> permanent
+        q1510b_contract_earner == 2 ~ 3, #indefinite period (not officer) --> self-employed
+        q1510b_contract_earner == 3  ~ 2, #temporal or contract of works and services --> temporary
+        q1510b_contract_earner == 4 ~ 4, #verbal or without contract
+        q1510b_contract_earner == 888 ~ NON_RESPONSE, 
+        q1510b_contract_earner == 999 ~ NON_RESPONSE,
+        is.na(q1510b_contract_earner) ~ NON_RESPONSE
+
+         ),
+          contract = factor(x = contract,
+                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("permanent",
+                                    "temporary",
+                                    "self-employed",
+                                    "other",
+                                    "not assessed",
+                                    "missing (default)"
+ )))
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(contract) %>%
+  freq_table(contract)
+```
+
+# EMPLOYMENT TYPE (`q1510_workday`)
+
+-   1 - Full time
+-   2 - Part time
+-   3 - No paid work
+-   4 - Other
+-   -991 not assessed
+-   -992 refused to answer
+-   -993 missing (default)
+
+In EcS (`q1510_workday`):
+
+-   1 Part time (morning and afternoon) ===== 2
+-   2 Continuous morning working day ===== 1
+-   3 Continuous afternoon working day ===== 1
+-   4 Continuous night working day ===== 1
+-   5 Reduced work day ===== 4
+-   6 Shift work / irregular or variable work ==== 2
+-   7 Other type ==== 4
+-   888 DK ==== -993
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1510e_workday) %>%
+  summarise_all(funs(sum(is.na(.))))
+
+data_2019 %>% 
+  select(q1510e_workday) %>%
+  freq_table(q1510e_workday)
+
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(employment_ty = case_when(
+       q1510e_workday == 1 ~ 2, #part time --> part time
+       q1510e_workday == 2 ~ 1, #continuous morning working day --> full time
+       q1510e_workday == 3  ~ 1, #continuous afternoon working day --> full time
+       q1510e_workday == 4 ~ 1, #continuous night working day --> full time
+       q1510e_workday == 5 ~ 4, #reduced work day --> other
+       q1510e_workday == 6 ~ 1, #shift work --> full time
+       q1510e_workday == 7 ~ 4, #other --> other
+       q1510e_workday == 888 ~ NON_RESPONSE, 
+       q1510e_workday == 999 ~ NON_RESPONSE,
+        is.na(q1510e_workday) ~ NON_RESPONSE
+
+         ),
+          contract = factor(x = employment_ty,
+                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("permanent",
+                                    "temporary",
+                                    "self-employed",
+                                    "other",
+                                    "not assessed",
+                                    "missing (default)"
+ )))
+
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(employment_ty) %>%
+  freq_table(employment_ty)
+```

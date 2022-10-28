@@ -2,14 +2,13 @@
 title: "Documenting Children's variables issues in Edad con Salud"
 author: "Cristina Rodríguez-Prada"
 date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+output:
+  html_notebook: 
+    toc: yes
+    toc_float: yes
+    keep_md: yes
 institute: CCOMS, Universidad Autónoma de Madrid
-output: 
-  html_notebook:
-  toc: yes
-  toc_float: yes
-  keep_md: yes
-editor_options: 
-  
+editor_options:
   chunk_output_type: console
 ---
 
@@ -235,13 +234,15 @@ data_2019_test <-
          q1057_NA = na_if(q1057, 888),
          q1057_NA = replace_na(q1057_NA, 0),
          q1059_NA = replace_na(q1059, 0),
-         add_children = q1057_NA + q1059_NA, 
+         add_children = q1057_NA + q1059_NA,
+         
          
          nofchildren = case_when(
                                   add_children == 0 ~  1, #no children
                                   add_children == 1 ~ 2, #one children
                                   add_children == 2 | add_children == 3 ~ 3, #two or three children
-                                  add_children >= 4 ~ 4 # four or more
+                                  add_children >= 4 ~ 4 # four or more,
+                                  #is.na(add_children) ~ NON_RESPONSE
                                  
          ), 
          nofchildren = factor(x = nofchildren,
@@ -254,6 +255,11 @@ data_2019_test <-
                                     "missing (default)")))
 
 ```
+
+
+
+
+
 
 ### Checking new variable
 

@@ -2,14 +2,18 @@
 title: "Preparando el archivo variable_list con los datos de Edad con Salud"
 author: "Cristina Rodríguez-Prada"
 date: "`r format(lubridate::today(), '%d de %B de %Y')`"
-institute: CCOMS, Universidad Autónoma de Madrid
-output: 
-  html_notebook:
+output:
+  html_document:
+    df_print: paged
   toc: yes
   toc_float: yes
   keep_md: yes
-editor_options: 
+  html_notebook: null
+institute: CCOMS, Universidad Autónoma de Madrid
+editor_options:
   chunk_output_type: console
+  markdown: 
+    wrap: 80
 ---
 
 # Preparación
@@ -119,8 +123,8 @@ cuestionario que permitan extraer la ocupación. En la BBDD hay otra variable,
 `q1510_catoccu` que utiliza la estructura de la CIUO-08 (códigos ISCO, de la
 OIT). Nos interesa la categorización:
 
-__GRUPO 2: "PROFESIONALES CIENTÍFICOS E INTELECTUALES" \> PROFESIONALES DE LA__
-__SALUD__
+**GRUPO 2: "PROFESIONALES CIENTÍFICOS E INTELECTUALES" \> PROFESIONALES DE LA**
+**SALUD**
 
 Exploramos `q1510_catoccu`
 
@@ -151,7 +155,10 @@ data_2019_test %>%
   select(q1510_catoccu, q1510_occ) %>% 
   View()
 ```
-Aquí faltan algunas opciones (e.g., auxiliar de enfermería... que hemos visto que existen. Vamos a filtrar por los que tengan un valor perdido en esta variable.
+
+Aquí faltan algunas opciones (e.g., auxiliar de enfermería... que hemos visto
+que existen. Vamos a filtrar por los que tengan un valor perdido en esta
+variable.
 
 ```{r}
 data_2019_test %>% 
@@ -185,7 +192,8 @@ data_2019_test %>%
   select(q1510_catoccu, q1510_occ) %>% 
   View()
 ```
-Con este filtro ^ obtenemos 1180 registros. Interesantes, en total, 69 casos.
+
+Con este filtro \^ obtenemos 1180 registros. Interesantes, en total, 69 casos.
 
 ```{r}
 data_2019_test %>% 
@@ -193,6 +201,7 @@ data_2019_test %>%
   select(q1510_catoccu, q1510_occ) %>% 
   View()
 ```
+
 Aquí no filtramos por categorías, vemos todos los casos (3002 observaciones).
 <!-- Explorar cuáles son los 347 casos pendientes.HECHO: Estos no tienen valores en q1510_occ asociados, por qué no aparecen como NAs? -->
 
@@ -214,18 +223,18 @@ data_2019$q1510_occ %>%
 ```
 
 Esto no ha funcionado.
+
 <!-- TODO! -->
+
 <!-- -   [ ] Buscar una manera de automatizarlo. -->
-<!--    -   [X] Crear un dataset sólo con la variable `q1510_occ` filtrada a través de -->
-<!--          `q1510_catoccu` == 2, que resuma las ocupaciones de las personas que han -->
-<!--           marcado esa categoría. 
-                  Esto tiene el problema de que no todas las ocupaciones HC son 2. Se ha 
-                  propuesto una lista de ítems que pueden ser interesantes, revisar con Dani.
-                  -->
-<!--         - [ ] Incluir los nuevos ítems una vez la decisión esté tomada (Ver archivo HC-workers.txt). -->
-<!--   -   [ ] Revisar los valores perdidos de ambas categorías. La variable de texto libre  -->
-<!--                   en teoría no tiene NAs, pero cuando combinas ambas dos, sí. ¿Qué está  -->
-<!--                   pasando?-->
+
+<!-- -   [X] Crear un dataset sólo con la variable `q1510_occ` filtrada a través de <!--         `q1510_catoccu` == 2, que resuma las ocupaciones de las personas que han -->
+
+<!--      marcado esa categoría. Esto tiene el problema de que no todas las ocupaciones HC son 2. Se ha propuesto una lista de ítems que pueden ser interesantes, revisar con Dani.-->
+
+<!-- - [ ] Incluir los nuevos ítems una vez la decisión esté tomada (Ver archivo HC-workers.txt). -->
+
+<!-- -[ ] Revisar los valores perdidos de ambas categorías. La variable de texto libre en teoría no tiene NAs, pero cuando combinas ambas dos, sí. ¿Qué está                 pasando?-->
 
 ### Creación de la variable
 
@@ -501,6 +510,7 @@ data_2019_test <- data_2019_test %>%
 ```
 
 Comprobamos:
+
 ```{r}
 glimpse(data_2019_test$hhquintile)
 data_2019_test %>% 
@@ -508,32 +518,35 @@ data_2019_test %>%
   freq_table(hhquintile)
 ```
 
-
 <!-- -   [X] Ver si se puede utilizar con case_when() -->
+
 <!-- -   [X] Hacer otra reconversión teniendo en cuenta el valor de hh_income_r para -->
+
 <!-- <!--     volver a los -993 (última codificación a 20/10/2022) -->
+
 <!-- Ver también funciones de interés: cut() y coalesce() -->
+
 <!-- COMPLETA! -->
 
 ## STRESSOR (LIFE EVENTS)
-La variable combinada es `lte` (está creada y habrá que importarla en la base de datos final). 
-Las variables individuales son:
 
-- q4659_ill
-- q4660_illrelative 
-- q4661_died 
-- q4662_diedrelative 
-- q4663_separation 
-- q4664_brokeoff 
-- q4665_problem 
-- q4666_unemployed 
-- q4667_sacked 
-- q4668_financial 
-- q4669_police
-- q4670_stolen
+La variable combinada es `lte` (está creada y habrá que importarla en la base de
+datos final). Las variables individuales son:
 
-No se necesita armonización previa; se trabajará una vez que esté en Opal. 
+-   q4659_ill
+-   q4660_illrelative
+-   q4661_died
+-   q4662_diedrelative
+-   q4663_separation
+-   q4664_brokeoff
+-   q4665_problem
+-   q4666_unemployed
+-   q4667_sacked
+-   q4668_financial
+-   q4669_police
+-   q4670_stolen
 
+No se necesita armonización previa; se trabajará una vez que esté en Opal.
 
 ```{r}
 data_2019_test %>% 
@@ -552,18 +565,18 @@ data_2019_test %>%
   View()
 ```
 
-- [x] Añadir en variable_list.xlsx una fila por cada ítem por separado. 
-
+-   [x] Añadir en variable_list.xlsx una fila por cada ítem por separado.
 
 ## LIVING ALONE (q0401_hh_total) - wave 1
-__¿Cuál es el número total de personas que viven habitualmente en este hogar?__
-Dos categorías:
-- 1 = alone;
-- 2 = not alone.
 
-En ECS partimos de `q0401_hh_total`, que es una variable cuantitativa del 1 al 10. 
+**¿Cuál es el número total de personas que viven habitualmente en este hogar?**
+Dos categorías: - 1 = alone; - 2 = not alone.
+
+En ECS partimos de `q0401_hh_total`, que es una variable cuantitativa del 1 al
+10.
 
 ### Exploración de variables
+
 ```{r}
 data_2019 %>%
   select(q0401_hh_total) %>%
@@ -575,6 +588,7 @@ data_2019 %>%
 ```
 
 ### Creación de la variable
+
 ```{r}
 data_2019_test <- data_2019_test %>% 
   mutate(living_alone = if_else(q0401_hh_total == 1, 1, 2),
@@ -596,22 +610,22 @@ var_label(data_2019_test$living_alone) <- "Living alone"
 
 <!-- Preparada. -->
 
-
 ## HOUSEHOLD SIZE (q0401_hh_total)
-__¿Cuántas personas viven en el hogar?__ Con categorías:
-- 1: one person
-- 2: two persons
-- 3: three or four persons
-- 4: five or more persons
-- 5: live in an institution
 
-La variable `q0401_hh_total` sólo contempla el número de personas (1-10 hasta 10 personas),
-no si viven institucionalizadas o no. Esto lo hace el ítem `q0400a` que no se encuentra en 
-línea base porque ningún participante era institucionalizado en línea base. Por tanto, simplemente se trata de no incluir ningún valor etiquetado como 5.
+**¿Cuántas personas viven en el hogar?** Con categorías: - 1: one person - 2:
+two persons - 3: three or four persons - 4: five or more persons - 5: live in an
+institution
 
-- [ ] Revisar si está en Ola 2 (subestudio COVID)
+La variable `q0401_hh_total` sólo contempla el número de personas (1-10 hasta 10
+personas), no si viven institucionalizadas o no. Esto lo hace el ítem `q0400a`
+que no se encuentra en línea base porque ningún participante era
+institucionalizado en línea base. Por tanto, simplemente se trata de no incluir
+ningún valor etiquetado como 5.
+
+-   [ ] Revisar si está en Ola 2 (subestudio COVID)
 
 ### Exploración de variables
+
 ```{r}
 data_2019 %>%
   select(q0401_hh_total) %>%
@@ -649,6 +663,7 @@ var_label(data_2019_test$hh_size) <- "Household size"
 ```
 
 ### Comprobación del funcionamiento de la nueva variable
+
 ```{r}
 freq_table(data_2019_test, hh_size)
 
@@ -664,14 +679,14 @@ data_2019_test %>%
 <!-- Completada. -->
 
 ## CHILDREN HOUSEHOLD (q0407_age_01-q0407_age_08/q0407_age_10)
-__Are there children in your household?__
-- 1 = Yes;
-- 2 = No.
 
-Según los comentarios encontrados en variable_list.xlsx, es necesario
-combinar las tres variables: (q0407_age_01-q0407_age_08/q0407_age_10)
+**Are there children in your household?** - 1 = Yes; - 2 = No.
+
+Según los comentarios encontrados en variable_list.xlsx, es necesario combinar
+las tres variables: (q0407_age_01-q0407_age_08/q0407_age_10)
 
 ### Exploración de variables
+
 ```{r}
 freq_table(data_2019_test, q0407_age_01)
 data_2019_test %>% 
@@ -698,6 +713,7 @@ data_2019 %>%
 ```
 
 ### Creación de variables
+
 ```{r}
 data_2019_test <-
   data_2019_test %>% 
@@ -716,12 +732,15 @@ data_2019_test <-
 ```
 
 ### Comprobación
+
 ```{r}
 freq_table(data_2019_test, children_hh) 
 ```
 
 <!-- Con la cosa de TRUE ~ NON_RESPONSE queda solucionado parcialmente, pero es una -->
+
 <!-- solución torticera. -->
+
 ## GENDER (q1009_sex)
 
 **Self-identified gvender** - 1: male - 2: female - 3: other/diverse -991: not
@@ -1153,9 +1172,10 @@ data_2019_test <-
 
 ```
 
--   [X] Darle una segunda vuelta a esto, porque igual hay gente que tiene hijos
+-   [x] Darle una segunda vuelta a esto, porque igual hay gente que tiene hijos
     adoptados e hijos biológicos al mismo tiempo. En ese caso hay que sumarlos.
-    -   [ ] Darle otra vuelta a la no coincidencia de los NAs. (--> Link a children-issue.Rmd)
+    -   [ ] Darle otra vuelta a la no coincidencia de los NAs. (--\> Link a
+        children-issue.Rmd)
 
 ### Checking new variable
 
@@ -1165,38 +1185,56 @@ data_2019_test %>%
   freq_table(nofchildren)
 ```
 
-## EMPLOYMENT STATUS (`q1503_work_now` & `q1504_reason`.)
+# EMPLOYMENT STATUS (`q1503_work_now` & `q1504_reason`.)
 
-**Employment status** has the following levels: 1 = Have a job (employed or
-self-employed) 2 = In education 3 = Care work (familiy) / homeworker/ on
-parental leave 4 = On long-term sick leave/disability 5 = Unable to work due to
-reasosn not mentioned elsewhere in this list 6 = unemployed or job-seeking 7 =
-retired
+**Employment status** has the following levels:
+
+-   1 = Have a job (employed or self-employed)
+-   2 = In education
+-   3 = Care work (family) / homeworker/ on parental leave
+-   4 = On long-term sick leave/disability
+-   5 = Unable to work due to reasons not mentioned elsewhere in this list
+-   6 = unemployed or job-seeking
+-   7 = retired
 
 -991 = not assessed -993 = missing (default)
 
 `q1503_work_now` (c2019_w1) *Currently working?*: - 1 = Yes - 2 = No
 
-`q1504_reason` (c2019_w1) *Reason not working*: - 1 = homemaker - 2 = couldn't
-find a job - 3 = unpaid/voluntary - 4 = studies/training - 5 = health - 6 = care
-family - 7 = no need - 8 = not permited - 9 = retired/too old - 10 = laid off -
-11 = seasonal work - 12 = does not want to for a while - 13 = vacation/sick or
-maternity leave - 87 = other.
+`q1504_reason` (c2019_w1) *Reason not working*:
+
+-   1 = homemaker
+-   2 = couldn't find a job
+-   3 = unpaid/voluntary
+-   4 = studies/training
+-   5 = health
+-   6 = care family
+-   7 = no need
+-   8 = not permitted
+-   9 = retired/too old
+-   10 = laid off
+-   11 = seasonal work
+-   12 = does not want to for a while
+-   13 = vacation/sick or maternity leave
+-   87 = other.
 
 As a proposal, I suggest the following combination of both variables:
 
--   1 = Have a job (employed or self-employed) == 1 (q1503_work_now)
--   2 = In education (currently studying) == 4 (q1504_reason)
--   3 = Care work (family) / homeworker / on parental leave == 1, 6, 13
-    (q1504_reason), - cuidado con 13 porque se solapa con la opción "4" de
-    vardict
--   4 = On long-term sick leave/disability == 13 (q1504_reason), 5 (health),
+-   1 = Have a job (employed or self-employed) == `1 (q1503_work_now)`
+-   2 = In education (currently studying) == `4 (q1504_reason)`
+-   3 = Care work (family) / homeworker / on parental leave == `1, 6, 13`
+    `(q1504_reason)`** 
+-   4 = On long-term sick leave/disability == `13, 5 (health) (q1504_reason)`,
 -   5 = Unable to work due to reasons not mentioned elsewhere in this list
-    (other) == 3 (unpaid/voluntary), 7 (no need), 8 (not permitted), 12 (does
-    not want to for a while), 87
--   6 = unemployed or job-seeking == 2 (couldn't find a job), 10 (laid off), 11
-    (seasonal work),
--   7 = retired == 9
+    (other) == `3 (unpaid/voluntary), 7 (no need), 8 (not permitted), 12 (does`
+    `not want to for a while), 87 (other)`
+-   6 = unemployed or job-seeking == `2 (couldn't find a job), 10 (laid off)`, 
+`11 (seasonal work)`,
+-   7 = retired == `9 (retired/too old)`
+
+**Our category 13 (vacation/sick or maternity leave) overlaps with the 
+proposed categories 3 (care work/homeworker/or parental leave) and 
+4(On long-term sick leave/disability)
 
 ### Variable exploration
 
@@ -1210,7 +1248,7 @@ data_2019 %>%
   freq_table(q1503_work_now) #1 = yes; 2 = no; NAs = -93
 
 data_2019 %>% 
-  select(q1504_reason) %>% #Sustituiremos los NA como -93
+  select(q1504_reason) %>% 
   freq_table(q1504_reason) 
 
 ```
@@ -1220,25 +1258,25 @@ data_2019 %>%
 ```{r}
 
 data_2019_test <-
-  data_2019_test %>% 
+  data_2019_test %>%
   mutate(employment_st = case_when(
-           q1503_work_now == 1 ~ 1, #have a job
-           q1504_reason == 4 ~ 2, #studying
-           q1504_reason == 1 | q1504_reason == 6 ~ 3, #care work (eliminamos la 13 para meterla en la siguiente - LA 13 es vacation/sick or maternity leave)
+                  q1503_work_now == 1 ~ 1, #have a job
+                  q1504_reason == 4 ~ 2, #studying
+           q1504_reason == 1 | q1504_reason == 6 ~ 3, #care work 
            q1504_reason == 13 | q1504_reason == 5 ~ 4, # on long term sick leave disability
            q1504_reason == 3 | q1504_reason == 7 | q1504_reason == 8 | q1504_reason == 11 | q1504_reason == 12 | q1504_reason == 87 ~ 5, #other reasons
            q1504_reason == 2 | q1504_reason == 10 |q1057 == 11 ~ 6, #unemployed or job-seeking
-           q1504_reason == 9 ~ 7,
-           q1504_reason == is.na(q1504_reason) | q1503_work_now == is.na(q1503_work_now) ~ NON_RESPONSE
-         ), 
+           q1504_reason == 9 ~ 7, #retired,
+           is.na(q1504_reason) | is.na(q1503_work_now) ~ NON_RESPONSE
+         ),
           employment_st = factor(x = employment_st,
                           levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
-                          labels = c("Have a job (employed or self-employed)", 
+                          labels = c("Have a job (employed or self-employed)",
                                     "In education",
                                     "Care work (familiy) / homeworker/ on parental leave",
                                     "On long-term sick leave/disability",
-                                    "Unable to work due to reasons not mentioned elsewhere in this list", 
-                                    "unemployed or job-seeking", 
+                                    "Unable to work due to reasons not mentioned elsewhere in this list",
+                                    "unemployed or job-seeking",
                                     "retired",
                                     "not assessed",
                                     "missing (default)"
@@ -1254,25 +1292,39 @@ data_2019_test %>%
   freq_table(employment_st)
 ```
 
-## PROFESSION (q1510_catoccu)
+# PROFESSION (q1510_catoccu)
 
-**Best description of current occupation(s)** - 1 undergoing education - 2
-education and research - 3 arts, entertainment, sports and media - 4
-healthcare - 5 first responder (paramedic/firefighter/police) - 6 military - 7
-civil services, politics - 8 finance and economy - 9 industry - 10 sales and
-services (incl. restaurants and bars) - 11 transport (goods and people) - 12
-installation, maintenance, cleaning, and repairs - 13 currently not working - 14
-other (please specify)
+**Best description of current occupation(s)**
+
+-   1 = undergoing education
+-   2 = education and research
+-   3 = arts, entertainment, sports and media
+-   4 = healthcare
+-   5 = first responder (paramedic/firefighter/police)
+-   6 = military
+-   7 = civil services, politics
+-   8 = finance and economy
+-   9 = industry
+-   10 = sales and services (incl. restaurants and bars)
+-   11 = transport (goods and people)
+-   12 = installation, maintenance, cleaning, and repairs
+-   13 = currently not working
+-   14 = other (please specify)
 
 `q1510_catoccu` follows the OIT categorization; differs almost in every level
-with the one proposed for RESPOND. What to do? - 1 Legislators -----\> 7 (civil
-services, politics) - 2 Professionals ----\> - 3 Technicians - 4 Clerks ------\>
-12 (installation, maintenance, cleaning and repairs) - 5 Service workers - 6
-Skilled agricultural workers - 7 Craft workers - 8 Plant operators - 9
-Elementary occupations - 10 Armed forces -----\> 6 (military)
+with the one proposed for RESPOND. What to do?
 
--   [ ] TO-DO: Establish a new system categorisation for accommodating our data
-    into RESPOND characteristics.
+-   1 Legislators === 7 (civil services, politics)
+-   2 Professionals === 2 (education and research),
+-   3 Technicians ==== 8 (finance and economy)
+-   4 Clerks ===== 12 (installation, maintenance, cleaning and repairs)
+-   5 Service workers ==== 5 (first responder: paramedic/firefighter/police)
+-   6 Skilled agricultural workers ==== 11 (transport - goods and people)
+-   7 Craft workers ==== 3 (arts, entertainment, sports and media)
+-   8 Plant operators ==== 14 (other)
+-   9 Elementary occupations ==== 10 (sales and services)
+-   10 Armed forces === 6 (military)
+
 
 ### Variable exploration
 
@@ -1283,8 +1335,7 @@ data_2019 %>%
 
 data_2019 %>% 
   select(q1510_catoccu) %>%
-  freq_table(q1510_catoccu) #Hay 347 NAs.
-
+  freq_table(q1510_catoccu) 
 ```
 
 ### Variable creation
@@ -1292,52 +1343,74 @@ data_2019 %>%
 ```{r}
 #Creamos la variable
 data_2019_test <-
-  data_2019_test %>% 
+  data_2019_test %>%
   mutate(profession = case_when(
-           
+                      q1510_catoccu ==  2  ~  2 , #professionals --> education & research
+                      q1510_catoccu ==  7  ~  3 , #craft workers --> arts, entertainment, sports & media
+                      q1510_catoccu ==  5  ~  5 , #service workers --> first responders: paramedic/firefighter/police
+                      q1510_catoccu ==  10  ~  6 , #armed forces --> military
+                      q1510_catoccu ==  1  ~  7 , #legislators --> civil services, politics
+                      q1510_catoccu ==  3  ~  8 , # technicians --> finance & economy
+                      q1510_catoccu ==  9  ~  10 , #elementary occupations --> sales and services
+                      q1510_catoccu ==  6  ~  11 , #skilled agricultural workers --> transport (goods and people)
+                      q1510_catoccu ==  4  ~  12 , #clerks --> installation, maintenance, cleaning and reparis
+                      q1510_catoccu ==  8  ~  14, #plant operators --> other,
+                      is.na(q1510_catoccu) ~ NON_RESPONSE
+                      
          ), 
-          profession = factor(x = profession,
-                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
-                          labels = c("undergoing education", 
-                                    "education and research",
-                                    "arts, entertainment, sports and media",
-                                    "healthcare",
-                                    "first responder (paramedic/firefighter/police)", 
-                                    "military", 
-                                    "civil services, politics",
-                                    "finance and economy",
-                                    "sales and services (incl. restaurants and bars)",
-                                    "transport (goods and people)",
-                                    "installation, maintenance, cleaning, and repairs",
-                                    "currently not working",
-                                    "other",
-                                    "not assessed",
-                                    "missing (default)"
-                                    )))
+         profession = factor(x = profession,
+                                  levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
+                                             MISSING_DESIGN, NON_RESPONSE),
+                                  labels = c("undergoing education",
+                                            "education and research",
+                                            "arts, entertainment, sports and media",
+                                            "healthcare",
+                                            "first responder (paramedic/firefighter/police)",
+                                            "military",
+                                            "civil services, politics",
+                                            "finance and economy",
+                                            "industry",
+                                            "sales and services (incl. restaurants and bars)",
+                                            "transport (goods and people)",
+                                            "installation, maintenance, cleaning, and repairs",
+                                            "currently not working",
+                                            "other",
+                                            "not assessed",
+                                            "missing (default)"
+                                            )))
 
 ```
+
 
 ### Checking new variable
 
 ```{r}
 data_2019_test %>% 
-  select(pofession) %>%
+  select(profession) %>%
   freq_table(profession)
 ```
 
 ## CONTRACT (q1510b_contract_earner)
 
-**Permanent/temporary contract** - 1 permanent - 2 temporary - 3 self-employed -
-4 other - Missing values/categories:\
-- -991 not assessed - -993 missing (default)
+**Permanent/temporary contract** -
 
-In EcS: - 1 officer ----\> 1 permanent - 2 indefinite period (not officer)
-----\> 3 self-employed - 3 temporal or contract of works and services ---\> 2
-temporary - 4 verbal or without contract ---\> 4 - 888 DK --\> -993 - 999
-refused to answer ---\> -993
+-   1 permanent
+-   2 temporary
+-   3 self-employed
+-   4 other
+-   Missing values/categories:\
+    -   -991 not assessed - -993 missing (default)
 
--   [ ] As the variables are not exactly the same, there's a need to clarificate
-    and agree on a combination proposal.
+In EcS:
+
+-   1 officer ===== 1 permanent
+-   2 indefinite period (not officer) ===== 3 self-employed
+-   3 temporal or contract of works and services ===== 2 temporary
+-   4 verbal or without contract ===== 4
+-   888 DK ===== -993
+-   999 refused to answer ===== -993
+-   [ ] As the variables are not exactly the same, there's a need to clarify and
+    agree on a combination proposal.
 
 ### Variable exploration
 
@@ -1348,17 +1421,24 @@ data_2019 %>%
 
 data_2019 %>% 
   select(q1510b_contract_earner) %>%
-  freq_table(q1510b_contract_earner) #Hay NAs que codificar a -93
+  freq_table(q1510b_contract_earner)
 ```
 
 ### Variable creation
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
+  data_2019_test %>%
   mutate(contract = case_when(
-           
-         ), 
+        q1510b_contract_earner == 1 ~ 1, #officer --> permanent
+        q1510b_contract_earner == 2 ~ 3, #indefinite period (not officer) --> self-employed
+        q1510b_contract_earner == 3  ~ 2, #temporal or contract of works and services --> temporary
+        q1510b_contract_earner == 4 ~ 4, #verbal or without contract
+        q1510b_contract_earner == 888 ~ NON_RESPONSE, 
+        q1510b_contract_earner == 999 ~ NON_RESPONSE,
+        is.na(q1510b_contract_earner) ~ NON_RESPONSE
+
+         ),
           contract = factor(x = contract,
                           levels = c("1", "2", "3", "4",  MISSING_DESIGN, NON_RESPONSE),
                           labels = c("permanent",
@@ -1379,29 +1459,32 @@ data_2019_test %>%
   freq_table(contract)
 ```
 
-## EMPLOYMENT TYPE (q1510_workday)
+# EMPLOYMENT TYPE (`q1510_workday`)
 
 -   1 - Full time
 -   2 - Part time
 -   3 - No paid work
 -   4 - Other
--   -91 not assessed
--   -92 refused to answer
--   -93 missing (default)
+-   -991 not assessed
+-   -992 refused to answer
+-   -993 missing (default)
 
-In EcS: - 1 Part time (morning and afternoon) ---\> 2 - 2 Continuous morning
-working day ---\> 1 - 3 Continuous afternoon working day ----\> 1 - 4 Continuous
-night working day ----\> 1 - 5 Reduced work day ---\> 4 - 6 Shift work /
-irregular or variable work --\> 2 - 7 Other type ---\> 4 - 888 DK ---\> -92
+In EcS (`q1510_workday`):
 
--   [ ] TODO: Comprobar si se han incluido en todas las olas; modificarlo si es
-    necesario.
+-   1 Part time (morning and afternoon) ===== 2
+-   2 Continuous morning working day ===== 1
+-   3 Continuous afternoon working day ===== 1
+-   4 Continuous night working day ===== 1
+-   5 Reduced work day ===== 4
+-   6 Shift work / irregular or variable work ==== 2
+-   7 Other type ==== 4
+-   888 DK ==== -993
 
 ### Variable exploration
 
 ```{r}
 data_2019 %>%
-  select(q1510_workday) %>%
+  select(q1510e_workday) %>%
   summarise_all(funs(sum(is.na(.))))
 
 data_2019 %>% 
@@ -1412,46 +1495,81 @@ data_2019 %>%
 
 ### Variable creation
 
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(employment_ty = case_when(
+       q1510e_workday == 1 ~ 2, #part time --> part time
+       q1510e_workday == 2 ~ 1, #continuous morning working day --> full time
+       q1510e_workday == 3  ~ 1, #continuous afternoon working day --> full time
+       q1510e_workday == 4 ~ 1, #continuous night working day --> full time
+       q1510e_workday == 5 ~ 4, #reduced work day --> other
+       q1510e_workday == 6 ~ 1, #shift work --> full time
+       q1510e_workday == 7 ~ 4, #other --> other
+       q1510e_workday == 888 ~ NON_RESPONSE, 
+       q1510e_workday == 999 ~ NON_RESPONSE,
+        is.na(q1510e_workday) ~ NON_RESPONSE
+
+         ),
+          contract = factor(x = employment_ty,
+                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("permanent",
+                                    "temporary",
+                                    "self-employed",
+                                    "other",
+                                    "not assessed",
+                                    "missing (default)"
+ )))
+
+
+```
+
 ### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(employment_ty) %>%
+  freq_table(employment_ty)
+```
+
 
 ## RESILIENCE SCALE (BRS)
 
 ### Ola 1
 
 Tenemos resilience_scale y los ítems individuales: q7537, q7538, q7539, q7540,
-q7541, q7542 
+q7541, q7542
 
-- [X] TODO: Añadir una fila por cada ítem individual.
+-   [x] TODO: Añadir una fila por cada ítem individual.
 
 ### Ola 2
 
 Tenemos resilience_scale y los ítems individuales: SM26_1, SM26_2, SM26_3,
-SM26_4, SM26_5, SM26_6 
+SM26_4, SM26_5, SM26_6
 
-- [X] TODO: Añadir una fila por cada ítem individual. 
-- [X] duda: ¿hay que cambiar el nombre de los items en la BBDD final? (formato long)
+-   [x] TODO: Añadir una fila por cada ítem individual.
+-   [x] duda: ¿hay que cambiar el nombre de los items en la BBDD final? (formato
+    long)
 
 ## Social support
 
 ### Ola 1
 
-Tenemos social_support y los ítems individuales: 
+Tenemos social_support y los ítems individuales:
 
+-   [x] TODO: encontrar los ítems individuales
 
-  - [X] TODO: encontrar los ítems individuales
-  
 ```{r}
 data_2019_test %>% 
   select(q6310_help_neig, q6320_close, q6330_concern) %>% 
   View()
 ```
 
-  - [X] TODO: Añadir una fila por
-cada ítem individual.
+-   [x] TODO: Añadir una fila por cada ítem individual.
 
 ### Ola 2
 
-Tenemos social_support y los ítems individuales: 
+Tenemos social_support y los ítems individuales:
 
 ```{r}
 data_COVID %>% 
@@ -1459,9 +1577,8 @@ data_COVID %>%
   View()
 ```
 
-  - [x] TODO: Añadir una fila por
-cada ítem individual. 
-  - [x] TODO: encontrar los ítems individuales
+-   [x] TODO: Añadir una fila por cada ítem individual.
+-   [x] TODO: encontrar los ítems individuales
 
 ## C.O RESIDENCE
 
@@ -1486,3 +1603,78 @@ q4665_problem q4666_unemployed q4667_sacked q4668_financial q4669_police
 q4670_stolen
 
 -   [x] TODO: Crear nuevas filas por cada ítem.
+
+## SOCIAL PARTICIPATION:
+
+To be created from baseline using q6613-q6621 (Adaptación del Índice de
+Aislamiento Social - Shankar, McMunn, Banks y Steptoe (2011))
+
+¿Con qué frecuencia en los últimos 12 meses usted
+
+- q6613_club: ... asistió a una reunión con algún grupo, club u organización?
+- q6618_relig: ... asistió a actividades religiosas (no incluya bodas y 
+funerales)?
+- q6619_leave: ... salió de su hogar/vivienda para asistir a reuniones sociales,
+actividades, programas o eventos o para visitar a amigos/as familiares?
+- q6621_assoc: ... acudió a centros o asociaciones de mayores, centros de día,
+grupos de autoayuda, universidades para la tercera edad?
+
+- 1: Nunca
+- 2: Una o dos veces al año
+- 3: Una o dos veces al mes
+- 4: Una o dos veces por semana
+- 5: A diario
+
+- 999: NA
+
+
+```{r}
+data_2019_test %>% 
+  select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>% 
+  glimpse()
+```
+To create this variable:
+- Not married/not cohabiting with a partner == 1, 
+- had less than monthly contact with children, other inmediate family and friends
+(q6619_leave == 2 & 1)
+- if no participation in any organization,s, religious groups, or committees 
+(q6613_club == 1; q6621_assoc == 1)
+
+En total es una escala de 5 puntos (la original), pero como aquí sólo tenemos 4
+la escala irá de 0 a 4 señalando que mayores puntuaciones tienen una mayor
+aislamiento social. 
+
+Lo podemos reconvertir a la inversa para que señale participación social. 
+
+\*En variable_list.xlsx aparece una fila duplicada con social participation que
+dice "size_sn", pero es una variable que no existe en la BBDD ni en la
+documentación de cohorte 2019.
+
+```{r}
+data_2019_test %>% 
+  select(size_sn) %>% 
+  View()
+```
+
+También aparecen otras variables que se laman "social_int_ff_pre",
+"social_int_total_pre", "social_int_vr_pre", que tampoco aparecen por ningún
+lado.
+
+## SUBSTANCE USE
+
+```{r}
+data_2019_test %>% 
+  select(alcohol) %>% 
+  View()
+```
+
+## DEPRESSION
+
+```{r}
+data_2019_test %>% 
+  select(ewb_pre) %>% 
+  View()
+
+data_COVID %>% 
+  select(ewb_pre)
+```
