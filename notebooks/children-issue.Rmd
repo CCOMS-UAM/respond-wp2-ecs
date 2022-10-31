@@ -231,8 +231,9 @@ data_2019 %>%
 data_2019_test <-
   data_2019_test %>% 
   mutate(
-         q1057_NA = na_if(q1057, 888),
-         q1057_NA = replace_na(q1057_NA, 0),
+         
+         q1057_NA = replace_na(q1057, 0),
+         q1057_NA = na_if(q1057_NA, 888),
          q1059_NA = replace_na(q1059, 0),
          add_children = q1057_NA + q1059_NA,
          
