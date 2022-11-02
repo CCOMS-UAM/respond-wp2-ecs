@@ -1620,7 +1620,7 @@ actividades, programas o eventos o para visitar a amigos/as familiares?
 grupos de autoayuda, universidades para la tercera edad?
 
 - 1: Nunca
-- 2: Una o dos veces al año
+- 2: Una o dos veces al año 
 - 3: Una o dos veces al mes
 - 4: Una o dos veces por semana
 - 5: A diario

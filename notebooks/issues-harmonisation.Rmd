@@ -16,7 +16,7 @@ editor_options:
   chunk_output_type: inline
 ---
 
-# Pre-requisites
+# Pre-requisites 
 
 ## Required libraries
 

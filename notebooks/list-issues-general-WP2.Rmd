@@ -1,0 +1,50 @@
+---
+title: "A list of (updated) issues on variable-list and WP2 harmonisation"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), '%d de %B de %Y')`"
+output:
+  html_notebook: 
+    toc: yes
+    toc_float: yes
+institute: CCOMS, Universidad Autónoma de Madrid
+editor_options:
+  chunk_output_type: console
+---
+
+# El archivo variable_list
+
+Este archivo reúne **todas las variables** que tiene cada estudio. Es necesario
+comprobar que todos los outcomes están incluidos (ver los archivos 
+[mental health outcomes](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7BA66AD0BE-D072-4CB3-8072-F4FF5C92BF9D%7D&file=mental_health_measures_hs.xlsx&action=default&mobileredirect=true)
+y
+[predictores](https://drzmainz.sharepoint.com/:x:/r/sites/obiba-wp2/_layouts/15/Doc.aspx?sourcedoc=%7B37F195E1-399B-48CE-9E11-5B2B8B83B210%7D&file=predictor_candidates_by_study_hs.xlsx&action=default&mobileredirect=true)
+para comprobar que está todo lo que tiene que estar).   
+
+#Índice de dudas/cosas pendientes
+
+1. Se han de incluir todas las variables que va a tener el dataset en Opal. (ok)
+2. Tiene que estar en formato long. (ok)
+3. El acceso al archivo NUTS desde el handbook (no nos responden) (pendiente)
+4. Variable age: rango 1-100 (tenemos un caso que tiene 101) (pendiente)
+5. Categorización de las variables work-related. (pendiente)
+6. Cuartiles y quintiles: ¿con la muestra o con los del Eurostat? (seguramente
+los del Eurostat) (pendiente)
+7. The variables related to children: children household, children and number of
+children, do they refer to having children in general (minors and adults), 
+or only minor children? (pendiente)
+8. Sociodemographic vars in all the waves or just baseline (imputation? -991?).
+Ejemplo de age_post, que sabemos que cambia con la ola. (pendiente)
+9. Creación de social_participation (ver artículo/anterior script)
+10. Creación de HC_worker (variable texto) (pendiente)
+11. Variables que ya no están: 
+- social participation: size_sn, social_int_ff_pre, social_int_total_pre, 
+social_int_vr_pre, livesalone_pre  (Ola 1; está en historial de Subestudio COVID, 
+pero no en la actual versión ---> En outcome variables related to loneliness
+and social interaction (description_social_interaction_subestudio_COVID_R)) 
+(pendiente)
+12. Items concretos de cada variable de depresión
+13. Quality of Life/Wellbeing: tanto las variables pre como las post están en 
+Ola 2, pero en history > evaluative_wellbeing
+14. Urbanisation: Q0302c/NUTS3
+15. C.o. residence
+16. Crear script definitivo de armonización.
