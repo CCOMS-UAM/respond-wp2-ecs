@@ -3,7 +3,10 @@ title: "A list of (updated) issues on variable-list and WP2 harmonisation"
 author: "Cristina Rodríguez-Prada"
 date: "`r format(lubridate::today(), '%d de %B de %Y')`"
 output:
-  html_notebook: 
+  html_document:
+    toc: yes
+    df_print: paged
+  html_notebook:
     toc: yes
     toc_float: yes
 institute: CCOMS, Universidad Autónoma de Madrid
@@ -24,27 +27,50 @@ para comprobar que está todo lo que tiene que estar).
 
 1. Se han de incluir todas las variables que va a tener el dataset en Opal. (ok)
 2. Tiene que estar en formato long. (ok)
+
 3. El acceso al archivo NUTS desde el handbook (no nos responden) (pendiente)
+
 4. Variable age: rango 1-100 (tenemos un caso que tiene 101) (pendiente)
+
 5. Categorización de las variables work-related. (pendiente)
+
 6. Cuartiles y quintiles: ¿con la muestra o con los del Eurostat? (seguramente
 los del Eurostat) (pendiente)
+
 7. The variables related to children: children household, children and number of
 children, do they refer to having children in general (minors and adults), 
 or only minor children? (pendiente)
+
 8. Sociodemographic vars in all the waves or just baseline (imputation? -991?).
 Ejemplo de age_post, que sabemos que cambia con la ola. (pendiente)
+
 9. Creación de social_participation (ver artículo/anterior script)
+
 10. Creación de HC_worker (variable texto) (pendiente)
+
 11. Variables que ya no están: 
 - social participation: size_sn, social_int_ff_pre, social_int_total_pre, 
 social_int_vr_pre, livesalone_pre  (Ola 1; está en historial de Subestudio COVID, 
 pero no en la actual versión ---> En outcome variables related to loneliness
 and social interaction (description_social_interaction_subestudio_COVID_R)) 
-(pendiente)
-12. Items concretos de cada variable de depresión
+(pendiente) --> Escribir a Elvira
+
+12. Items concretos de cada variable de depresión (solucionado)
+
 13. Quality of Life/Wellbeing: tanto las variables pre como las post están en 
-Ola 2, pero en history > evaluative_wellbeing
+Ola 2, pero en history > evaluative_wellbeing ---> Elvira 
+
 14. Urbanisation: Q0302c/NUTS3
 15. C.o. residence
 16. Crear script definitivo de armonización.
+
+Tareas 03/11/2022:
+- Escribir a RESPOND insistiendo con las dudas (listo!)
+- Escribir a Elvira con las variables que están en el historial (listo!)
+- Revisar la lista de outcomes que incluir en variable_list (listo!)
+
+
+¿No hay anxiety en Subestudio covid?
+¿mental disorders categorical? ni un 1 ni en 2
+suicidality: no hay puntuación combinada en ola 1, pero se puede crear a partir
+de q4222r, q4222s, q4222t, q4222u, q4222v.
