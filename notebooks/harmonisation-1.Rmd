@@ -3,12 +3,12 @@ title: "Preparando el archivo variable_list con los datos de Edad con Salud"
 author: "Cristina Rodríguez-Prada"
 date: "`r format(lubridate::today(), '%d de %B de %Y')`"
 output:
-  html_document:
-    df_print: paged
+  html_notebook: null
   toc: yes
   toc_float: yes
   keep_md: yes
-  html_notebook: null
+  html_document:
+    df_print: paged
 institute: CCOMS, Universidad Autónoma de Madrid
 editor_options:
   chunk_output_type: console
@@ -1632,6 +1632,29 @@ grupos de autoayuda, universidades para la tercera edad?
 data_2019_test %>% 
   select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>% 
   glimpse()
+
+data_2019 %>%
+  select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>%
+  summarise_all(funs(sum(is.na(.))))
+
+data_2019 %>% 
+  select(q6613_club) %>%
+  freq_table(q6613_club)
+
+
+data_2019 %>% 
+  select(q6618_relig) %>%
+  freq_table(q6618_relig)
+
+data_2019 %>% 
+  select(q6619_leave) %>%
+  freq_table(q6619_leave)
+
+data_2019 %>% 
+  select(q6621_assoc) %>%
+  freq_table(q6621_assoc)
+
+
 ```
 To create this variable:
 - Not married/not cohabiting with a partner == 1, 
@@ -1649,6 +1672,48 @@ Lo podemos reconvertir a la inversa para que señale participación social.
 \*En variable_list.xlsx aparece una fila duplicada con social participation que
 dice "size_sn", pero es una variable que no existe en la BBDD ni en la
 documentación de cohorte 2019.
+
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(q6613_club_r =
+           case_when(
+             q6613_club == 3 | q6613_club == 4 |  q6613_club == 5 ~ 1,
+             TRUE ~ 0),
+          q6618_relig_r = 
+           case_when(
+             q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5 ~ 1,
+             TRUE ~ 0),
+         q6619_leave_r =
+           case_when(
+             q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5 ~ 1,
+             TRUE ~ 0),
+         q6621_assoc_r =
+           case_when(
+             q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5 ~ 1,
+             q6621_assoc == 999 ~ NON_RESPONSE,
+             TRUE ~ 0),
+         
+         social_participation = q6613_club_r + 
+                                q6618_relig_r + 
+                                q6619_leave_r +
+                                q6621_assoc_r,
+         
+         social_participation =
+           case_when(
+             social_participation < 0 ~ NON_RESPONSE,
+             TRUE ~ social_participation
+           )
+             )
+```
+
+```{r}
+data_2019_test %>% 
+  select(social_participation) %>%
+  freq_table(social_participation)
+```
+
+
 
 ```{r}
 data_2019_test %>% 
