@@ -153,7 +153,7 @@ data_2019_test %>%
   group_by(ID_ECS) %>% 
   filter(as.numeric(q1510_catoccu) %in% c("2")) %>% 
   select(q1510_catoccu, q1510_occ) %>% 
-  View()
+  View() #asignarlo a un objeto y luego imprimirlo
 ```
 
 Aquí faltan algunas opciones (e.g., auxiliar de enfermería... que hemos visto
@@ -181,7 +181,7 @@ data_2019_test %>%
 data_2019_test %>% 
   group_by(ID_ECS) %>% 
   filter(q1510_occ == "auxiliar de enfermeria") %>% 
-  select(q1510_catoccu) %>% 
+  select(q1510_occ, q1510_catoccu) %>% 
   View()
 ```
 
@@ -452,13 +452,34 @@ glimpse(data_2019_test$q0410g_total)
 glimpse(data_2019_test$hh_income_r_NA)
 ```
 
-Calculamos los quintiles con `quantile(x)` y guardamos únicamente los valores de
-los quintiles para acceder a través de ellos con los corchetes.
+<!-- Calculamos los quintiles con `quantile(x)` y guardamos únicamente los valores de -->
+<!-- los quintiles para acceder a través de ellos con los corchetes. -->
+
+<!-- ```{r} -->
+<!-- quintiles <- quantile(data_2019_test$hh_income_r_NA, na.rm = T) -->
+<!-- quintiles <- unname(quintiles) -->
+<!-- ``` -->
+
+No hace falta calcular a mano los quintiles, sino que tenemos que utilizar 
+los proporcionados por EUROSTAT.
+
 
 ```{r}
-quintiles <- quantile(data_2019_test$hh_income_r_NA, na.rm = T)
-quintiles <- unname(quintiles)
+income <- 
+  tibble(
+  year = as.double(c("2018", "2019", "2020")),
+  quintile_1 = c(8549, 8847, 9449),
+  quintile_2 = c(12647,12997,13840),
+  quintile_3 = c(17064,17422,18526),
+  quintile_4 = c(23666,24104,25189),
+  quartile_1 = c(9509,9816,10562),
+  quartile_2 = c(14785,15015,16043),
+  quartile_3 = c(21656,22024,23295)
+)
 ```
+
+
+
 
 Recodificamos en quintiles:
 
@@ -474,11 +495,11 @@ Recodificamos en quintiles:
 
 data_2019_test <- data_2019_test %>% 
   mutate(hhquintile = case_when(
-                          hh_income_r_NA <= quintiles[1] ~ 1,
-                          hh_income_r_NA > quintiles[1] & hh_income_r_NA <= quintiles[2] ~ 2,
-                          hh_income_r_NA > quintiles[2] & hh_income_r_NA <= quintiles[3] ~ 3,
-                          hh_income_r_NA > quintiles[3] & hh_income_r_NA <= quintiles[4] ~ 4,
-                          hh_income_r_NA > quintiles[4] & hh_income_r_NA <= quintiles[5] ~ 5
+                          hh_income_r_NA <= income[2,2] ~ 1,
+                          hh_income_r_NA > income[2,2] & hh_income_r_NA <= income[2,3] ~ 2,
+                          hh_income_r_NA > income[2,3] & hh_income_r_NA <= income[2,4] ~ 3,
+                          hh_income_r_NA > income[2,4] & hh_income_r_NA <= income[2,5] ~ 4,
+                          hh_income_r_NA > income[2,5] ~ 5
     
   ))
 ```
@@ -1263,8 +1284,8 @@ data_2019_test <-
                   q1503_work_now == 1 ~ 1, #have a job
                   q1504_reason == 4 ~ 2, #studying
            q1504_reason == 1 | q1504_reason == 6 ~ 3, #care work 
-           q1504_reason == 13 | q1504_reason == 5 ~ 4, # on long term sick leave disability
-           q1504_reason == 3 | q1504_reason == 7 | q1504_reason == 8 | q1504_reason == 11 | q1504_reason == 12 | q1504_reason == 87 ~ 5, #other reasons
+           q1504_reason == 5 ~ 4, # on long term sick leave disability
+           q1504_reason == 3 | q1504_reason == 7 | q1504_reason == 8 | q1504_reason == 11 | q1504_reason == 12  | q1504_reason == 13 | q1504_reason == 87 ~ 5, #other reasons, added '13' here
            q1504_reason == 2 | q1504_reason == 10 |q1057 == 11 ~ 6, #unemployed or job-seeking
            q1504_reason == 9 ~ 7, #retired,
            is.na(q1504_reason) | is.na(q1503_work_now) ~ NON_RESPONSE
@@ -1326,6 +1347,23 @@ with the one proposed for RESPOND. What to do?
 -   10 Armed forces === 6 (military)
 
 
+We will include this variable in raw format in the database just for 
+knowing levels of OIT categorization rather than sector. Following
+recommendations of IPD-RESPOND team, we would try to keep assumptions to a
+minimum and when in doubt, code things as other:
+
+
+-   1 Legislators === 7 (civil services, politics)
+-   2 Professionals === 14 (others)
+-   3 Technicians ==== 14 (others) 
+-   4 Clerks ===== 12 (installation, maintenance, cleaning and repairs)
+-   5 Service workers ==== 5 (first responder: paramedic/firefighter/police)
+-   6 Skilled agricultural workers ==== 14 (others)
+-   7 Craft workers ==== 14 (others)
+-   8 Plant operators ==== 14 (other)
+-   9 Elementary occupations ==== 14 (others)
+-   10 Armed forces === 6 (military)
+
 ### Variable exploration
 
 ```{r}
@@ -1345,16 +1383,16 @@ data_2019 %>%
 data_2019_test <-
   data_2019_test %>%
   mutate(profession = case_when(
-                      q1510_catoccu ==  2  ~  2 , #professionals --> education & research
-                      q1510_catoccu ==  7  ~  3 , #craft workers --> arts, entertainment, sports & media
                       q1510_catoccu ==  5  ~  5 , #service workers --> first responders: paramedic/firefighter/police
                       q1510_catoccu ==  10  ~  6 , #armed forces --> military
                       q1510_catoccu ==  1  ~  7 , #legislators --> civil services, politics
-                      q1510_catoccu ==  3  ~  8 , # technicians --> finance & economy
-                      q1510_catoccu ==  9  ~  10 , #elementary occupations --> sales and services
-                      q1510_catoccu ==  6  ~  11 , #skilled agricultural workers --> transport (goods and people)
                       q1510_catoccu ==  4  ~  12 , #clerks --> installation, maintenance, cleaning and reparis
-                      q1510_catoccu ==  8  ~  14, #plant operators --> other,
+                      q1510_catoccu ==  8 | 
+                      q1510_catoccu ==  3 | 
+                      q1510_catoccu ==  6 |
+                      q1510_catoccu ==  7 | 
+                      q1510_catoccu ==  9 | 
+                      q1510_catoccu ==  2  ~  14, #others
                       is.na(q1510_catoccu) ~ NON_RESPONSE
                       
          ), 
@@ -1409,8 +1447,15 @@ In EcS:
 -   4 verbal or without contract ===== 4
 -   888 DK ===== -993
 -   999 refused to answer ===== -993
--   [ ] As the variables are not exactly the same, there's a need to clarify and
-    agree on a combination proposal.
+
+Changes made after consulting with IPD-Respond team:
+
+-   1 officer ===== 1 permanent
+-   2 indefinite period (not officer) ===== 4 (other)
+-   3 temporal or contract of works and services ===== 2 temporary
+-   4 verbal or without contract ===== 4
+-   888 DK ===== -993
+-   999 refused to answer ===== -993
 
 ### Variable exploration
 
@@ -1431,9 +1476,9 @@ data_2019_test <-
   data_2019_test %>%
   mutate(contract = case_when(
         q1510b_contract_earner == 1 ~ 1, #officer --> permanent
-        q1510b_contract_earner == 2 ~ 3, #indefinite period (not officer) --> self-employed
         q1510b_contract_earner == 3  ~ 2, #temporal or contract of works and services --> temporary
-        q1510b_contract_earner == 4 ~ 4, #verbal or without contract
+        q1510b_contract_earner == 4 |
+        q1510b_contract_earner == 2 ~ 4, #verbal or without contract & indefinite period (not officer) --> other
         q1510b_contract_earner == 888 ~ NON_RESPONSE, 
         q1510b_contract_earner == 999 ~ NON_RESPONSE,
         is.na(q1510b_contract_earner) ~ NON_RESPONSE
@@ -1680,17 +1725,21 @@ data_2019_test <-
            case_when(
              q6613_club == 3 | q6613_club == 4 |  q6613_club == 5 ~ 1,
              TRUE ~ 0),
+         
           q6618_relig_r = 
            case_when(
              q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5 ~ 1,
              TRUE ~ 0),
+         
          q6619_leave_r =
            case_when(
              q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5 ~ 1,
              TRUE ~ 0),
+         
          q6621_assoc_r =
            case_when(
              q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5 ~ 1,
+             
              q6621_assoc == 999 ~ NON_RESPONSE,
              TRUE ~ 0),
          
