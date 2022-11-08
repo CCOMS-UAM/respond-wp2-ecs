@@ -29,10 +29,14 @@ para comprobar que está todo lo que tiene que estar).
 2. Tiene que estar en formato long. (ok)
 
 3. El acceso al archivo NUTS desde el handbook (no nos responden) (pendiente)
+- No se ha solucionado, pero da igual
 
 4. Variable age: rango 1-100 (tenemos un caso que tiene 101) (pendiente)
+- Se ha modificado el rango de la variable
 
 5. Categorización de las variables work-related. (pendiente)
+- Revisar correo Papoula
+
 
 6. Cuartiles y quintiles: ¿con la muestra o con los del Eurostat? (seguramente
 los del Eurostat) (pendiente)
