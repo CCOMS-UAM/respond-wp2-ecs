@@ -52,10 +52,10 @@ library(readstata13)
 ## Constants on variable harmonization
 
 _Coding of missing values:_
- - -91 specifies a variable has not been assessed in general (eg, at this point 
+ - -991 specifies a variable has not been assessed in general (eg, at this point 
     of data collection), so it is missing by design. 
  
- - -93 specifies missings (default) from data collections that
+ - -993 specifies missings (default) from data collections that
 actually took place (eg, this exact questionnaire had been assessed at this
 timepoint, but the participant did not answer for whatever reason).
 
