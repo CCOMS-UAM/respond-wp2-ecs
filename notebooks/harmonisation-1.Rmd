@@ -31,6 +31,12 @@ library(labelled)
 library(stringr)
 library(gridExtra)
 #install.packages("gridExtra")
+library(readstata13)
+library(stringi)
+install.packages("Encoding")
+library(Encoding)
+install.packages("utf8")
+library(utf8)
 ```
 
 ## Constantes en la armonización de variables
@@ -63,7 +69,8 @@ hacer desde el principio con `unlabelled()`, `to_factor()` o `unclass()`, o
 cuando ya se ha hecho la limpieza de datos y se quiere mantener esa info en la
 exportación.
 
-A continuación se importan las BBDD originales y se duplican para probar cosas.
+A continuación se importan las BBDD originales y se duplican para hacer pruebas
+conservando lo anterior.
 
 ```{r}
 data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
@@ -73,9 +80,15 @@ data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Ed
 data_2019_test <- data_2019 #Hago una copia del dataset original para probar cosas.
 ```
 
-Tareas pendientes:
+```{r}
+data_2019 <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta", encoding = "UTF-8", fromEncoding = "CP1252", nonint.factors = F)
 
--   [ ] Revisar codificación UTF-8
+data_COVID <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta", encoding = "UTF-8", fromEncoding = "CP1252", nonint.factors = F)
+
+data_2019_test <- data_2019
+data_COVID_test <- data_COVID
+```
+
 
 # El archivo variable_list
 
@@ -115,50 +128,9 @@ data_2019 %>%
 
 data_2019 %>%
   select(q1510_occ, q1510_catoccu) %>%
-  summarise_all(funs(sum(is.na(.)))) #Sólo hay NAs en catoccu
+  summarise_all(funs(sum(is.na(.)))) #Los NAs coinciden entre ambas; en 
+#respuesta abierta son "".
 ```
-
-Esta variable contiene 1824 valores únicos. Exploramos otras variables del
-cuestionario que permitan extraer la ocupación. En la BBDD hay otra variable,
-`q1510_catoccu` que utiliza la estructura de la CIUO-08 (códigos ISCO, de la
-OIT). Nos interesa la categorización:
-
-**GRUPO 2: "PROFESIONALES CIENTÍFICOS E INTELECTUALES" \> PROFESIONALES DE LA**
-**SALUD**
-
-Exploramos `q1510_catoccu`
-
-```{r}
-glimpse(data_2019$q1510_catoccu)
-
-data_2019 %>%
-  select(q1510_catoccu) %>%
-  distinct()
-
-freq_table(data_2019, q1510_catoccu)
-
-```
-
-Esta variable sólo contiene la categorización de los 10 grupos principales, no
-de los subgrupos. Por tanto, tenemos que descartar esta variable porque no nos
-permite diferenciar los profesionales de la salud de otros profesionales y se
-tiene que trabajar con la variable `q1510_occ`.
-
-Cuenta con 347 valores perdidos. Vamos a crear una nueva variable con los
-valores de `q1510_occ` filtrado a través de `q1510_catoccu`, teniendo en cuenta
-esta consideración.
-
-```{r}
-data_2019_test %>% 
-  group_by(ID_ECS) %>% 
-  filter(as.numeric(q1510_catoccu) %in% c("2")) %>% 
-  select(q1510_catoccu, q1510_occ) %>% 
-  View() #asignarlo a un objeto y luego imprimirlo
-```
-
-Aquí faltan algunas opciones (e.g., auxiliar de enfermería... que hemos visto
-que existen. Vamos a filtrar por los que tengan un valor perdido en esta
-variable.
 
 ```{r}
 data_2019_test %>% 
@@ -176,6 +148,68 @@ data_2019_test %>%
   View()
 
 ```
+
+Esta variable contiene 1824 valores únicos  Y 347 valores perdidos. Exploramos otras variables del
+cuestionario que permitan extraer la ocupación. En la BBDD hay otra variable,
+`q1510_catoccu` que utiliza la estructura de la CIUO-08 (códigos ISCO, de la
+OIT). Nos interesa la categorización:
+
+**GRUPO 2: "PROFESIONALES CIENTÍFICOS E INTELECTUALES" \> PROFESIONALES DE LA**
+**SALUD**
+
+Exploramos `q1510_catoccu`
+
+```{r}
+glimpse(data_2019$q1510_catoccu)
+
+data_2019 %>%
+  select(q1510_catoccu) %>%
+  distinct()
+
+freq_table(data_2019, q1510_occ)
+
+```
+
+Esta variable sólo contiene la categorización de los 10 grupos principales, no
+de los subgrupos. Por tanto, tenemos que descartar esta variable porque no nos
+permite diferenciar los profesionales de la salud de otros profesionales y se
+tiene que trabajar con la variable `q1510_occ`.
+
+
+Para facilitar la detección de patrones, convertimos a minúsculas todos los
+caracteres utilizando `str_to_lower()`de `stringr`. En el caso de que exista
+textos con tildes, estas se pueden eliminar utilizando el siguiente comando: `stri_trans_general(x, "Latin-ASCII")`.
+
+```{r}
+data_2019_test %>% 
+  mutate(
+    q1510_occ_utf8 = as_utf8(q1510_occ),
+    q1510_occ_utf8 = str_to_lower(q1510_occ_utf8, locale = "spa"),
+    q1510_occ_itf8 = stringi::stri_trans_general(q1510_occ_utf8, "Latin-ASCII")
+  ) %>% 
+  select(q1510_occ, q1510_occ_utf8) %>% 
+  View()
+
+```
+
+**IMPORTANTE** NO FUNCIONA UTF-8.
+
+
+Vamos a crear una nueva variable con los
+valores de `q1510_occ` filtrado a través de `q1510_catoccu`, teniendo en cuenta
+esta consideración.
+
+```{r}
+data_2019_test %>% 
+  group_by(ID_ECS) %>% 
+  filter(as.numeric(q1510_catoccu) %in% c("2")) %>% 
+  select(q1510_catoccu, q1510_occ) %>% 
+  View() #asignarlo a un objeto y luego imprimirlo
+```
+
+Aquí faltan algunas opciones (e.g., auxiliar de enfermería... que hemos visto
+que existen. Vamos a filtrar por los que tengan un valor perdido en esta
+variable.
 
 ```{r}
 data_2019_test %>% 
@@ -203,7 +237,10 @@ data_2019_test %>%
 ```
 
 Aquí no filtramos por categorías, vemos todos los casos (3002 observaciones).
-<!-- Explorar cuáles son los 347 casos pendientes.HECHO: Estos no tienen valores en q1510_occ asociados, por qué no aparecen como NAs? -->
+
+Después de explorar "a mano" todas las respuestas abiertas, todas las de 
+interés se encuentran en HC-workers.txt y su potencial categorización para 
+posteriormente extraer patrones en HC_workersCat.txt.
 
 ### Utilizando expresiones regulares
 
@@ -234,7 +271,6 @@ Esto no ha funcionado.
 
 <!-- - [ ] Incluir los nuevos ítems una vez la decisión esté tomada (Ver archivo HC-workers.txt). -->
 
-<!-- -[ ] Revisar los valores perdidos de ambas categorías. La variable de texto libre en teoría no tiene NAs, pero cuando combinas ambas dos, sí. ¿Qué está                 pasando?-->
 
 ### Creación de la variable
 
@@ -248,7 +284,7 @@ data_2019_test <- data_2019 %>%
                                         if_else(str_detect(q1510_occ, "med"), 1,
                                                 if_else(str_detect(q1510_occ, "traum"), 1, 
                                                         if_else(str_detect(q1510_occ, "aux"), 1,
-                                                                ifelse(str_detect(q1510_occ, "SADSERVICIO"), 1, 0)))))
+                                                                ifelse(str_detect(q1510_occ, "SADSERVICIO"), 1, 2)))))
                     )
 glimpse(data_2019_test$occ_mhw)  #Funciona
 ```
@@ -465,17 +501,20 @@ los proporcionados por EUROSTAT.
 
 
 ```{r}
-income <- 
-  tibble(
-  year = as.double(c("2018", "2019", "2020")),
-  quintile_1 = c(8549, 8847, 9449),
-  quintile_2 = c(12647,12997,13840),
-  quintile_3 = c(17064,17422,18526),
-  quintile_4 = c(23666,24104,25189),
-  quartile_1 = c(9509,9816,10562),
-  quartile_2 = c(14785,15015,16043),
-  quartile_3 = c(21656,22024,23295)
-)
+# income <- 
+#   tibble(
+#   year = as.double(c("2018", "2019", "2020")),
+#   quintile_1 = c(8549, 8847, 9449),
+#   quintile_2 = c(12647,12997,13840),
+#   quintile_3 = c(17064,17422,18526),
+#   quintile_4 = c(23666,24104,25189),
+#   quartile_1 = c(9509,9816,10562),
+#   quartile_2 = c(14785,15015,16043),
+#   quartile_3 = c(21656,22024,23295)
+# )
+
+quintiles19 <- c(8847, 12997, 17422, 24104)
+cuartiles19 <- c(9816, 1501, 22024)
 ```
 
 
@@ -495,13 +534,21 @@ Recodificamos en quintiles:
 
 data_2019_test <- data_2019_test %>% 
   mutate(hhquintile = case_when(
-                          hh_income_r_NA <= income[2,2] ~ 1,
-                          hh_income_r_NA > income[2,2] & hh_income_r_NA <= income[2,3] ~ 2,
-                          hh_income_r_NA > income[2,3] & hh_income_r_NA <= income[2,4] ~ 3,
-                          hh_income_r_NA > income[2,4] & hh_income_r_NA <= income[2,5] ~ 4,
-                          hh_income_r_NA > income[2,5] ~ 5
+                          hh_income_r_NA <= quintiles19[1] ~ 1,
+                          hh_income_r_NA > quintiles19[1] & hh_income_r_NA <= quintiles19[2] ~ 2,
+                          hh_income_r_NA > quintiles19[2] & hh_income_r_NA <= quintiles19[3] ~ 3,
+                          hh_income_r_NA > quintiles19[3] & hh_income_r_NA <= quintiles19[4] ~ 4,
+                          hh_income_r_NA > quintiles19[4] ~ 5,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE
     
-  ))
+  ),
+        hhquartile = case_when(
+                          hh_income_r_NA <= cuartiles19[1] ~ 1,
+                          hh_income_r_NA > cuartiles19[1] & hh_income_r_NA <= cuartiles19[2] ~ 2,
+                          hh_income_r_NA > cuartiles19[2] & hh_income_r_NA <= cuartiles19[3] ~ 3,
+                          hh_income_r_NA > cuartiles19[3] ~ 4,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE
+        ))
 ```
 
 ```{r}
@@ -510,12 +557,17 @@ data_2019_test %>%
   select(hhquintile) %>% 
   freq_table(hhquintile)
 
+glimpse(data_2019_test$hhquintile)
+data_2019_test %>% 
+  select(hhquartile) %>% 
+  freq_table(hhquartile)
+
 str(data_2019_test$hhquintile)
 class(data_2019_test$hhquintile)
 ```
 
 Hacemos que los NAs sean, de nuevo, NON_RESPONSE:
-
+<!-- Esto no funciona -->
 ```{r}
 data_2019_test <- data_2019_test %>% 
   mutate(
