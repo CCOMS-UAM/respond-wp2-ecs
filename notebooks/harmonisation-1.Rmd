@@ -33,8 +33,6 @@ library(gridExtra)
 #install.packages("gridExtra")
 library(readstata13)
 library(stringi)
-install.packages("Encoding")
-library(Encoding)
 install.packages("utf8")
 library(utf8)
 ```
@@ -81,7 +79,7 @@ data_2019_test <- data_2019 #Hago una copia del dataset original para probar cos
 ```
 
 ```{r}
-data_2019 <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta", encoding = "UTF-8", fromEncoding = "CP1252", nonint.factors = F)
+data_2019 <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta", encoding = "UTF-8", fromEncoding = "CP1252")
 
 data_COVID <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta", encoding = "UTF-8", fromEncoding = "CP1252", nonint.factors = F)
 
@@ -1844,3 +1842,14 @@ data_2019_test %>%
 data_COVID %>% 
   select(ewb_pre)
 ```
+
+## Código que hemos utilizado para explorar los ítems individuales
+```{r}
+data_2019 %>% select(starts_with("q6010"))
+data_2019 %>% select(starts_with("q621"))
+data_2019 %>% select(starts_with("q621")) %>% View()
+data_2019 %>% select(starts_with("q621")) %>% colnames()
+data_2019 %>% select(starts_with("q6010")) %>% colnames()
+data_2019 %>% select(q4585_ideation:q4599c_hospi) %>% colnames()
+```
+
