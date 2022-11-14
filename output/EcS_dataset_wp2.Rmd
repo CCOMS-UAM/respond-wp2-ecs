@@ -1,0 +1,168 @@
+---
+title: "Edad con Salud WP2 dataset harmonization process"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), 'First created on 30 Sept. 2022. Updated on %d de %B de %Y')`"
+output:
+  html_notebook: 
+  toc: yes
+  toc_float: yes
+institute: CCOMS, Universidad Autónoma de Madrid
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: 80
+---
+# Step 0. Preparation
+
+## Overview
+
+Here, I prepare the full Edad con Salud (2 assessment waves) to be uploaded to 
+OPAL, as part of RESPOND WP2 IPD meta-analysis. I will follow the 
+[OPAL handbook for WP2](https://drzmainz.sharepoint.com/:w:/r/sites/obiba-wp2/Shared%20Documents/harmonisation/data%20upload%20preparation/handbook_datauploadprep.docx?d=w15b8e9fe38734104a507dcedc3af3d49&csf=1&web=1&e=6Hu6Lm)
+
+1. Merge all the assessment waves in a dataset with a number of rows equal to 
+wavesBYparticipants. 
+2. Create as many new variables as needed, as per the OPAL handbook for WP2.
+3. Transform variables that require transformation outside the OBIBA environment
+(sensitive data).
+4. Remove all columns that are not included in the RESPOND WP2 codebook. 
+5. Recode missing data
+5. Create a new hashed ID and remove the old one. 
+6. Export a .csv file to be uploaded to OPAL.
+
+## Required libraries
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(freqtables)
+#install.packages("freqtables")
+library(ecs.data)
+library(labelled)
+#install.packages("labelled")
+library(stringr)
+library(gridExtra)
+#install.packages("gridExtra")
+library(lubridate)
+library(naniar)
+library(stringi)
+library(readstata13)
+```
+
+## Constants on variable harmonization
+
+_Coding of missing values:_
+ - -991 specifies a variable has not been assessed in general (eg, at this point 
+    of data collection), so it is missing by design. 
+ 
+ - -993 specifies missings (default) from data collections that
+actually took place (eg, this exact questionnaire had been assessed at this
+timepoint, but the participant did not answer for whatever reason).
+
+```{r constants}
+
+MISSING_DESIGN <- -991
+NON_RESPONSE <- -993
+
+```
+
+## Data importation
+
+Data is extracted from the OneDrive folders `Bases de datos maestras`. For
+RESPOND WP2, the used folders are `Cohort 2019`and `COVID Substudy`. Files are
+in .dta format, which is a double format. It contains:
+
+  - the variable type (class)
+  - the label (label, part of the metadata)
+  
+To facilitate the work, it is necessary to make variable transformations so that
+`value-label` does not interfere, as it doesn't say anything about the
+categorical or continuous consideration of the variables. 
+
+**Before doing the data analysis it is required to convert the vectors with **
+**`value_labels`** into factors, numeric or character vectors. To do this, it is
+possible to use `unlabelled()`, `to_factor()` o `unclass()`
+before data cleaning or after, to keep the info in the export. 
+
+The original databases are then imported and copies are created for testing.
+
+```{r}
+data_2019 <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
+
+data_COVID <- read_dta("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+
+data_2019_test <- data_2019
+data_COVID_test <- data_COVID
+```
+
+```{r}
+data_2019 <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Ola_3/Cohorte_2019/rawdata_c2019w1.dta", encoding = "UTF-8")
+
+data_COVID <- read.dta13("~/../UAM/Marta Miret Garcia - Bases de datos maestras Edad con Salud/Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta", encoding = "UTF-8", fromEncoding = "CP1252")
+
+data_2019_test <- data_2019
+data_COVID_test <- data_COVID
+```
+
+# Include all individual participants across waves
+
+## Remove and rename variables
+
+We want to check that the column names are adequate. 
+```{r}
+raw_2019_colnames <- colnames(data_2019)
+raw_COVID_colnames <- colnames(data_COVID)
+```
+
+How many columns are duplicated?
+```{r}
+intersect(raw_2019_colnames, raw_COVID_colnames)
+```
+Are in each dataset unique values for columns? Yes.
+```{r}
+print(raw_2019_colnames[duplicated(raw_2019_colnames)])
+print(raw_COVID_colnames[duplicated(raw_COVID_colnames)])
+```
+
+```{r}
+raw_2019_colnames
+```
+
+```{r}
+raw_COVID_colnames
+```
+
+```{r}
+look_for(data_2019, "origin")
+```
+```{r}
+look_for(data_COVID_test)
+
+```
+
+
+
+# Create new variables
+
+## Lockdown stringency index
+
+The file has got data from several countries. I only want to import the Spanish data.
+
+```{r}
+stringency_index <- 
+  readr::read_csv("https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker/master/data/OxCGRT_nat_latest.csv") %>% 
+  filter(CountryCode == "ESP")
+```
+
+```{r}
+stringency_index <- 
+  stringency_index %>% 
+  mutate(date = ymd(Date)) %>% 
+  select(!Date)
+```
+
+Aquí lo que se hace es convertir la variable fecha en "date" para que coincida con la variable "date" de stringency_index.
+```{r}
+df %>% 
+  mutate(date = as_date(`Fecha inicio`)) -> df
+```
