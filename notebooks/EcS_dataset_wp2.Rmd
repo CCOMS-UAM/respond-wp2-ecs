@@ -133,14 +133,26 @@ raw_COVID_colnames
 ```
 
 ```{r}
-look_for(data_2019, "origin")
+look_for(data_2019, "q0006_date")
 ```
+
 ```{r}
-look_for(data_COVID_test)
+look_for(data_COVID_test, "FECHAFIN") #doesn't work
 
 ```
 
+## Waves identification
+```{r}
+data_2019 <- data_2019 %>%
+              add_column(wave = 1, .before = "ID_ECS")
+  
+```
 
+```{r}
+data_COVID <- data_COVID %>%
+              add_column(wave = 2, .before = "ID_ECS")
+  
+```
 
 # Create new variables
 
@@ -163,6 +175,31 @@ stringency_index <-
 
 Aquí lo que se hace es convertir la variable fecha en "date" para que coincida con la variable "date" de stringency_index.
 ```{r}
-df %>% 
-  mutate(date = as_date(`Fecha inicio`)) -> df
+data_2019_test %>% 
+  mutate(date = as_date(`q0006_date`)) -> data_2019_test
+
+data_COVID_test <- data_COVID_test %>% 
+  mutate(date = lubridate::dmy('FECHAFIN')) #esto no funciona y no sé porqué
+
+data_COVID_test$date <- lubridate::dmy(data_COVID_test$FECHAFIN)
 ```
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                    stringency_index,
+                    by = "date")
+
+data_COVID_test <- left_join(data_COVID_test,
+                    stringency_index,
+                    by = "date")
+
+rm(stringency_index)
+```
+Ya hemos conseguido añadir este conjunto de variables. 
+
+## Google Mobility / NUTS
+
+```{r}
+
+```
+
