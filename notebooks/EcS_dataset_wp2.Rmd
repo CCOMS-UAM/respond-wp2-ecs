@@ -141,6 +141,14 @@ look_for(data_COVID_test, "FECHAFIN") #doesn't work
 
 ```
 
+```{r}
+fecha2019 <- lubridate::dmy(data_2019$q0006_date)
+fechaCOVID <- lubridate::dmy(data_COVID_test$FECHAFIN)
+
+df <- cbind(fecha2019, fechaCOVID) %>% View()
+```
+
+
 ## Waves identification
 ```{r}
 data_2019 <- data_2019 %>%
@@ -173,7 +181,8 @@ stringency_index <-
   select(!Date)
 ```
 
-Aquí lo que se hace es convertir la variable fecha en "date" para que coincida con la variable "date" de stringency_index.
+Aquí lo que se hace es convertir la variable fecha en "date" para que coincida
+con la variable "date" de stringency_index.
 ```{r}
 data_2019_test %>% 
   mutate(date = as_date(`q0006_date`)) -> data_2019_test
@@ -197,9 +206,183 @@ rm(stringency_index)
 ```
 Ya hemos conseguido añadir este conjunto de variables. 
 
-## Google Mobility / NUTS
+## Google Mobility
+Descargamos el archivo .zip de los informes regionales de Google 
+(https://www.google.com/covid19/mobility/). Nuestras olas son del año 
+2019 y 2020, por lo que tenemos que guardar los datasets relativos a España
+en esos dos ciclos. 
+
+Como es el cambio de movilidad por el COVID, sólo hay
+información relativa al 2020.
 
 ```{r}
+mobility <- read.csv("~/workspace/2020_ES_Region_Mobility_Report.csv", stringsAsFactors = TRUE)
+```
+
+```{r collapse=TRUE}
+mobility %>% 
+  select(sub_region_1) %>% 
+  table() # CCAA
+mobility %>% 
+  select(sub_region_2) %>% 
+  table() # Province
+```
+
+En Edad con Salud sólo tenemos datos de Madrid y Barcelona. Este valor de
+ciudad está codificado en los datasets originales como "origin". 
+
+```{r}
+mobility <- mobility %>% 
+  filter(sub_region_2 %in% c("Barcelona") | sub_region_1 %in% c("Community of Madrid") )
+```
+
+Habrá que unir el dataset "mobility" a través de ORIGIN en ambos datasets
+(hacerlo cuando ya estén combinados).
+
+## NUTS
+Importamos el dataset obtenido en OBIBA/NUTS2021_nomenclature of territrial units
+for statistics.
+
+Tenemos que importar:
+- Nuts provinces (NUTS 1 to 3)
+- Nuts Urban - Rural
+- Nuts Urban-rural remoteness
+```{r}
+nuts_provinces <- read_excel("~/workspace/NUTS2021.xlsx", 
+                       sheet = "NUTS 1 to 3")
+```
+
+```{r}
+nuts_urbanrural <- read_excel("~/workspace/NUTS2021.xlsx",
+                              sheet = "Urban - Rural")
+```
+
+```{r}
+nuts_urbanruralremoteness <- read_excel("~/workspace/NUTS2021.xlsx",
+                                        sheet = "Urban-rural remoteness")
+```
+
+```{r}
+nuts_provinces <- 
+  nuts_provinces %>% 
+  mutate(NUTS3 = str_replace_all("NUTS level 3",
+                                   "'",
+                                   ""),
+         CODE  = str_replace_all("CODE 2021",
+                                   "'",
+                                   "")
+  )
+```
+
+```{r collapse=TRUE}
+str(nuts_provinces)
+str(nuts_urbanrural)
+str(nuts_urbanruralremoteness)
+```
+
+```{r}
+nuts_provinces  <- 
+  nuts_provinces %>% 
+      rename(nuts_id = `Code 2021` ,
+             origin = `NUTS level 3`)
+
+nuts_urbanrural <- 
+  nuts_urbanrural %>% 
+  rename(nuts_id = NUTS_ID,
+         nuts_urbanrural_category = `URBAN-RURAL CATEGORY`,
+         nuts_urbanrural_label = `URBAN-RURAL LABEL`)
+
+nuts_urbanruralremoteness <- 
+  nuts_urbanruralremoteness %>% 
+  rename(nuts_id = `NUTS ID`,
+         nuts_remoteness_category = `CATEGORY CODE`,
+         nuts_remoteness_label = `CATEGORY LABEL`)
 
 ```
 
+Succesive merging
+
+```{r}
+nuts_ds <- 
+  left_join(nuts_provinces,
+          nuts_urbanrural,
+          by = "nuts_id") %>% 
+  left_join(.,
+            nuts_urbanruralremoteness,
+            by = "nuts_id")
+```
+
+
+```{r}
+rm(nuts_provinces,
+   nuts_urbanrural,
+   nuts_urbanruralremoteness)
+```
+
+```{r}
+mobility %>% 
+  filter(!sub_region_2 %in% nuts_ds$origin) %>% 
+  select(sub_region_2) %>% 
+  table() # I need to change these names
+nuts_ds$origin %>% table()
+```
+
+```{r}
+mobility %>% 
+  mutate(sub_region_2 = str_replace_all(sub_region_2,
+                                            "Álava",
+                                            "Araba/Álava"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Alicante",
+                                    "Alacant/Alicante"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Biscay",
+                                    "Bizkaia"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Castellón",
+                                    "Castellón/Castelló"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Las Palmas",
+                                    "Gran Canaria"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Santa Cruz de Tenerife",
+                                    "Tenerife"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Province of Ourense",
+                                    "Ourense"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Seville",
+                                    "Sevilla"),
+         sub_region_2 = str_replace_all(sub_region_2,
+                                    "Valencia",
+                                    "Valencia/València")
+         ) %>%
+  rename(origin = sub_region_2) -> mobility
+```
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+    origin = to_factor(origin)
+  )
+
+```
+
+```{r}
+str(data_2019_test$origin)
+```
+
+
+```{r}
+df_prueba <- 
+  left_join(data_2019_test,
+            nuts_ds,
+            by = "origin")
+rm(nuts_ds) 
+```
+
+Salen todos NAs. Hay que ver por qué. 
+Revisar data_2019 para ver qué variables de geolocalización hay y qué se puede
+utilizar para utilizar los datos NUTS: origin sólo tiene "BCN" y "MAD" Y NO
+COINCIDEN CON NUTS. 
