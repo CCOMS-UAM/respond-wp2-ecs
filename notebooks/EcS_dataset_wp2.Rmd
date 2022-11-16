@@ -385,4 +385,4 @@ rm(nuts_ds)
 Salen todos NAs. Hay que ver por qué. 
 Revisar data_2019 para ver qué variables de geolocalización hay y qué se puede
 utilizar para utilizar los datos NUTS: origin sólo tiene "BCN" y "MAD" Y NO
-COINCIDEN CON NUTS. 
+COINCIDEN CON NUTS.
