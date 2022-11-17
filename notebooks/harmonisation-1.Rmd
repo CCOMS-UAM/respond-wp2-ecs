@@ -814,7 +814,7 @@ freq_table(data_2019_test, children_hh)
 
 ## GENDER (q1009_sex)
 
-**Self-identified gvender** - 1: male - 2: female - 3: other/diverse -991: not
+**Self-identified gender** - 1: male - 2: female - 3: other/diverse -991: not
 assessed -993: missing (default)
 
 Our categories are: 1 = male; 2 0 female (and the question is not about the
@@ -930,8 +930,8 @@ data_2019_test <-
            q1011_age >= 95 ~ 5
          ), 
          age_cat = factor(x = age_cat,
-                          levels= c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("below 18 years", 
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("below 18 years", 
                                     "18-44",
                                     "45-64",
                                     "65-94",
@@ -995,8 +995,8 @@ data_2019_test <-
            q1012_mar_stat == 5 ~ 6,
          ), 
          relationship = factor(x = relationship,
-                          levels= c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("single", 
+                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("single", 
                                     "married/in a civil union",
                                     "in a relationship and living together",
                                     "in a relationship and living apart",
@@ -1064,8 +1064,8 @@ data_2019_test <-
            q1016_highest == 888 ~ NON_RESPONSE,
          ), 
          education = factor(x = education,
-                          levels= c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
-                          labels= c("primary/basic", 
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("primary/basic", 
                                     "secondary/intermediate",
                                     "tertiary/advanced",
                                     "no formal education",
