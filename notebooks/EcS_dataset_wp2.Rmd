@@ -163,7 +163,7 @@ data_COVID <- data_COVID %>%
   
 ```
 
-# Harmonisation of wave 1
+# Step 1. Harmonisation of wave 1
 
 ## 1. GENDER (q1009_sex)
 
@@ -1135,7 +1135,6 @@ data_2019_test %>%
 
 
 ## 18. INCOME QUARTILES
-## CREATE INCOME QUINTILES (HHQUINTILE) - wave 1
 
 Las variables relacionadas con los ingresos que se manejan en esta BBDD son:
 
@@ -1171,6 +1170,36 @@ data_2019 %>%
 ```
 
 ```{r}
+data_2019 %>%
+  select(q0410g_total, q0410i_ss, q0410j_government, q0410k_other) %>%
+  summarise_all(funs(sum(is.na(.))))
+```
+
+```{r}
+data_2019 %>% 
+  freq_table(q0410g_total) %>% 
+  print(n = 50)
+```
+
+```{r}
+data_2019 %>% 
+  freq_table(q0410i_ss) %>% 
+  print(n = 50)
+```
+
+```{r}
+data_2019 %>% 
+  freq_table(q0410j_government) %>% 
+  print(n = 50)
+```
+
+```{r}
+data_2019 %>% 
+  freq_table(q0410k_other) %>% 
+  print(n = 50)
+```
+
+```{r}
 g1 <- ggplot(data_2019) +
   geom_bar(mapping = aes(x = q0410g_total)) +
   xlim(0, 40)
@@ -1203,6 +1232,13 @@ y luego a factores.
 
 ```{r}
 data_2019_test %>% 
+  select(q0410g_total, q0410i_ss, q0410j_government, q0410k_other) %>% 
+  View()
+```
+
+
+```{r}
+data_2019_test <- data_2019_test %>% 
   mutate(
     q0410g_total = as.numeric(q0410g_total),
     q0410i_ss = as.numeric(q0410i_ss),
@@ -1271,6 +1307,19 @@ data_2019_test <-
          )
 ```
 
+```{r}
+data_2019_test %>% 
+  select(q0410g_total,  
+         q0410g_total_r, 
+         q0410i_ss, 
+         q0410i_ss_r, 
+         q0410j_government, 
+         q0410j_government_r, 
+         q0410k_other,
+         q0410k_other_r) %>% 
+  str()
+```
+
 Encontramos que la recodificación que se ha hecho no es la que buscábamos,
 aunque si seleccionamos dos variables (original y recodificada) vemos que
 podemos hacer otras cosas para seguir operando:
@@ -1300,7 +1349,39 @@ data_2019_test <-
   )
 ```
 
-Necesitamos crear otra variable a partir de esta teniendo en cuenta los -92 y
+Comprobamos que están los NAs bien codificados (-993 y NA)
+```{r}
+data_2019_test %>%
+  select(q0410g_total_r, q0410i_ss_r, q0410j_government_r, q0410k_other_r) %>%
+  summarise_all(funs(sum(is.na(.)))) #Están bien los NAs, 91 de proxy
+```
+
+```{r}
+data_2019_test %>% 
+  freq_table(q0410g_total_r) %>% 
+  print(n = 50) # 371 + 819 = 1190 NON_RESPONSE
+```
+
+```{r}
+data_2019_test  %>% 
+  freq_table(q0410i_ss_r) %>% 
+  print(n = 50) #267 + 824 = 1091 NON_RESPONSE
+```
+
+```{r}
+data_2019_test  %>% 
+  freq_table(q0410j_government_r) %>% 
+  print(n = 50) #230 + 766 = 966 NON_RESPONSE
+```
+
+```{r}
+data_2019_test  %>% 
+  freq_table(q0410k_other_r) %>% 
+  print(n = 50) #291 + 710 = 1001 NON_RESPONSE
+```
+
+
+Necesitamos crear otra variable a partir de esta teniendo en cuenta los -993 y
 -93 con missing para que no se tengan en cuenta a la hora de calcular los
 quintiles, utilizando na_if().
 
@@ -1315,6 +1396,12 @@ data_2019_test <-
 )
 ```
 
+```{r}
+data_2019_test %>%
+  select( q0410g_tot_NA, q0410i_ss_NA, q0410j_gov_NA, q0410k_other_NA) %>%
+  summarise_all(funs(sum(is.na(.))))
+```
+Ahora mismo están como NAs los que son MISSING_DESIGN (proxy) y los NON_RESPONSE
 Una vez que tenemos esto, ya podemos continuar operando.
 
 #### Creación de la variable
@@ -1324,35 +1411,568 @@ data_2019_test <-
   data_2019_test %>% 
   mutate(
     hh_income_r_NA = q0410g_tot_NA + q0410i_ss_NA + q0410j_gov_NA + q0410k_other_NA)
+```
 
+```{r}
+data_2019_test %>% 
+  freq_table(hh_income_r_NA) %>%
+  print(n = 200)
+```
+
+Tenemos 1429 NAs, en los que se incluyen los MISSING_DESIGN y los NON_RESPONSE.
+
+```{r}
 glimpse(data_2019_test$q0410g_total)
 glimpse(data_2019_test$hh_income_r_NA)
 ```
 
+
 ```{r}
-cuartiles19 <- c(9816, 1501, 22024)
+quartiles19 <- c(9816, 15015, 22024) 
 ```
 
 ```{r}
 data_2019_test <- data_2019_test %>% 
   mutate(
   hhquartile = case_when(
-                          hh_income_r_NA <= cuartiles19[1] ~ 1,
-                          hh_income_r_NA > cuartiles19[1] & hh_income_r_NA <= cuartiles19[2] ~ 2,
-                          hh_income_r_NA > cuartiles19[2] & hh_income_r_NA <= cuartiles19[3] ~ 3,
-                          hh_income_r_NA > cuartiles19[3] ~ 4,
-                          is.na(hh_income_r_NA) ~ NON_RESPONSE),
-  
+                          hh_income_r_NA <= quartiles19[1] ~ 1,
+                          hh_income_r_NA > quartiles19[1] & hh_income_r_NA <= quartiles19[2] ~ 2,
+                          hh_income_r_NA > quartiles19[2] & hh_income_r_NA <= quartiles19[3] ~ 3,
+                          hh_income_r_NA > quartiles19[3] ~ 4,
+                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
+                                                  is.na(q0410i_ss_r) &
+                                                  is.na(q0410j_government_r) &
+                                                  is.na(q0410k_other_r)
+                                                           ~ MISSING_DESIGN,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE),                     
+
+  hhquartile = factor(x = hhquartile,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quartile", 
+                                    "second quartile", 
+                                    "third quartile", 
+                                    "fourth quartile", 
+                                    "not assessed", 
+                                    "missing (default)")))
                           
 ```
 
+#### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(hhquartile) %>%
+  freq_table(hhquartile)
+```
 
 ## 19. INCOME QUINTILES
 
+#### Variable creation
+```{r}
+quintiles19 <- c(8847, 12997, 17422, 24104)
+```
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(
+  hhquintile = case_when(
+                          hh_income_r_NA <= quintiles19[1] ~ 1,
+                          hh_income_r_NA > quintiles19[1] & hh_income_r_NA <= quintiles19[2] ~ 2,
+                          hh_income_r_NA > quintiles19[2] & hh_income_r_NA <= quintiles19[3] ~ 3,
+                          hh_income_r_NA > quintiles19[3] & hh_income_r_NA <= quintiles19[4] ~ 4,
+                          hh_income_r_NA > quintiles19[4] ~ 5,
+                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
+                                                  is.na(q0410i_ss_r) &
+                                                  is.na(q0410j_government_r) &
+                                                  is.na(q0410k_other_r)
+                                                           ~ MISSING_DESIGN,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE),                     
+
+  hhquintile = factor(x = hhquintile,
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quintile", 
+                                    "second quintile", 
+                                    "third quintile", 
+                                    "fourth quintile",
+                                    "fifth quintile",
+                                    "not assessed", 
+                                    "missing (default)")))
+                          
+```
+
+#### Checking new variable
+
+```{r}
+data_2019_test %>% 
+  select(hhquintile) %>%
+  freq_table(hhquintile)
+```
+
+Aquí tenemos 1338 NAs y los 91 proxy. 
+
+
+## STRESSORS: life events
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+lte <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_LTE.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            lte, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q465", "q466", "q467"))) %>% 
+  colnames()
+```
+
+## BRS (resilience scale)
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+brs <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_briefresiliencescale.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            brs, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q753", "q754"))) %>% 
+  colnames()
+```
+
+## SOCIAL SUPPORT & LONELINESS
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+loneliness_ss_si <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Loneliness, social support and social isolation.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            loneliness_ss_si, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q63"))) %>% 
+  colnames()
+```
+
+## SOCIAL PARTICIPATION
+
+To be created from baseline using q6613-q6621 (Adaptación del Índice de
+Aislamiento Social - Shankar, McMunn, Banks y Steptoe (2011))
+
+¿Con qué frecuencia en los últimos 12 meses usted
+
+- q6613_club: ... asistió a una reunión con algún grupo, club u organización?
+- q6618_relig: ... asistió a actividades religiosas (no incluya bodas y 
+funerales)?
+- q6619_leave: ... salió de su hogar/vivienda para asistir a reuniones sociales,
+actividades, programas o eventos o para visitar a amigos/as familiares?
+- q6621_assoc: ... acudió a centros o asociaciones de mayores, centros de día,
+grupos de autoayuda, universidades para la tercera edad?
+
+- 1: Nunca
+- 2: Una o dos veces al año 
+- 3: Una o dos veces al mes
+- 4: Una o dos veces por semana
+- 5: A diario
+
+- 999: NA
+
+
+```{r}
+data_2019_test %>% 
+  select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>% 
+  glimpse()
+
+data_2019 %>%
+  select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>%
+  summarise_all(funs(sum(is.na(.))))
+
+data_2019 %>% 
+  select(q6613_club) %>%
+  freq_table(q6613_club)
+
+
+data_2019 %>% 
+  select(q6618_relig) %>%
+  freq_table(q6618_relig)
+
+data_2019 %>% 
+  select(q6619_leave) %>%
+  freq_table(q6619_leave)
+
+data_2019 %>% 
+  select(q6621_assoc) %>%
+  freq_table(q6621_assoc)
+
+
+```
+To create this variable:
+- Not married/not cohabiting with a partner == 1, 
+- had less than monthly contact with children, other inmediate family and friends
+(q6619_leave == 2 & 1)
+- if no participation in any organization,s, religious groups, or committees 
+(q6613_club == 1; q6621_assoc == 1)
+
+En total es una escala de 5 puntos (la original), pero como aquí sólo tenemos 4
+la escala irá de 0 a 4 señalando que mayores puntuaciones tienen una mayor
+aislamiento social. 
+
+Lo podemos reconvertir a la inversa para que señale participación social. 
+
+\*En variable_list.xlsx aparece una fila duplicada con social participation que
+dice "size_sn", pero es una variable que no existe en la BBDD ni en la
+documentación de cohorte 2019.
+
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(q6613_club_r =
+           case_when(
+             q6613_club == 3 | q6613_club == 4 |  q6613_club == 5 ~ 1,
+             is.na(q6613_club) ~ NA,
+             TRUE ~ 0),
+         
+          q6618_relig_r = 
+           case_when(
+             q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5 ~ 1,
+             is.na(q6618_relig) ~ NA,
+             TRUE ~ 0),
+         
+         q6619_leave_r =
+           case_when(
+             q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5 ~ 1,
+             is.na(q6619_leave) ~ NA,
+             TRUE ~ 0),
+         
+         q6621_assoc_r =
+           case_when(
+             q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5 ~ 1,
+             q6621_assoc == 999 ~ NON_RESPONSE,
+             is.na(q6621_assoc) ~ NA,
+             TRUE ~ 0),
+         
+         social_participation = q6613_club_r + 
+                                q6618_relig_r + 
+                                q6619_leave_r +
+                                q6621_assoc_r,
+         
+         social_participation =
+           case_when(
+             social_participation < 0 ~ NON_RESPONSE,
+             is.na(social_participation) & is.na(q6613_club) & 
+                                           is.na(q6618_relig) &
+                                           is.na(q6619_leave) &
+                                           is.na(q6621_assoc) ~ MISSING_DESIGN,
+             TRUE ~ social_participation
+           )
+             )
+```
+
+```{r}
+data_2019_test %>% 
+  select(social_participation) %>%
+  freq_table(social_participation)
+```
+
+is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
+                                                  is.na(q0410i_ss_r) &
+                                                  is.na(q0410j_government_r) &
+                                                  is.na(q0410k_other_r)
+                                                           ~ MISSING_DESIGN,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE
 
 
 
-# Create new variables
+The individual items are already on the dataset:
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q661", "q662"))) %>% 
+  colnames()
+```
+
+## ALCOHOL CONSUMPTION
+"C:\Users\Cristina\UAM\Marta Miret Garcia - Documentacion Edad con Salud\Edad con salud - Ola 3\Outcomes\Cohorte 2019\Outcome datasets\"
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+alcohol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Alchool Consumption.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            alcohol, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q300"))) %>% 
+  colnames()
+```
+
+## TOBACCO CONSUMPTION
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+tobacco <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_tobaccoconsumption.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            tobacco, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q300"))) %>% 
+  colnames()
+```
+
+## DEPRESSION
+
+
+```{r}
+depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_depressionDSM5.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            depression, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q422", "q421", "q4223", "q4700"))) %>% 
+  colnames()
+```
+
+## FLOURISHING SCALE
+
+```{r}
+flourishing <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Flourishing Scale.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            flourishing, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q75"))) %>% 
+  colnames()
+```
+
+## NEGATIVE AND POSITIVE AFFECT
+
+```{r}
+negposaf <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Positive and Negative Affect.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            negposaf, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q702", "q703", "q711", "q7069", "q707", "q706"))) %>% 
+  colnames()
+```
+
+## QUALITY OF LIFE
+
+```{r}
+qol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Quality of Life.dta")
+```
+
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            qol, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q700", "q7010"))) %>% 
+  colnames()
+```
+
+## EXTRAVERSION & NEUROTICISM
+
+```{r}
+personality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_EPQR-A.dta")
+```
+
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            personality, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q464", "q465"))) %>% 
+  colnames()
+```
+
+## SELF-EFFICACY
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q7008"))) %>% 
+  colnames()
+```
+
+## STRESSORS
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q201", "q751", #sleep problems,
+                       "q304", #nutrition
+                       "q200","q41" #pain
+                       ))) %>% 
+  colnames()
+```
+
+## MATERIAL DEPRIVATION
+```{r}
+materialdep <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta")
+```
+
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            materialdep, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q0411"))) %>% 
+  colnames()
+```
+
+## GAD
+
+```{r}
+anxiety <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_anxietyDSM4.dta")
+```
+
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            anxiety, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q45", "q6010", "q621", "q7008a"))) %>% 
+  colnames()
+```
+
+
+
+
+
+
+
+
+# Step 3. Create new variables
 
 ## Lockdown stringency index
 
