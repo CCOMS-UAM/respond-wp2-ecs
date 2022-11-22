@@ -54,14 +54,14 @@ library(ecs.data)
 ## Constants on variable harmonization
 
 _Coding of missing values:_
- - -991 specifies a variable has not been assessed in general (eg, at this point 
-    of data collection), so it is missing by design. 
+ - -991 specifies a variable has not been assessed in general (e.g., at this
+ point of data collection), so it is missing by design. 
+ 
+ - -992 specifies 'refused to answer' NAs
  
  - -993 specifies missings (default) from data collections that
 actually took place (eg, this exact questionnaire had been assessed at this
 timepoint, but the participant did not answer for whatever reason).
-
-  - -992 specifies 'refused to answer' NAs
 
 ```{r constants}
 
@@ -146,23 +146,23 @@ look_for(data_COVID_test, "FECHAFIN") #doesn't work
 
 ```
 
-```{r}
-fecha2019 <- lubridate::dmy(data_2019$q0006_date)
+```{r dates format}
+fecha2019 <- lubridate::ymd(data_2019$q0006_date)
 fechaCOVID <- lubridate::dmy(data_COVID_test$FECHAFIN)
+birthday <- lubridate::ymd(data_2019$q1010_birth_date)
 
-df <- cbind(fecha2019, fechaCOVID) %>% View()
 ```
 
 
 ## Waves identification
 ```{r}
-data_2019 <- data_2019 %>%
+data_2019_test <- data_2019 %>%
               add_column(wave = 1, .before = "ID_ECS")
   
 ```
 
 ```{r}
-data_COVID <- data_COVID %>%
+data_COVID_test <- data_COVID %>%
               add_column(wave = 2, .before = "ID_ECS")
   
 ```
@@ -171,11 +171,18 @@ data_COVID <- data_COVID %>%
 
 ## 1. GENDER (q1009_sex)
 
-**Self-identified gender** - 1: male - 2: female - 3: other/diverse -991: not
-assessed -993: missing (default)
+**Self-identified gender** 
+  - 1: male 
+  - 2: female 
+  - 3: other/diverse 
+  -991: not assessed
+  -992: refused to answer
+  -993: missing (default)
 
-Our categories are: 1 = male; 2 = female (and the question is not about the
-self-identified gender, but sex).
+Our categories are: 
+  - 1 = male; 
+  - 2 = female 
+(the question is not about the self-identified gender, but sex).
 
 ### Variable exploration
 
@@ -189,7 +196,8 @@ data_2019 %>%
 ```
 
 ### Variable harmonization
-
+In this case we simply rename this variable and convert it into a factor, 
+changing the labels as they are the same (the ones we have and the proposed ones)
 ```{r}
 data_2019_test <- data_2019_test %>% 
   mutate(gender = factor(x = q1009_sex,
@@ -211,7 +219,8 @@ data_2019_test %>%
 
 ## 2. CORESIDENCE
 There's no variable from which to create, but knowing that all participants
-are from Spain, we can do it from scratch.
+are from Spain, we can do it from scratch. This variable should be complemented
+with the NUTS code (see below/later on on this script).
 
 ### Variable harmonization
 ```{r}
@@ -232,8 +241,13 @@ data_2019_test %>%
 
 ## 3. MIGRATION
 
-**Country of birth other than country of residence**: - 1 = Yes - 2 = No - 3 =
-No information - 991 - 993
+**Country of birth other than country of residence**: 
+  - 1 = Yes 
+  - 2 = No 
+  - 3 = No information
+  - 991 = missing by design
+  - 992 = refused to answer
+  - 993 = missing (default)
 
 Our variable has registered the name of each country. As we did the sample
 collection in Spain, we can assume that responses that are different than Spain
@@ -247,7 +261,7 @@ data_2019 %>%
   summarise_all(funs(sum(is.na(.)))) #No NAs
 
 data_2019 %>% 
-  freq_table(q1018_country)
+  freq_table(q1018_country) # 1 = Spain, !1 = other countries
 ```
 
 ### Variable creation
@@ -256,9 +270,11 @@ data_2019 %>%
 data_2019_test <-
   data_2019_test %>% 
   mutate(
-    migration = if_else(q1018_country == 1, 2, 1),
+    migration = if_else(q1018_country == 1, 2, 1), 
     migration = factor(x = migration,
-                       levels= c("1", "2", "3", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                       levels= c("1", "2", "3", MISSING_DESIGN,
+                                                REFUSED_ANSWER, 
+                                                NON_RESPONSE),
                           labels= c("yes", 
                                     "no",
                                     "no information",
@@ -270,14 +286,13 @@ data_2019_test <-
 ### Checking new variable
 
 ```{r}
-data_2019_test %>% 
-  select(migration) %>%
+data_2019_test %>%
   freq_table(migration)
 ```
 
 
 
-## A REVISAR 4 & 5.AGE (q1010_birth_date &/OR q1011_age)
+##4 & 5.AGE (q1010_birth_date &/OR q1011_age)
 
 The variable **age_continuous** is a continuous variable from 1 to 100. There is
 also another variable, **age_cat**, a categorical v. with the following
@@ -313,6 +328,21 @@ data_2019 %>%
   select(q1010_birth_date, q1011_age) %>%
   summarise_all(funs(sum(is.na(.))))
 
+ID_NAs <- c(18702401,
+    5600601,
+    3100602,
+    18702701,
+    2802002,
+    17801501,
+    16602601,
+    5800201,
+    19600501,
+    3300201,
+    7101202,
+    7101401,
+    14300101,
+    16800301) 
+
 data_2019 %>%  
   filter(ID_ECS == 18702401 |
          ID_ECS == 5600601 |
@@ -331,40 +361,55 @@ data_2019 %>%
   select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) %>% 
   View()
 
+data_2019 %>%  
+  filter(ID_ECS %in% ID_NAs) %>% 
+  select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) %>% 
+  View()
+
+
 ```
 
 We use exclusively the Age variable:
 
 ```{r}
 data_2019_test %>%
-  select(q1011_age) %>%
   freq_table(q1011_age) %>% 
   print(n = 82)
 ```
 
 ### Variables creation
-
 ```{r}
 data_2019_test <-
   data_2019_test %>% 
-  mutate(age_continuous = q1011_age,
-         age_cat = case_when(
-           q1011_age < 18 ~ 1,
-           q1011_age >= 18 & q1011_age <= 44 ~ 2,
-           q1011_age >= 45 & q1011_age <= 64 ~ 3,
-           q1011_age >= 65 & q1011_age <= 94 ~ 4, 
-           q1011_age >= 95 ~ 5
+  mutate(
+    diff_bday_int = year(fecha2019) - year(birthday),
+    diff_bday_int = as.double(diff_bday_int),
+    age_continuous = if_else(
+                        ID_ECS %in% ID_NAs, q1011_age, 
+                        diff_bday_int
+                        ),
+    age_cat = case_when(
+           age_continuous < 18 ~ 1,
+           age_continuous >= 18 & age_continuous <= 44 ~ 2,
+           age_continuous >= 45 & age_continuous <= 64 ~ 3,
+           age_continuous >= 65 & age_continuous <= 94 ~ 4, 
+           age_continuous >= 95 ~ 5
          ), 
          age_cat = factor(x = age_cat,
-                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
+                          levels = c("1", "2", "3", "4", "5",
+                                     MISSING_DESIGN,
+                                     REFUSED_ANSWER,
+                                     NON_RESPONSE),
                           labels = c("below 18 years", 
                                     "18-44",
                                     "45-64",
                                     "65-94",
                                     "95 years or older",
                                     "not assessed", 
+                                    "refused to answer",
                                     "missing (default)")))
 ```
+
 
 ### Checking new variables
 
@@ -373,7 +418,7 @@ data_2019_test %>%
   freq_table(age_cat)
 
 data_2019_test %>% 
-  select(age_continuous) %>% 
+  select(age_continuous, age_cat) %>% 
   View()
 ```
 
@@ -391,7 +436,9 @@ data_2019_test %>%
 
 -991 = not assessed -993 = missing (default)
 
-`q1503_work_now` (c2019_w1) *Currently working?*: - 1 = Yes - 2 = No
+`q1503_work_now` (c2019_w1) *Currently working?*: 
+- 1 = Yes 
+- 2 = No
 
 `q1504_reason` (c2019_w1) *Reason not working*:
 
@@ -490,7 +537,7 @@ Changes made after consulting with IPD-Respond team:
 -   3 temporal or contract of works and services ===== 2 temporary
 -   4 verbal or without contract ===== 4
 -   888 DK ===== -993
--   999 refused to answer ===== -993
+-   999 refused to answer ===== -992
 
 ### Variable exploration
 
@@ -558,7 +605,7 @@ In EcS (`q1510_workday`):
 -   5 Reduced work day ===== 4
 -   6 Shift work / irregular or variable work ==== 4
 -   7 Other type ==== 4
--   888 DK ==== -993
+-   888 DK ==== -992
 
 ### Variable exploration
 
@@ -583,8 +630,7 @@ data_2019_test <-
        q1510e_workday == 5 ~ 4, #reduced work day --> other
        q1510e_workday == 6 ~ 4, #shift work --> other
        q1510e_workday == 7 ~ 4, #other --> other
-       q1510e_workday == 888 ~ NON_RESPONSE, 
-       q1510e_workday == 999 ~ REFUSED_ANSWER,
+       q1510e_workday == 888 ~ REFUSED_ANSWER,
         is.na(q1510e_workday) ~ NON_RESPONSE
 
          ),
@@ -612,18 +658,110 @@ data_2019_test %>%
 
 
 ## 9. HC WORKER (To be modified)
-<!-- *defined as: A healthcare worker is anyone who works in a healthcare or social  -->
-<!-- care setting, including healthcare students on clinical placement, frontline  -->
-<!-- healthcare workers and other healthcare workers not in direct patient contact. -->
+*defined as: A healthcare worker is anyone who works in a healthcare or social
+care setting, including healthcare students on clinical placement, frontline
+healthcare workers and other healthcare workers not in direct patient contact.
 
-<!-- These settings include, but are not limited to, state-funded and private  -->
-<!-- organisations providing services in the following areas: disability, older  -->
-<!-- persons, nursing homes, acute and non acute hospitals, community hospitals,  -->
-<!-- mental health, social inclusion, palliative care, chronic illness, primary care -->
-<!-- (GP, dental, pharmacies, physiotherapy clinics), health and well being, hospice, -->
-<!-- rehabilitation, home care, paramedics, and community services (e.g. youth,  -->
-<!-- substance abuse, suicide prevention, community development). -->
-<!-- . -->
+These settings include, but are not limited to, state-funded and private
+organisations providing services in the following areas: disability, older
+persons, nursing homes, acute and non acute hospitals, community hospitals,
+mental health, social inclusion, palliative care, chronic illness, primary care
+(GP, dental, pharmacies, physiotherapy clinics), health and well being, hospice,
+rehabilitation, home care, paramedics, and community services (e.g. youth,
+substance abuse, suicide prevention, community development).
+
+HC_worker has to be a dichotomous variable that indicates if a participants fits
+in the previous definition (1 = yes; 2 = no). In EcS we have `q1510_occ`on base-
+line, which indicates in a free-text variable the occupation of the participants.
+`q1510_catoccu` uses the CIUO-08 (ISCO codes from OIT) from categorize the 
+occupations of the participants. 
+
+To proceed, we follow the next steps:
+
+1. Explore unique values of this variable & see if `q1510_catoccu`is useful.
+2. Extract patterns that are of our interest. 
+3. Create the new variable. 
+
+
+```{r}
+occ_unique <- data_2019 %>%
+  select(q1510_occ) %>%
+  distinct()  
+  
+View(occ_unique)
+
+data_2019 %>%
+  select(q1510_occ, q1510_catoccu) %>%
+  summarise_all(funs(sum(is.na(.)))) #Los NAs coinciden entre ambas; en 
+#respuesta abierta son "".
+```
+
+There are 1824 unique values for this variable and 347 NAs (in both variables;
+in free-text they appear as ""). This would be useful in order
+to process the variable "profession" later on. 
+
+`q1510_catoccu`indicates the categorization of the 10 main groups, but not
+the subcategories, which are the ones that could be interesting to use. We'll
+try if using it as a filter is useful. 
+
+
+Barely it does, as the principal category of our interest leaves out interesting
+occupations (e.g., auxiliar de enfermería), which are on groups 2, 3, 7, 8. 
+As it  doesn't allow us to differentiate health care workers from other
+professionals, we'll just work with `q1510_occ`and explore manually all the
+free-text unique values. The ones that are interesting for us are on
+`"HC_workersCat.txt"`. 
+
+To facilitate pattern detection, we convert to lowercase all the values of 
+`q1510_occ` using `str_to_lower()`de `stringr`. To eliminate accents, 
+`stri_trans_general(x, "Latin-ASCII")`.
+
+```{r}
+data_2019_test %>% 
+  mutate(
+    q1510_occ_utf8 = as_utf8(q1510_occ),
+    q1510_occ_utf8 = str_to_lower(q1510_occ_utf8, locale = "spa"),
+    q1510_occ_itf8 = stringi::stri_trans_general(q1510_occ_utf8, "Latin-ASCII")
+  ) %>% 
+  select(q1510_occ, q1510_occ_utf8) %>% 
+  View()
+```
+
+Import the .txt that has all the responses to create HC_workers:
+
+```{r}
+library(readr)
+occ_unique <- read_delim("C:/Users/Cris/Downloads/HC-workerCat.txt", 
+     delim = "\t", escape_double = FALSE, 
+     col_names = FALSE, trim_ws = TRUE)
+occ_unique <- as.character(occ_unique)
+
+```
+
+```{r}
+data_2019_test <- data_2019 %>% 
+  mutate( 
+    hc_worker = if_else(str_detect(q1510_occ, occ_unique), 1, 2),
+    hc_worker = factor(x = hc_worker,
+                                  levels = c("1", "2",
+                                             MISSING_DESIGN, 
+                                             REFUSED_ANSWER, 
+                                             NON_RESPONSE),
+                                  labels = c("yes",
+                                            "no",
+                                            "not assessed",
+                                            "refused to answer",
+                                            "missing (default)"
+                                            )))
+#TODO: Ver por qué no funciona str_detect 
+```
+
+
+```{r}
+data_2019_test %>% 
+  freq_table(hc_worker)
+```
+
 
 ## A REVISAR 10. PROFESSION (q1510_catoccu)
 
