@@ -94,7 +94,7 @@ before data cleaning or after, to keep the info in the export.
 The original databases are then imported and copies are created for testing.
 
 ```{r}
-data_2019 <- read_dta(BASELINE_FILEPATH)
+data_2019 <- read_dta(BASELINE_FILEPATH, encoding = "UTF-8")
 data_COVID <- read_dta(COVID_FILEPATH)
 
 data_2019_test <- data_2019
@@ -731,17 +731,18 @@ Import the .txt that has all the responses to create HC_workers:
 
 ```{r}
 library(readr)
-occ_unique <- read_delim("C:/Users/Cris/Downloads/HC-workerCat.txt", 
+occ_unique <- read_delim("C:/Users/Cristina/Downloads/HC-workerCat.txt", 
      delim = "\t", escape_double = FALSE, 
      col_names = FALSE, trim_ws = TRUE)
-occ_unique <- as.character(occ_unique)
+#occ_unique <- as.character(occ_unique)
 
 ```
 
 ```{r}
 data_2019_test <- data_2019 %>% 
   mutate( 
-    hc_worker = if_else(str_detect(q1510_occ, occ_unique), 1, 2),
+    #hc_worker = if_else(str_detect(q1510_occ, occ_unique$X1), 1, 2),
+    hc_worker = if_else(q1510_occ %in% occ_unique$X1, 1, 2),
     hc_worker = factor(x = hc_worker,
                                   levels = c("1", "2",
                                              MISSING_DESIGN, 
@@ -754,6 +755,9 @@ data_2019_test <- data_2019 %>%
                                             "missing (default)"
                                             )))
 #TODO: Ver por qué no funciona str_detect 
+#Se ha hecho un apaño con if_else, pero realmente tendríamos que ver qué
+#pasa con str_detect porque a lo mejor es posible que alguno se nos haya
+#pasado.
 ```
 
 
