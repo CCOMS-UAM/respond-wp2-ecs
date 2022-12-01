@@ -1,0 +1,142 @@
+---
+title: "Final issues on baseline harmonization"
+output: html_notebook
+---
+
+# Gender
+No problems found.
+
+# Coresidence
+In combination with NUTS codes, variable is created without any
+problem.
+
+# Migration
+Variable created from an existing variable, `q1018_country`, 
+which indicates the country of origin of the participants. As all 
+of them live in Spain, answers that differ from "1" (as it is the
+category for Spain) are coded as migrants.
+
+No further problems with this variable.
+
+# Age variables
+We have to create a continuous and a categorical variable. This has
+to be made with `q1010_birth_date`, which collects the date of birth
+of the participants, and substract that value from the date in which
+the interview was perform (`fecha2019`). 
+
+- Problem 1: There are some IDs with NAs. To 'imputate' these values,
+we use another variable, `q1011_age`. (Solved)
+
+**- Problem 2: By doing this, when it comes to inspect all the age**
+**variables (`age_continuous`, `age_cat`, `q1011_age`,**
+**`q1010_birth_date`), we can appreciate that in some cases, the age**
+**differs from one unit (approximately). **
+
+# Employment status
+
+This variable is created based on `q1503_work_now`(currently working)
+and `q1504_reason` (reason not working). 
+
+- Problem #1. Our categories doesn't match with categories proposed in
+RESPOND categorisation. **It is solved** by marking the ones that doesn't
+exactly match as 'Other'.
+
+# Contract
+
+No problems found. Categorization was agreed upon with the RESPOND team.
+
+# Employment type
+
+No problems found. Categorization was agreed upon with the RESPOND team.
+
+#HC worker
+This variable has to be created based on a free-text variable. A manual inspection of all the categories of the variable `q1510_occ` was made, and the interesting values were copied in a .txt. Later on, variable was created by selecting the cases that match with the names on that .txt file. 
+
+**- Problem 1. There should be a way to select the patterns we are interested in, in case the manual coding has failed and some exact case has been overlooked (which has a similar handwriting and therefore has not been analyzed/detected) using str_detect (for example)**
+
+# Profession 
+
+- Problem #1. Our categorisation doesn't match the categorisation proposed by RESPOND Team. If we follow their indications, the final variable contains 1944 cases in "others", but also knowing that some categories doesn't match with the free-text variables. 
+The ideal solution would be to create this variable based on the free-text variable we have to use with HC_worker.
+- At the moment, we have decided to let this variable as it is, "wrong-categorised", but it would be a great idea to see how can we do it usin NLP.
+
+# Education
+No further problems.
+
+# Relationship status
+Categorization was agreed upon with the RESPOND team. No further issues.
+
+# Children
+**Do you have children?** - 1 = yes, - 2 = no - 991 - 993
+
+Our variables `q1056` & `q1058` ask about biological and adopted children
+(separated) (1 = yes; 2 = no). Elvira suggested to combine them and we'll follow
+this approach.
+2253 people has children, 749 no.
+
+# Children household
+569 yes, 1921 no (they can be people with children but don't live with them).
+
+# N. o. children
+749 don't have children, 579 one child, two or three 1465, four or more 206.
+
+# Living alone
+512 personas viven solas y 2490 no
+
+# Household size
+512 personas viven en una casa de una única persona
+
+# Income quartiles & quintiles 
+**- Problem #1. The different variables that are used (q0410g_total, q0410i_ss, q0410j_government, q0410k_other) to create these two**
+**variables have a distinct number of NAs. The combination of them**
+**generates a number of NAs that doesn't match with any of the variables by**
+**separate, and there's no filter in the questionnaire (as long as I could check). **
+
+-- It seems to be an error on converting -993 and -992 in NAs (línea 1537). When you want to see a frequency tables, the value of -993 stills there. 
+
+# Stressors : life events
+No problems.
+
+# BRS (resilience scale)
+No problems.
+
+# Social support & loneliness
+No problems.
+
+# Social participation
+Although we do not necessarily have to create this variable (our combined variable does not take into account all the original items and is measuring "the opposite" of what we are looking for), I think it may be a good option to upload it to Opal. However, I get an interesting error when using case_when() that I don't know how to fix. It is in lines 1746. 
+# Alcohol consumption
+No problems.
+
+# Tobacco consumption
+No problems.
+
+# Depression
+No problems.
+
+# Anxiety (GAD)
+No problems. 
+
+# Flourishing scale
+No problems.
+
+# Negative and positive affect
+No problems.
+
+# Quality of Life
+No problems.
+
+# Extraversion & neuroticism
+No problems.
+
+# Self - efficacy
+No problems.
+
+# Stressors
+No problems.
+
+# material deprivation
+No problems.
+
+#NUTS and GMI
+No problems.
