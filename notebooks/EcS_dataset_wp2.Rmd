@@ -272,10 +272,10 @@ data_2019_test <-
   mutate(
     migration = if_else(q1018_country == 1, 2, 1), 
     migration = factor(x = migration,
-                       levels= c("1", "2", "3", MISSING_DESIGN,
+                       levels = c("1", "2", "3", MISSING_DESIGN,
                                                 REFUSED_ANSWER, 
                                                 NON_RESPONSE),
-                          labels= c("yes", 
+                          labels = c("yes", 
                                     "no",
                                     "no information",
                                     "not assessed", 
@@ -418,8 +418,10 @@ data_2019_test %>%
   freq_table(age_cat)
 
 data_2019_test %>% 
-  select(age_continuous, age_cat) %>% 
+  select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
   View()
+#¿Hay algunos casos en los que la edad continua es un número mayor que la 
+#establecida?
 ```
 
 ## 6. EMPLOYMENT STATUS (`q1503_work_now` & `q1504_reason`.)
@@ -634,7 +636,7 @@ data_2019_test <-
         is.na(q1510e_workday) ~ NON_RESPONSE
 
          ),
-          contract = factor(x = employment_ty,
+          employment_ty = factor(x = employment_ty,
                           levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
                           labels = c("permanent",
                                     "temporary",
@@ -653,6 +655,7 @@ data_2019_test <-
 ```{r}
 data_2019_test %>%
   freq_table(employment_ty)
+
 ```
 
 
@@ -1275,6 +1278,9 @@ data_2019_test %>%
   distinct() %>% 
   arrange(size, value) %>% 
   print(n = 150)
+
+
+data_2019_test %>% freq_table(hh_size)
 ```
 
 
@@ -1502,7 +1508,8 @@ data_2019_test %>%
 
 ```{r}
 data_2019_test %>% 
-  freq_table(q0410g_total_r)  # 371 + 819 = 1190 NON_RESPONSE
+  freq_table(q0410g_total_r) %>%  # 371 + 819 = 1190 NON_RESPONSE
+  print(n = 26)
 ```
 
 ```{r}
@@ -1539,6 +1546,12 @@ data_2019_test <-
         q0410k_other_NA = na_if(q0410k_other_r, REFUSED_ANSWER)
 )
 ```
+
+```{r}
+data_2019_test  %>% 
+ freq_table(q0410i_ss_NA)
+```
+
 
 ```{r}
 data_2019_test %>%
@@ -1797,25 +1810,25 @@ data_2019_test <-
   data_2019_test %>%
   mutate(q6613_club_r =
            case_when(
-             q6613_club == 3 | q6613_club == 4 |  q6613_club == 5 ~ 1,
+             (q6613_club == 3 | q6613_club == 4 | q6613_club == 5) ~ 1,
              is.na(q6613_club) ~ NA,
              TRUE ~ 0),
          
           q6618_relig_r = 
            case_when(
-             q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5 ~ 1,
+             (q6618_relig == 3 | q6618_relig == 4 |  q6618_relig) == 5 ~ 1,
              is.na(q6618_relig) ~ NA,
              TRUE ~ 0),
          
          q6619_leave_r =
            case_when(
-             q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5 ~ 1,
+             (q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5) ~ 1,
              is.na(q6619_leave) ~ NA,
              TRUE ~ 0),
          
          q6621_assoc_r =
            case_when(
-             q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5 ~ 1,
+             (q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5) ~ 1,
              q6621_assoc == 999 ~ NON_RESPONSE,
              is.na(q6621_assoc) ~ NA,
              TRUE ~ 0),
@@ -1827,7 +1840,7 @@ data_2019_test <-
          
          social_participation =
            case_when(
-             social_participation < 0 ~ NON_RESPONSE,
+             (social_participation < 0) ~ NON_RESPONSE,
              is.na(social_participation) & is.na(q6613_club) & 
                                            is.na(q6618_relig) &
                                            is.na(q6619_leave) &
@@ -1842,14 +1855,6 @@ data_2019_test %>%
   select(social_participation) %>%
   freq_table(social_participation)
 ```
-
-is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
-                                                  is.na(q0410i_ss_r) &
-                                                  is.na(q0410j_government_r) &
-                                                  is.na(q0410k_other_r)
-                                                           ~ MISSING_DESIGN,
-                          is.na(hh_income_r_NA) ~ NON_RESPONSE
-
 
 
 The individual items are already on the dataset:
