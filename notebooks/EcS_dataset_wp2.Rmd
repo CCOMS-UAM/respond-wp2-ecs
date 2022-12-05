@@ -1537,13 +1537,13 @@ data_2019_test <-
   data_2019_test %>% 
   mutate(
         q0410g_tot_NA = na_if(q0410g_total_r, NON_RESPONSE),
-        q0410g_tot_NA = na_if(q0410g_total_r, REFUSED_ANSWER),
+        q0410g_tot_NA = na_if(q0410g_tot_NA, REFUSED_ANSWER),
         q0410i_ss_NA = na_if(q0410i_ss_r, NON_RESPONSE),
-        q0410i_ss_NA = na_if(q0410i_ss_r, REFUSED_ANSWER),
+        q0410i_ss_NA = na_if(q0410i_ss_NA, REFUSED_ANSWER),
         q0410j_gov_NA = na_if(q0410j_government_r, NON_RESPONSE),
-        q0410j_gov_NA = na_if(q0410j_government_r, REFUSED_ANSWER),
+        q0410j_gov_NA = na_if(q0410j_gov_NA, REFUSED_ANSWER),
         q0410k_other_NA = na_if(q0410k_other_r, NON_RESPONSE),
-        q0410k_other_NA = na_if(q0410k_other_r, REFUSED_ANSWER)
+        q0410k_other_NA = na_if(q0410k_other_NA, REFUSED_ANSWER)
 )
 ```
 
@@ -1821,7 +1821,7 @@ data_2019_test <-
          
           q6618_relig_r = 
            case_when(
-             (q6618_relig == 3 | q6618_relig == 4 |  q6618_relig) == 5 ~ 1,
+             (q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5) ~ 1,
              is.na(q6618_relig) ~ NA,
              TRUE ~ 0),
          
@@ -1870,8 +1870,6 @@ data_2019_test %>%
 ```
 
 ## ALCOHOL CONSUMPTION
-"C:\Users\Cristina\UAM\Marta Miret Garcia - Documentacion Edad con Salud\Edad con salud - Ola 3\Outcomes\Cohorte 2019\Outcome datasets\"
-
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
