@@ -1561,6 +1561,11 @@ data_2019_test %>%
 Ahora mismo están como NAs los que son MISSING_DESIGN (proxy) y los NON_RESPONSE
 Una vez que tenemos esto, ya podemos continuar operando.
 
+```{r}
+data_c2019w1 |> transmute(across(q0410g_total:q0410k_other, is.na)) |> distinct()
+```
+
+
 #### Creación de la variable
 
 ```{r}

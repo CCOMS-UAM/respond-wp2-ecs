@@ -1,0 +1,324 @@
+---
+title: "Doing a reprex of R programming problem on EcS"
+output: html_notebook
+---
+
+```{r}
+library(reprex)
+library(tidyverse)
+```
+# Importing data
+```{r}
+dput(data_c2019w1 %>% 
+       slice_sample(prop = 0.30) %>% 
+                select(q0410g_total:q0410k_other), file = "data_c2019w1.R")
+```
+
+```{r}
+data_c2019w1 <- dget(file = "C:/Users/Cris/Documents/Workspace/respond-wp2-ecs/data_c2019w1.R")
+```
+
+# Problem description
+We need to calculate the centiles for the baseline sample. 
+The approach we follow is to sum all the variables that collect data on income: 
+
+-   `q0410g_total`: gross personal income of all members of your family during 
+      the last 12M.
+-   `q0410i_ss`: gross household income during the last 12M from the retirement 
+      pension.
+-   `q0410j_government`: gross household income (...) from official programs 
+      (unemployment, dependent children, widows, widowers, orphans, 
+      general assistance, ...).
+-   `q0410k_other`: from private sources (pensions, investments, alimony or 
+      maintenance).
+
+We encountered two problems:
+- The characteristics of the double format of database variables in Stata make 
+it necessary to do some previous transformations to be able to handle it
+properly.
+- The NAs for each variable result in a number of NAs different 
+from the number of NAs for each of these variables separately.
+- When converting to NAs, an error occurs that I cannot locate. 
+
+
+### Variable exploration
+
+```{r}
+data_c2019w1 |> 
+  transmute(across(q0410g_total:q0410k_other, is.na)) |> 
+  distinct()
+```
+The number of NAs in these variables is the same (91 as proxy respondents).
+
+```{r}
+data_c2019w1 %>% 
+  freq_table(q0410g_total) %>% 
+  print(n = 50)
+```
+
+```{r}
+data_c2019w1  %>% 
+  freq_table(q0410i_ss) %>% 
+  print(n = 50)
+```
+
+```{r}
+data_c2019w1  %>% 
+  freq_table(q0410j_government) %>% 
+  print(n = 50)
+```
+
+```{r}
+data_c2019w1  %>% 
+  freq_table(q0410k_other) %>% 
+  print(n = 50)
+```
+
+#### Variable recoding
+
+These variables are originally factor variables with a value of a number from
+1 to 33 and a label indicating the median value of the established range. 
+
+We have, therefore, to convert these factor variables into numeric variables 
+whose values are the information of the median of the established range 
+(currently they are there as labels). To do this, we will:
+
+* recode them into the respective medians,
+* change their format,
+* change the value of the NAs to what was agreed in RESPOND, 
+* convert the missing values into NAs in order to be able to do the sum, 
+* sum 
+* and divide by quintiles and convert the NAs into their original values. 
+
+
+```{r}
+data_c2019w1 <- 
+  data_c2019w1 %>% 
+  mutate(q0410g_total_r = recode_factor(q0410g_total,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+         
+         q0410i_ss_r = recode_factor(q0410i_ss,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410j_government_r = recode_factor(q0410j_government,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410k_other_r = recode_factor(q0410k_other,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE, 
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+         )
+```
+
+```{r}
+data_c2019w1 %>% 
+  select(q0410g_total,  
+         q0410g_total_r, 
+         q0410i_ss, 
+         q0410i_ss_r, 
+         q0410j_government, 
+         q0410j_government_r, 
+         q0410k_other,
+         q0410k_other_r) %>% 
+  str()
+```
+
+```{r}
+data_c2019w1 %>% 
+  select(q0410g_total, q0410g_total_r) %>% 
+  View()
+```
+
+After this coding we see that the levels have been modified, but not the labels.
+We convert first to character and then to integer:
+
+```{r}
+data_c2019w1 <- 
+  data_c2019w1 %>% 
+  mutate(
+        q0410g_total_r = as.character(q0410g_total_r),
+        q0410i_ss_r = as.character(q0410i_ss_r),
+        q0410j_government_r = as.character(q0410j_government_r),
+        q0410k_other_r = as.character(q0410k_other_r),
+        
+        q0410g_total_r = as.integer(q0410g_total_r),
+        q0410i_ss_r = as.integer(q0410i_ss_r),
+        q0410j_government_r = as.integer(q0410j_government_r),
+        q0410k_other_r = as.integer(q0410k_other_r)
+  )
+```
+
+```{r}
+g1 <- ggplot(data_c2019w1) +
+  geom_bar(mapping = aes(x = q0410g_total_r))
+
+g2 <- ggplot(data_c2019w1 ) +
+  geom_bar(mapping = aes(x = q0410i_ss_r))
+
+g3 <- ggplot(data_c2019w1 ) +
+  geom_bar(mapping = aes(x = q0410j_government_r))
+
+
+g4 <- ggplot(data_c2019w1 ) +
+  geom_bar(mapping = aes(x = q0410k_other_r))
+
+grid.arrange(g1, g2, g3, g4)
+```
+
+Comprobamos que están los NAs bien codificados (-993 y NA)
+```{r}
+data_c2019w1 %>%
+  select(q0410g_total_r, q0410i_ss_r, q0410j_government_r, q0410k_other_r) %>%
+  summarise_all(funs(sum(is.na(.)))) #Están bien los NAs, 91 de proxy
+```
+
+```{r}
+data_c2019w1 %>% 
+  freq_table(q0410g_total_r) %>%  # 371 + 819 = 1190 NON_RESPONSE
+  print(n = 26)
+```
+
+```{r}
+data_c2019w1 %>% 
+  freq_table(q0410i_ss_r) #267 + 824 = 1091 NON_RESPONSE
+```
+
+```{r}
+data_c2019w1 %>% 
+  freq_table(q0410j_government_r) #230 + 766 = 966 NON_RESPONSE
+```
+
+```{r}
+data_c2019w1   %>% 
+  freq_table(q0410k_other_r) #291 + 710 = 1001 NON_RESPONSE
+```
+
+
+Necesitamos crear otra variable a partir de esta teniendo en cuenta los -993 y
+-93 con missing para que no se tengan en cuenta a la hora de calcular los
+quintiles, utilizando na_if().
+
+```{r}
+data_c2019w1 <- 
+  data_c2019w1 %>% 
+  mutate(
+        q0410g_tot_NA = na_if(q0410g_total_r, NON_RESPONSE),
+        q0410g_tot_NA = na_if(q0410g_total_r, REFUSED_ANSWER),
+        q0410i_ss_NA = na_if(q0410i_ss_r, NON_RESPONSE),
+        q0410i_ss_NA = na_if(q0410i_ss_r, REFUSED_ANSWER),
+        q0410j_gov_NA = na_if(q0410j_government_r, NON_RESPONSE),
+        q0410j_gov_NA = na_if(q0410j_government_r, REFUSED_ANSWER),
+        q0410k_other_NA = na_if(q0410k_other_r, NON_RESPONSE),
+        q0410k_other_NA = na_if(q0410k_other_r, REFUSED_ANSWER)
+)
+```
+
+```{r}
+data_c2019w1 %>% 
+ freq_table(q0410i_ss_NA)
+```
+
+
+```{r}
+data_c2019w1 %>%
+  select(q0410g_tot_NA, q0410i_ss_NA, q0410j_gov_NA, q0410k_other_NA) %>%
+  summarise_all(funs(sum(is.na(.))))
+```
+Right now the NAs are MISSING_DESIGN (proxy) and NON_RESPONSE.
+While the proxy are always the same, the NON_RESPONSE are different for 
+each variable.
+```{r}
+data_c2019w1 |> 
+  transmute(across(q0410g_total:q0410k_other, is.na)) |>
+  distinct()
+```
+
+
+#### Variable creation
+
+```{r}
+data_c2019w1 <- 
+  data_c2019w1 %>% 
+  mutate(
+    hh_income_r_NA = q0410g_tot_NA + q0410i_ss_NA + q0410j_gov_NA + q0410k_other_NA)
+```
+
+```{r}
+data_c2019w1 %>% 
+  freq_table(hh_income_r_NA)
+```
+
+We have 99 NAs, including MISSING_DESIGN and NON_RESPONSE.
+
+```{r}
+quartiles19 <- c(9816, 15015, 22024) 
+```
+
+```{r}
+data_c2019w1 <- data_c2019w1 %>% 
+  mutate(
+  hhquartile = case_when(
+                          hh_income_r_NA <= quartiles19[1] ~ 1,
+                          hh_income_r_NA > quartiles19[1] & hh_income_r_NA <= quartiles19[2] ~ 2,
+                          hh_income_r_NA > quartiles19[2] & hh_income_r_NA <= quartiles19[3] ~ 3,
+                          hh_income_r_NA > quartiles19[3] ~ 4,
+                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
+                                                  is.na(q0410i_ss_r) &
+                                                  is.na(q0410j_government_r) &
+                                                  is.na(q0410k_other_r)
+                                                           ~ MISSING_DESIGN,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE),                     
+
+  hhquartile = factor(x = hhquartile,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quartile", 
+                                    "second quartile", 
+                                    "third quartile", 
+                                    "fourth quartile", 
+                                    "not assessed", 
+                                    "missing (default)")))
+                          
+```
+
+#### Checking new variable
+
+```{r}
+data_c2019w1%>% 
+  freq_table(hhquartile)
+```
