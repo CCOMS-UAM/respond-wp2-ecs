@@ -5,10 +5,14 @@ output: html_notebook
 
 # Gender
 No problems found.
+Harmonizing both waves, gender should be imputed with the same values as 
+wave 1.
 
 # Coresidence
 In combination with NUTS codes, variable is created without any
 problem.
+Harmonizing both waves, gender should be imputed with the same values as 
+wave 1.
 
 # Migration
 Variable created from an existing variable, `q1018_country`, 
@@ -17,6 +21,9 @@ of them live in Spain, answers that differ from "1" (as it is the
 category for Spain) are coded as migrants.
 
 No further problems with this variable.
+
+Harmonizing both waves, gender should be imputed with the same values as 
+wave 1.
 
 # Age variables
 We have to create a continuous and a categorical variable. This has
@@ -32,6 +39,9 @@ we use another variable, `q1011_age`. (Solved)
 **`q1010_birth_date`), we can appreciate that in some cases, the age**
 **differs from one unit (approximately). **
 
+I have difficulties creating age for wave 2.
+
+
 # Employment status
 
 This variable is created based on `q1503_work_now`(currently working)
@@ -41,30 +51,56 @@ and `q1504_reason` (reason not working).
 RESPOND categorisation. **It is solved** by marking the ones that doesn't
 exactly match as 'Other'.
 
+Harmonizing both waves, employment status in wave 2 should be `MISSING_DESING`
+or maybe construct it based on a variable called `unemployment`(which refers
+to losing his/her job because of COVID)
+
 # Contract
 
 No problems found. Categorization was agreed upon with the RESPOND team.
+Harmonizing both waves, employment status in wave 2 should be `MISSING_DESING`
+
 
 # Employment type
 
 No problems found. Categorization was agreed upon with the RESPOND team.
+Harmonizing both waves, employment status in wave 2 should be `MISSING_DESING`
 
 #HC worker
-This variable has to be created based on a free-text variable. A manual inspection of all the categories of the variable `q1510_occ` was made, and the interesting values were copied in a .txt. Later on, variable was created by selecting the cases that match with the names on that .txt file. 
+This variable has to be created based on a free-text variable. 
+A manual inspection of all the categories of the variable `q1510_occ` was made,
+and the interesting values were copied in a .txt. Later on, variable was 
+created by selecting the cases that match with the names on that .txt file. 
 
-**- Problem 1. There should be a way to select the patterns we are interested in, in case the manual coding has failed and some exact case has been overlooked (which has a similar handwriting and therefore has not been analyzed/detected) using str_detect (for example)**
+**- Problem 1. There should be a way to select the patterns we are interested** 
+**in, in case the manual coding has failed and some exact case has been**
+**overlooked (which has a similar handwriting and therefore has not been**
+**analyzed/detected) using str_detect (for example)** (left in the fridge)
+
+We could impute the values from wave 1 in wave 2. 
 
 # Profession 
 
-- Problem #1. Our categorisation doesn't match the categorisation proposed by RESPOND Team. If we follow their indications, the final variable contains 1944 cases in "others", but also knowing that some categories doesn't match with the free-text variables. 
-The ideal solution would be to create this variable based on the free-text variable we have to use with HC_worker.
-- At the moment, we have decided to let this variable as it is, "wrong-categorised", but it would be a great idea to see how can we do it usin NLP.
+- Problem #1. Our categorisation doesn't match the categorisation proposed
+by RESPOND Team. If we follow their indications, the final variable contains
+1944 cases in "others", but also knowing that some categories doesn't match
+with the free-text variables. 
+The ideal solution would be to create this variable based on the free-text
+variable we have to use with HC_worker.
+- At the moment, we have decided to let this variable as it is, 
+"wrong-categorised", but it would be a great idea to see how
+can we do it usin NLP.
+
+We could impute the values from wave 1 to wave 2.
 
 # Education
 No further problems.
 
+We could impute the values from wave 1 to wave 2.
+
 # Relationship status
 Categorization was agreed upon with the RESPOND team. No further issues.
+Harmonizing both waves, Relationship status in wave 2 should be `MISSING_DESING`
 
 # Children
 **Do you have children?** - 1 = yes, - 2 = no - 991 - 993
@@ -74,32 +110,45 @@ Our variables `q1056` & `q1058` ask about biological and adopted children
 this approach.
 2253 people has children, 749 no.
 
+We could impute the values from wave 1 to wave 2.
+
 # Children household
 569 yes, 1921 no (they can be people with children but don't live with them).
+
+We could impute the values from wave 1 to wave 2.
 
 # N. o. children
 749 don't have children, 579 one child, two or three 1465, four or more 206.
 
+We could impute the values from wave 1 to wave 2.
+
 # Living alone
 512 personas viven solas y 2490 no
 
+They are created on both waves.
+
 # Household size
 512 personas viven en una casa de una única persona
+We could impute the values from wave 1 to wave 2.
 
 # Income quartiles & quintiles 
-**- Problem #1. The different variables that are used (q0410g_total, q0410i_ss, q0410j_government, q0410k_other) to create these two**
+**- Problem #1. The different variables that are used (q0410g_total, **
+**q0410i_ss, q0410j_government, q0410k_other) to create these two**
 **variables have a distinct number of NAs. The combination of them**
 **generates a number of NAs that doesn't match with any of the variables by**
 **separate, and there's no filter in the questionnaire (as long as I could check). **
 
--- It seems to be an error on converting -993 and -992 in NAs (línea 1537). When you want to see a frequency tables, the value of -993 stills there. 
+-- It seems to be an error on converting -993 and -992 in NAs (línea 1537). 
+When you want to see a frequency tables, the value of -993 stills there. 
+
+-- Queda pendiente explorarlo en profundidad (16/12/2022)
 
 # Stressors : life events
 No problems.
 
 # BRS (resilience scale)
 No problems.
-
+BRS = BRS
 # Social support & loneliness
 No problems.
 

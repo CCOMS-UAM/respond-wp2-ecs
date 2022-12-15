@@ -141,8 +141,8 @@ On COVID Substudy there's one case that is not on baseline wave. We have to
 remove it. Firstly, we detect it using anti_join():
 
 ```{r}
-ID_ECS_subs <- data_COVID_test %>%
-                anti_join(data_2019_test, by = "ID_ECS") %>% 
+ID_ECS_subs <- data_COVID %>%
+                anti_join(data_2019, by = "ID_ECS") %>% 
                 select(ID_ECS) %>% pull()
 
 ```
@@ -161,38 +161,6 @@ data_2019_test <- data_2019
 data_COVID_test <- data_COVID
 ```
 
-COVID substudy is a follow-up study from baseline. We have to know what cases
-are in both waves:
-```{r}
-ID_ECS_both <- data_COVID_test %>%
-               semi_join(data_2019_test, by = "ID_ECS") %>% 
-               select(ID_ECS) %>% 
-               pull()
-  
-```
-
-
-```{r}
-ID_ECS_w1w2 <- integer(3002)
-ID_ECS_w1w2 <- ifelse(data_2019_test$ID_ECS == ID_ECS_both, 1, 0)
-```
-
-
-We have to harmonize the format of dates:
-
-```{r dates format}
-fecha2019 <- lubridate::ymd(data_2019$q0006_date)
-fechaCOVID <- lubridate::dmy(data_COVID_test$FECHAFIN)
-birthday <- lubridate::ymd(data_2019$q1010_birth_date)
-birthday_COVID <- data_2019_test %>% 
-                  filter(ID_ECS == ID_ECS_both) %>%
-                  select(q1010_birth_date) %>% 
-                  lubridate::ymd()
-                  
-
-```
-
-
 ## Waves identification
 ```{r}
 data_2019_test <- data_2019 %>%
@@ -205,6 +173,76 @@ data_COVID_test <- data_COVID %>%
               add_column(wave = 2, .before = "ID_ECS")
   
 ```
+
+## Follow-up cases
+COVID substudy is a follow-up study from baseline. We have to know what cases
+are in both waves:
+```{r}
+ID_ECS_both <- data_COVID_test %>%
+               semi_join(data_2019_test, by = "ID_ECS") %>% 
+               select(ID_ECS) %>% 
+               pull()
+  
+```
+
+This generates a vector that contains 1853 values: the cases that are in both
+waves of the study.
+
+```{r}
+# ID_ECS_w1w2 <- integer(3002)
+# ID_ECS_w1w2 <- ifelse(data_2019_test$ID_ECS == ID_ECS_both, 1, 0)
+
+combi <- match(data_COVID_test$ID_ECS, data_2019_test$ID_ECS) #positions of the
+#cases that are in both waves
+fill0 <- rep(0, 3002 - length(ID_ECS_both))
+
+ID_ECS_w1w2 <- ifelse(combi, ID_ECS_both, fill0)
+length(ID_ECS_w1w2)
+length(fill0)
+```
+
+```{r}
+ids_2019 <- data_2019_test %>% select(ID_ECS, wave)
+ids_covid <- data_COVID_test %>% select(ID_ECS, wave)
+
+ids <- full_join(ids_2019, ids_covid); ids
+```
+
+
+```{r}
+prueba <- left_join(data_2019_test, data_COVID_test, by = "ID_ECS")
+
+birthday_COVID <- prueba %>% 
+                  group_by(ID_ECS) %>% 
+                  mutate(
+                    birthday_COVID = case_when(
+                      wave.x == 1 & wave.y == 2 ~ q1010_birth_date.x,
+                      wave.x == 1 | wave.y == 2 ~ 0
+                    )
+                  )
+```
+
+
+We have to harmonize the format of dates:
+Firstly, we create separate vectors with the dates:
+```{r dates format}
+fecha2019 <- lubridate::ymd(data_2019$q0006_date) #date of interview wave 1
+fechaCOVID <- lubridate::dmy(data_COVID_test$FECHAFIN)
+birthday <- lubridate::ymd(data_2019$q1010_birth_date)
+birthday_COVID <- data_2019_test %>% 
+                  filter(ID_ECS_both %in% ID_ECS) %>%
+                  select(q1010_birth_date) %>% 
+                  lubridate::ymd()
+                  
+
+```
+
+```{r}
+data_COVID_test <- data_2019_test %>% 
+                  mutate(q1010_birth_date = lubridate::ymd(q1010_birth_date))
+```
+
+
 
 # Step 1. Harmonisation of wave 1
 
