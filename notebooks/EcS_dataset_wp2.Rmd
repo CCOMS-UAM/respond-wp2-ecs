@@ -225,7 +225,7 @@ birthday_COVID <- prueba %>%
 
 We have to harmonize the format of dates:
 Firstly, we create separate vectors with the dates:
-```{r dates format}
+```{r dates-format}
 fecha2019 <- lubridate::ymd(data_2019$q0006_date) #date of interview wave 1
 fechaCOVID <- lubridate::dmy(data_COVID_test$FECHAFIN)
 birthday <- lubridate::ymd(data_2019$q1010_birth_date)
@@ -2250,7 +2250,7 @@ year:
 birthday_COVID <- data_2019_test %>% 
   mutate(
     birthday_COVID = case_when(
-      ID_ECS == ID_ECS_both ~ q1010_birth_date,
+      ID_ECS == ID_ECS_both  ~ q1010_birth_date,
       ID_ECS == ID_NAs_sub ~ q1010_year
     ) %>% 
       select(birthday_COVID)
