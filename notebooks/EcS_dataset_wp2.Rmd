@@ -84,7 +84,7 @@ in .dta format, which is a double format. It contains:
   - the variable type (class)
   - the label (label, part of the metadata)
   
-To facilitate the work, it is necessary to make variable transformations so that
+For ease of work, it is necessary to make variable transformations so that
 `value-label` does not interfere, as it doesn't say anything about the
 categorical or continuous consideration of the variables. 
 
