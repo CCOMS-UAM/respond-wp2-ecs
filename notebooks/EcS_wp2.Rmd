@@ -52,6 +52,8 @@ library(stringi)
 library(readstata13)
 library(readxl)
 library(ecs.data)
+
+#TODO: Add labels to all variables
 ```
 
 ## Constants on variable harmonization
@@ -851,7 +853,8 @@ data_2019_test <-
   data_2019_test %>%
   mutate(
     profession = case_when(
-      q1510_catoccu ==  5  ~  5 ,
+      q1510_catoccu ==  5 |
+      hc_worker == 1 ~  5 , #added hc_worker
       #service workers --> first responders: paramedic/firefighter/police
       q1510_catoccu ==  10  ~  6 ,
       #armed forces --> military
@@ -1012,11 +1015,8 @@ data_2019_test %>%
 
 Our variable `q1012_mar_stat` is coded as:
 
-1 = never married (and no cohabiting)
-2 = currently married/law-partner
-3 = cohabiting
-4 = separated/divorced
-5 = widowed
+1 = never married (and no cohabiting) 2 = currently married/law-partner 3 =
+cohabiting 4 = separated/divorced 5 = widowed
 
 As the categories doesn't match exactly, I propose the following categorisation:
 
@@ -1070,4 +1070,995 @@ data_2019_test <-
 ```{r}
 data_2019_test %>%
   freq_table(relationship)
+```
+
+## 2.13. Children
+
+**Do you have children, live with children or take care of children in your**
+**household?**
+
+-   1 = yes
+-   2 = no
+
+Our variables `q1056` & `q1058` ask about biological and adopted children
+(separatedly) (1 = yes; 2 = no). We'll combine both in a single variable.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1056, q1058) %>%
+  summarise_all(funs(sum(is.na(.)))) #No NAs
+
+data_2019 %>% 
+  freq_table(q1056) #1 = yes (2241); #2 = no (761)
+
+data_2019 %>% 
+  freq_table(q1058) #1 = yes (24); #2 = no (2978)
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(children = case_when(
+           q1056 == 1 | q1058 == 1 ~ 1,
+           q1056 == 2 | q1058 == 2 ~ 2
+         ), 
+         children = factor(x = children,
+                          levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("yes", 
+                                    "no",
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)")))
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>%
+  freq_table(children) #2253 = yes; 749 = no  
+```
+
+## 2.14. Children household
+
+**Are there children in your household?**
+
+-   1 = yes
+-   2 = no
+
+This variable should be created based on the Cohort 2019 (wave 1) variables:
+`q0407_age_01:q0407_age_010`, as they indicate how many members with different
+ages are in the participants' household.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q0407_age_01, q0407_age_08, q0407_age_10) %>%
+  summarise_all(funs(sum(is.na(.)))) #A lot of NAs
+
+data_2019 %>%
+  select(
+    q0407_age_01,
+    q0407_age_02,
+    q0407_age_03,
+    q0407_age_04,
+    q0407_age_05,
+    q0407_age_06,
+    q0407_age_07,
+    q0407_age_08,
+    q0407_age_10
+  ) %>%
+  glimpse()
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(
+    children_hh =
+      case_when(
+        q0407_age_01 < 18 |
+          q0407_age_02 < 18 |
+          q0407_age_03 < 18 |
+          q0407_age_04 < 18 |
+          q0407_age_05 < 18 |
+          q0407_age_06 < 18 |
+          q0407_age_07 < 18 |
+          q0407_age_08 < 18 |  q0407_age_09 < 18 | q0407_age_10 < 18 ~ 1,
+        
+        q0407_age_01 >= 18 |
+          q0407_age_02 >= 18 |
+          q0407_age_03 >= 18 |
+          q0407_age_04 >= 18 |
+          q0407_age_05 >= 18 |
+          q0407_age_06 >= 18 |
+          q0407_age_07 >= 18 |
+          q0407_age_08 >= 18 |  q0407_age_09 >= 18 | q0407_age_10 >= 18 ~ 2,
+        
+        
+        is.na(q0407_age_01) |
+          is.na(q0407_age_02) |
+          is.na(q0407_age_03) |
+          is.na(q0407_age_04) |
+          is.na(q0407_age_05) |
+          is.na(q0407_age_06) |
+          is.na(q0407_age_07) |
+          is.na(q0407_age_08) |
+          is.na(q0407_age_09) | is.na(q0407_age_10) ~ NON_RESPONSE
+      ),
+    children_hh = factor(
+      x = children_hh,
+      levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "yes",
+        "no",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"
+      )
+    )
+  )
+```
+
+### Checking new variable
+
+```{r}
+freq_table(data_2019_test, children_hh) 
+```
+
+## 2.15. Number of children (q1057/q1059)
+
+Same as the previous one, this variable indicates in a continuous way **How**
+\_\_many children do you have? (including children who are not your own but live
+in the same household or who do you care for in your household?)
+
+-   1 = no children
+-   2 = one child
+-   3 = two or three
+-   4 = four or more
+
+In EcS there's a difference made between biological and adopted children (1+,
+DK). Our proposal is to combine both.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q1057, q1059) %>%
+  summarise_all(funs(sum(is.na(.)))) #NAs
+
+data_2019 %>%
+  freq_table(q1057) 
+
+data_2019 %>%
+  freq_table(q1059) 
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <-
+  data_2019_test %>% 
+  mutate(
+         
+         q1057_NA = replace_na(q1057, 0),
+         q1057_NA = na_if(q1057_NA, 888),
+         q1059_NA = replace_na(q1059, 0),
+         add_children = q1057_NA + q1059_NA,
+         
+         
+         nofchildren = case_when(
+                                  add_children == 0 ~  1, #no children
+                                  add_children == 1 ~ 2, #one children
+                                  add_children == 2 | add_children == 3 ~ 3, #two or three children
+                                  add_children >= 4 ~ 4, # four or more,
+                                  is.na(add_children) ~ NON_RESPONSE
+                                 
+         ), 
+         nofchildren = factor(x = nofchildren,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("no children", 
+                                    "one child",
+                                    "two or three",
+                                    "four or more",
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)")))
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>%
+  freq_table(nofchildren)
+```
+
+## 2.16. Living alone
+
+**Do you live alone or together with others?** - 1 = alone - 2 = not alone
+
+ECS has `q0401_hh_total`, which is a continuous variable from 1 to 10.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  freq_table(q0401_hh_total)
+
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  summarise_all(funs(sum(is.na(.)))) #No NAs
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <- data_2019_test %>%
+  mutate(
+    living_alone = if_else(q0401_hh_total == 1, 1, 2),
+    living_alone = factor(
+      x = living_alone,
+      levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "alone",
+        "not alone",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"
+      )
+    )
+  ) %>%
+  select(living_alone) %>%
+  glimpse()
+
+
+var_label(data_2019_test$living_alone) <- "Living alone"
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>%
+  freq_table(living_alone)
+```
+
+## 2.17. Household size
+
+**How many people, including yourself, live in your household?**
+
+-   1: one person
+-   2: two persons
+-   3: three or four persons
+-   4: five or more persons
+-   5: live in an institution
+
+Variable `q0401_hh_total` reflects the number of people (1-10 to 10 people). In
+ECS there's no case that lives in an institution - so category no 5 won't have
+any case on our sample.
+
+### Variable exploration
+
+```{r}
+data_2019 %>%
+  select(q0401_hh_total) %>%
+  summarise_all(funs(sum(is.na(.)))) #No NAs
+
+data_2019 %>%
+  freq_table(q0401_hh_total) 
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <- data_2019 %>% 
+  mutate(hh_size = case_when(
+                  q0401_hh_total == 1 ~ "1",
+                  q0401_hh_total == 2 ~ "2",
+                  q0401_hh_total == 3 ~ "3",
+                  q0401_hh_total == 4 ~ "3",
+                  q0401_hh_total >= 5 ~ "4"),
+         
+         hh_size = factor(x = hh_size,
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("one person", 
+                                    "two persons", 
+                                    "three or four persons", 
+                                    "five or more persons", 
+                                    "live in an institution", 
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)"))
+  )
+
+var_label(data_2019_test$hh_size) <- "Household size"
+
+```
+
+### Checking new variable
+
+```{r}
+data_2019_test %>%
+  group_by(hh_size) %>% 
+  pivot_longer(hh_size, names_to = "size", values_to = "value") %>% 
+  select(size, value) %>% 
+  distinct() %>% 
+  arrange(size, value) %>% 
+  print(n = 150)
+
+
+data_2019_test %>% 
+  freq_table(hh_size)
+```
+
+## 2.18. Quartiles & quintiles
+
+Quartiles and quintiles have to be created from baseline cohort. We'll sum all
+the variables that collect data on income:
+
+-   `q0410g_total`: gross personal income of all members of your family during
+    the last 12M.
+-   `q0410i_ss`: gross household income during the last 12M from the retirement
+    pension.
+-   `q0410j_government`: gross household income (...) from official programs
+    (unemployment, dependent children, widows, widowers, orphans, general
+    assistance, ...).
+-   `q0410k_other`: from private sources (pensions, investments, alimony or
+    maintenance).
+
+We have to take into account:
+
+-   The characteristics of the double format of database variables in Stata make
+    it necessary to do some previous transformations to be able to handle it
+    properly.
+
+-   The NAs for each variable result in a number of NAs different from the
+    number of NAs for each of these variables separately.
+
+### Variable exploration
+
+```{r}
+data_2019 |> 
+  transmute(across(q0410g_total:q0410k_other, is.na)) |> 
+  distinct()
+```
+
+All variables have 91 NAs (proxy respondents). But the numbers of `888` and
+`999` could be different.
+
+```{r}
+data_2019 %>% 
+  freq_table(q0410g_total) %>% 
+  print(n = 50) #888 = 371; 999 = 819; 91 = NAs
+```
+
+```{r}
+data_2019 %>% 
+  freq_table(q0410i_ss) %>% 
+  print(n = 50) #888 = 267; 999 = 824; 91 = NAs. Most of the sample are in '1' & '2'
+#but not much; 321 + 645
+```
+
+```{r}
+data_2019  %>% 
+  freq_table(q0410j_government) %>% 
+  print(n = 50) #888 = 371; 999 = 819; 91 = NAs. Most of the sample are in '1' & '2'
+```
+
+```{r}
+data_2019  %>% 
+  freq_table(q0410k_other) %>% 
+  print(n = 50) #888 = 291; 999 = 710; 91 = NAs. Most of the sample are in '1' & '2'
+```
+
+More people do not want to answer than do not answer because they do not know.
+If we explore the NAs pattern (excluding -91 as they are proxy respondents) we
+can say that:
+
+```{r}
+g1 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410g_total), width = 30) +
+  xlim(800, 1200)
+
+g2 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410i_ss), width = 30) +
+  xlim(800, 1200)
+
+g3 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410j_government), width = 30) +
+  xlim(800, 1200)
+
+g4 <- ggplot(data_2019) +
+  geom_bar(mapping = aes(x = q0410k_other), width = 30) +
+  xlim(800, 1200)
+
+grid.arrange(g1, g2, g3, g4)
+```
+
+The pattern of NAs (999 and 888) is very similar.
+
+### Variable recoding
+
+These variables are originally factor variables with a value of a number from 1
+to 33 and a label indicating the median value of the established range.
+
+We have, therefore, to convert these factor variables into numeric variables
+whose values are the information of the median of the established range
+(currently they are there as labels). To do this, we will:
+
+-   recode them into the respective medians,
+-   change their format,
+-   change the value of the NAs to what was agreed in RESPOND,
+-   convert the missing values into NAs in order to be able to do the sum,
+-   sum
+-   and divide by quintiles and convert the NAs into their original values.
+
+```{r}
+data_2019_test <- 
+  data_2019 %>% 
+  mutate(q0410g_total_r = recode_factor(q0410g_total,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+         
+         q0410i_ss_r = recode_factor(q0410i_ss,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410j_government_r = recode_factor(q0410j_government,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE,
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000),
+        q0410k_other_r = recode_factor(q0410k_other,
+                                          "999" = REFUSED_ANSWER,
+                                          "888" = NON_RESPONSE, 
+                                          "1"  =           0, "2"  =      0, "3"  =    500, "4"  =    1500,
+                                          "5"  =        2500, "6"  =   3500, "7"  =   4500, "8"  =    5500,
+                                          "9"  =        6500, "10" =   7500, "11" =   8500, "12" =    9500,
+                                          "13" =       10500, "14" =  11500, "15" =  12500, "16" =   13500,
+                                          "17" =       14500, "18" =  15500, "19" =  16500, "20" =   17500,
+                                          "21" =       18500, "22" =  19500, "23" =  22500, "24" =   27500,
+                                          "25" =       32500, "26" =  37500, "27" =  42500, "28" =   47500,
+                                          "29" =       62500, "30" =  87500, "31" = 125000, "32" =  175500,
+                                          "33" =      250000, "34" = 400000, "35" = 750000, "36" = 1000000)
+         )
+```
+
+```{r}
+data_2019_test %>% 
+  select(q0410g_total,  
+         q0410g_total_r, 
+         q0410i_ss, 
+         q0410i_ss_r, 
+         q0410j_government, 
+         q0410j_government_r, 
+         q0410k_other,
+         q0410k_other_r) %>% 
+  str()
+```
+
+At this point, the things that have changed is that the **levels** have been
+modified.
+
+```{r}
+levels(data_2019_test$q0410k_other_r)
+```
+
+```{r}
+data_2019_test %>% 
+  select(q0410g_total_r, 
+         q0410i_ss_r, 
+         q0410j_government_r,
+         q0410k_other_r) %>% 
+  remove_val_labels()
+```
+
+As factors can't be summed, we have to convert these variables in character, and
+then in integer.
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+        q0410g_total_r = as.character(q0410g_total_r),
+        q0410i_ss_r = as.character(q0410i_ss_r),
+        q0410j_government_r = as.character(q0410j_government_r),
+        q0410k_other_r = as.character(q0410k_other_r),
+        
+        q0410g_total_r = as.integer(q0410g_total_r),
+        q0410i_ss_r = as.integer(q0410i_ss_r),
+        q0410j_government_r = as.integer(q0410j_government_r),
+        q0410k_other_r = as.integer(q0410k_other_r)
+  )
+```
+
+We check that NAs are well recoded (-992, -993 & NAs)
+
+```{r}
+data_2019_test %>%
+  select(q0410g_total_r, q0410i_ss_r, q0410j_government_r, q0410k_other_r) %>%
+  summarise_all(funs(sum(is.na(.)))) #Están bien los NAs, 91 de proxy
+```
+
+```{r}
+data_2019_test %>% 
+  freq_table(q0410g_total_r) %>%  # 371 + 819 = 1190 NON_RESPONSE
+  print(n = 26)
+```
+
+```{r}
+data_2019_test %>% 
+  freq_table(q0410i_ss_r) #267 + 824 = 1091 NON_RESPONSE
+```
+
+```{r}
+data_2019_test %>% 
+  freq_table(q0410j_government_r) #230 + 766 = 966 NON_RESPONSE
+```
+
+```{r}
+data_2019_test   %>% 
+  freq_table(q0410k_other_r) #291 + 710 = 1001 NON_RESPONSE
+```
+
+We need to create another variable from these taking into account the -993 and
+-992 as missing so that they are not taken into account when calculating the
+quintiles, using na_if().
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+        q0410g_tot_NA = na_if(q0410g_total_r, NON_RESPONSE),
+        q0410g_tot_NA = na_if(q0410g_total_r, REFUSED_ANSWER),
+        q0410i_ss_NA = na_if(q0410i_ss_r, NON_RESPONSE),
+        q0410i_ss_NA = na_if(q0410i_ss_r, REFUSED_ANSWER),
+        q0410j_gov_NA = na_if(q0410j_government_r, NON_RESPONSE),
+        q0410j_gov_NA = na_if(q0410j_government_r, REFUSED_ANSWER),
+        q0410k_other_NA = na_if(q0410k_other_r, NON_RESPONSE),
+        q0410k_other_NA = na_if(q0410k_other_r, REFUSED_ANSWER)
+)
+```
+
+```{r}
+data_2019_test %>% 
+ freq_table(q0410i_ss_NA)
+```
+
+```{r}
+data_2019_test %>%
+  select(q0410g_tot_NA, q0410i_ss_NA, q0410j_gov_NA, q0410k_other_NA) %>%
+  summarise_all(funs(sum(is.na(.))))
+```
+
+Right now the NAs are MISSING_DESIGN (proxy) and NON_RESPONSE. While the proxy
+are always the same, the NON_RESPONSE are different for each variable.
+
+```{r}
+data_2019_test |> 
+  transmute(across(q0410g_total:q0410k_other, is.na)) |>
+  distinct()
+```
+
+### Variable creation
+
+```{r}
+data_2019_test <- 
+  data_2019_test %>% 
+  mutate(
+    hh_income_r_NA = q0410g_tot_NA + q0410i_ss_NA + q0410j_gov_NA + q0410k_other_NA)
+```
+
+```{r}
+data_2019_test %>% 
+  freq_table(hh_income_r_NA)
+```
+
+We have 99 NAs, including MISSING_DESIGN and NON_RESPONSE.
+
+```{r}
+quartiles19 <- c(9816, 15015, 22024) 
+quintiles19 <- c(8847, 12997, 17422, 24104)
+```
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(
+  hhquartile = case_when(
+                          hh_income_r_NA <= quartiles19[1] ~ 1,
+                          hh_income_r_NA > quartiles19[1] & hh_income_r_NA <= quartiles19[2] ~ 2,
+                          hh_income_r_NA > quartiles19[2] & hh_income_r_NA <= quartiles19[3] ~ 3,
+                          hh_income_r_NA > quartiles19[3] ~ 4,
+                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
+                                                  is.na(q0410i_ss_r) &
+                                                  is.na(q0410j_government_r) &
+                                                  is.na(q0410k_other_r)
+                                                           ~ MISSING_DESIGN,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE),   
+  
+  hhquartile = factor(x = hhquartile,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quartile", 
+                                    "second quartile", 
+                                    "third quartile", 
+                                    "fourth quartile", 
+                                    "not assessed", 
+                                    "missing (default)")),
+  
+  hhquintile = case_when(
+                          hh_income_r_NA <= quintiles19[1] ~ 1,
+                          hh_income_r_NA > quintiles19[1] & hh_income_r_NA <= quintiles19[2] ~ 2,
+                          hh_income_r_NA > quintiles19[2] & hh_income_r_NA <= quintiles19[3] ~ 3,
+                          hh_income_r_NA > quintiles19[3] & hh_income_r_NA <= quintiles19[4] ~ 4,
+                          hh_income_r_NA > quintiles19[4] ~ 5,
+                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
+                                                  is.na(q0410i_ss_r) &
+                                                  is.na(q0410j_government_r) &
+                                                  is.na(q0410k_other_r)
+                                                           ~ MISSING_DESIGN,
+                          is.na(hh_income_r_NA) ~ NON_RESPONSE),
+  
+  hhquintile = factor(x = hhquintile,
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quartile", 
+                                    "second quartile", 
+                                    "third quartile", 
+                                    "fourth quartile",
+                                    "fifth quintile",
+                                    "not assessed", 
+                                    "missing (default)"))
+  
+  )
+                          
+```
+
+### Checking new variables
+
+```{r}
+data_2019_test %>% 
+  freq_table(hhquartile)
+```
+
+```{r}
+data_2019_test %>% 
+  freq_table(hhquintile)
+```
+
+Finally we got 91 as not assessed (proxy respondants) and 996 missing (default).
+
+## From here, variables that do not need harmonization but do need to be in Wave 1.
+
+## Stressors
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+lte <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_LTE.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            lte, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q465", "q466", "q467"))) %>% 
+  colnames()
+```
+
+## BRS (resilience scale)
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+brs <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_briefresiliencescale.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            brs, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q753", "q754"))) %>% 
+  colnames()
+```
+
+## Social support & Loneliness
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+loneliness_ss_si <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Loneliness, social support and social isolation.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            loneliness_ss_si, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q63"))) %>% 
+  colnames()
+```
+
+## Social participation
+
+To be created from baseline using q6613-q6621 (Adapted from Social Isolation
+Index - Shankar, McMunn, Banks and Steptoe (2011)).
+
+How often in the past 12 months did you
+
+-   `q6613_club`: ... attended a meeting with any group, club, or organization?
+-   `q6618_relig`: ... attended religious activities (do not include weddings and
+    funerals)? funerals)?
+-   `q6619_leave`: ... went out of your home to attend social gatherings,
+    activities, programs or events or to visit family friends?
+-   `q6621_assoc`: ... did you go to senior centers or associations, day centers,
+    self-help groups, universities for the elderly?
+
+-   1: Never
+-   2: Once or twice a year
+-   3: Once or twice a month
+-   4: Once or twice a week
+-   5: Daily
+-   999: NA
+
+### Variable exploration
+```{r}
+data_2019_test %>% 
+  select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>% 
+  glimpse()
+
+data_2019 %>%
+  select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>%
+  summarise_all(funs(sum(is.na(.))))
+
+data_2019 %>% 
+  freq_table(q6613_club)
+
+
+data_2019 %>% 
+  freq_table(q6618_relig)
+
+data_2019 %>% 
+  freq_table(q6619_leave)
+
+data_2019 %>% 
+  freq_table(q6621_assoc)
+```
+
+### Variable creation
+To create this variable:
+
+-   Not married/not cohabiting with a partner == 1, 
+-   had less than monthly contact with children, other inmediate family and friends
+(q6619_leave == 2 & 1)
+-   if no participation in any organizations, religious groups, or committees 
+(q6613_club == 1; q6621_assoc == 1)
+
+In total, the original scale it is a 5-point scale, but since we only have
+4 items here, the scale will go from 0 to 4, indicating that
+higher scores have greater social isolation. 
+
+We can reverse the score to indicate social participation. 
+
+<!-- \*In variable_list.xlsx there is a duplicate row with social participation that -->
+<!-- says "size_sn", but it is a variable that does not exist in the database or in the  -->
+<!-- 2019 cohort documentation. -->
+
+```{r}
+data_2019_test <-
+  data_2019_test %>%
+  mutate(q6613_club_r =
+           case_when(
+             (q6613_club == 3 | q6613_club == 4 | q6613_club == 5) ~ 1,
+             is.na(q6613_club) ~ NA,
+             TRUE ~ 0),
+         
+          q6618_relig_r = 
+           case_when(
+             (q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5) ~ 1,
+             is.na(q6618_relig) ~ NA,
+             TRUE ~ 0),
+         
+         q6619_leave_r =
+           case_when(
+             (q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5) ~ 1,
+             is.na(q6619_leave) ~ NA,
+             TRUE ~ 0),
+         
+         q6621_assoc_r =
+           case_when(
+             (q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5) ~ 1,
+             q6621_assoc == 999 ~ NON_RESPONSE,
+             is.na(q6621_assoc) ~ NA,
+             TRUE ~ 0),
+         
+         social_participation = q6613_club_r + 
+                                q6618_relig_r + 
+                                q6619_leave_r +
+                                q6621_assoc_r,
+         
+         social_participation =
+           case_when(
+             (social_participation < 0) ~ NON_RESPONSE,
+             is.na(social_participation) & is.na(q6613_club) & 
+                                           is.na(q6618_relig) &
+                                           is.na(q6619_leave) &
+                                           is.na(q6621_assoc) ~ MISSING_DESIGN,
+             TRUE ~ social_participation
+           )
+             )
+```
+
+### Checking new variable
+```{r}
+data_2019_test %>%
+  freq_table(social_participation)
+```
+
+The individual items are already on the dataset:
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q661", "q662"))) %>% 
+  colnames()
+```
+
+## Alcohol consumption
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+alcohol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Alchool Consumption.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            alcohol, 
+                            by = "ID_ECS")
+```
+
+```{r}
+data_2019_test %>%
+  freq_table(social_participation)
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q300"))) %>% 
+  colnames()
+```
+
+## Tobacco consumption
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+tobacco <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_tobaccoconsumption.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            tobacco, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q300"))) %>% 
+  colnames()
+```
+
+## Depression
+
+```{r}
+depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_depressionDSM5.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            depression, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q422", "q421", "q4223", "q4700"))) %>% 
+  colnames()
+```
+
+## Flourishing scale
+```{r}
+flourishing <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Flourishing Scale.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            flourishing, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q75"))) %>% 
+  colnames()
 ```
