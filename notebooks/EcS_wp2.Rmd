@@ -3,13 +3,15 @@ title: "Edad con Salud WP2 dataset harmonization process"
 author: "Cristina Rodríguez-Prada"
 date: "`r format(lubridate::today(), 'First created on 30 Sept. 2022. Updated on %d de %B de %Y')`"
 output:
-  html_notebook: 
+  html_document:
+    df_print: paged
   toc: yes
   toc_float: yes
+  html_notebook: null
 institute: CCOMS, Universidad Autónoma de Madrid
 editor_options:
   chunk_output_type: console
-  markdown: 
+  markdown:
     wrap: 80
 ---
 
@@ -604,26 +606,34 @@ data_2019 %>%
 ```{r}
 data_2019_test <-
   data_2019_test %>%
-  mutate(contract = case_when(
-        q1510b_contract_earner == 1 ~ 1, #officer --> permanent
-        q1510b_contract_earner == 3  ~ 2, #temporal or contract of works and services --> temporary
-        q1510b_contract_earner == 4 |
-        q1510b_contract_earner == 2 ~ 4, #verbal or without contract & indefinite period (not officer) --> other
-        q1510b_contract_earner == 888 ~ NON_RESPONSE, 
-        q1510b_contract_earner == 999 ~ REFUSED_ANSWER,
-        is.na(q1510b_contract_earner) ~ NON_RESPONSE
-
-         ),
-          contract = factor(x = contract,
-                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("permanent",
-                                    "temporary",
-                                    "self-employed",
-                                    "other",
-                                    "not assessed",
-                                    "refused to answer",
-                                    "missing (default)"
- )))
+  mutate(
+    contract = case_when(
+      q1510b_contract_earner == 1 ~ 1,
+      #officer --> permanent
+      q1510b_contract_earner == 3  ~ 2,
+      #temporal or contract of works and services --> temporary
+      q1510b_contract_earner == 4 |
+        q1510b_contract_earner == 2 ~ 4,
+      #verbal or without contract & indefinite period (not officer) --> other
+      q1510b_contract_earner == 888 ~ NON_RESPONSE,
+      q1510b_contract_earner == 999 ~ REFUSED_ANSWER,
+      is.na(q1510b_contract_earner) ~ NON_RESPONSE
+      
+    ),
+    contract = factor(
+      x = contract,
+      levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "permanent",
+        "temporary",
+        "self-employed",
+        "other",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"
+      )
+    )
+  )
 
 ```
 
@@ -785,7 +795,7 @@ Import the .txt that has all the responses to create HC_workers:
 
 ```{r}
 library(readr)
-occ_unique <- read_delim("C:/Users/Cristina/Downloads/HC-workerCat.txt", 
+occ_unique <- read_delim("C:/Users/Cris/Downloads/HC-workerCat.txt", 
      delim = "\t", escape_double = FALSE, 
      col_names = FALSE, trim_ws = TRUE)
 ```
@@ -1846,21 +1856,30 @@ Index - Shankar, McMunn, Banks and Steptoe (2011)).
 How often in the past 12 months did you
 
 -   `q6613_club`: ... attended a meeting with any group, club, or organization?
--   `q6618_relig`: ... attended religious activities (do not include weddings and
-    funerals)? funerals)?
+
+-   `q6618_relig`: ... attended religious activities (do not include weddings
+    and funerals)? funerals)?
+
 -   `q6619_leave`: ... went out of your home to attend social gatherings,
     activities, programs or events or to visit family friends?
--   `q6621_assoc`: ... did you go to senior centers or associations, day centers,
-    self-help groups, universities for the elderly?
+
+-   `q6621_assoc`: ... did you go to senior centers or associations, day
+    centers, self-help groups, universities for the elderly?
 
 -   1: Never
+
 -   2: Once or twice a year
+
 -   3: Once or twice a month
+
 -   4: Once or twice a week
+
 -   5: Daily
+
 -   999: NA
 
 ### Variable exploration
+
 ```{r}
 data_2019_test %>% 
   select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>% 
@@ -1873,7 +1892,6 @@ data_2019 %>%
 data_2019 %>% 
   freq_table(q6613_club)
 
-
 data_2019 %>% 
   freq_table(q6618_relig)
 
@@ -1885,48 +1903,47 @@ data_2019 %>%
 ```
 
 ### Variable creation
+
 To create this variable:
 
--   Not married/not cohabiting with a partner == 1, 
--   had less than monthly contact with children, other inmediate family and friends
-(q6619_leave == 2 & 1)
--   if no participation in any organizations, religious groups, or committees 
-(q6613_club == 1; q6621_assoc == 1)
+-   Not married/not cohabiting with a partner == 1,
+-   had less than monthly contact with children, other inmediate family and
+    friends (q6619_leave == 2 & 1)
+-   if no participation in any organizations, religious groups, or committees
+    (q6613_club == 1; q6621_assoc == 1)
 
-In total, the original scale it is a 5-point scale, but since we only have
-4 items here, the scale will go from 0 to 4, indicating that
-higher scores have greater social isolation. 
+In total, the original scale it is a 5-point scale, but since we only have 4
+items here, the scale will go from 0 to 4, indicating that higher scores have
+greater social isolation.
 
-We can reverse the score to indicate social participation. 
+We can reverse the score to indicate social participation.
 
 <!-- \*In variable_list.xlsx there is a duplicate row with social participation that -->
+
 <!-- says "size_sn", but it is a variable that does not exist in the database or in the  -->
+
 <!-- 2019 cohort documentation. -->
 
 ```{r}
 data_2019_test <-
   data_2019_test %>%
-  mutate(q6613_club_r =
-           case_when(
-             (q6613_club == 3 | q6613_club == 4 | q6613_club == 5) ~ 1,
-             is.na(q6613_club) ~ NA,
-             TRUE ~ 0),
+  mutate(q6613_club_r = case_when(
+              ((q6613_club == 3 | q6613_club == 4 | q6613_club == 5)) ~ 1,
+              is.na(q6613_club) ~ NA,
+              TRUE ~ 0),
          
-          q6618_relig_r = 
-           case_when(
-             (q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5) ~ 1,
+          q6618_relig_r = case_when(
+             ((q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5)) ~ 1,
              is.na(q6618_relig) ~ NA,
              TRUE ~ 0),
          
-         q6619_leave_r =
-           case_when(
-             (q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5) ~ 1,
+         q6619_leave_r = case_when(
+             ((q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5)) ~ 1,
              is.na(q6619_leave) ~ NA,
              TRUE ~ 0),
          
-         q6621_assoc_r =
-           case_when(
-             (q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5) ~ 1,
+         q6621_assoc_r = case_when(
+             ((q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5)) ~ 1,
              q6621_assoc == 999 ~ NON_RESPONSE,
              is.na(q6621_assoc) ~ NA,
              TRUE ~ 0),
@@ -1946,15 +1963,20 @@ data_2019_test <-
              TRUE ~ social_participation
            )
              )
+
+#FIXME: 'Error in mutate(): Problem while computing `q6613_club_r = case_when(...)
+#Caused by error in 'case_When()
 ```
 
 ### Checking new variable
+
 ```{r}
 data_2019_test %>%
   freq_table(social_participation)
 ```
 
 The individual items are already on the dataset:
+
 ```{r}
 data_2019_test %>% 
   select(starts_with(c("q661", "q662"))) %>% 
@@ -1962,6 +1984,7 @@ data_2019_test %>%
 ```
 
 ## Alcohol consumption
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -1969,7 +1992,7 @@ alcohol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -1992,6 +2015,7 @@ data_2019_test %>%
 ```
 
 ## Tobacco consumption
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -1999,7 +2023,7 @@ tobacco <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2023,7 +2047,7 @@ depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Sal
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2041,12 +2065,13 @@ data_2019_test %>%
 ```
 
 ## Flourishing scale
+
 ```{r}
 flourishing <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Flourishing Scale.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2062,3 +2087,144 @@ data_2019_test %>%
   select(starts_with(c("q75"))) %>% 
   colnames()
 ```
+
+## Negative and positive affect
+
+```{r}
+negposaf <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Positive and Negative Affect.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            negposaf, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q702", "q703", "q711", "q7069", "q707", "q706"))) %>% 
+  colnames()
+```
+
+## Quality of life
+
+```{r}
+qol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Quality of Life.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            qol, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q700", "q7010"))) %>% 
+  colnames()
+```
+
+## Extraversion and neuroticism
+
+```{r}
+personality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_EPQR-A.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            personality, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q464", "q465"))) %>% 
+  colnames()
+```
+
+## Self-efficacy
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q7008"))) %>% 
+  colnames()
+```
+
+## Stressors
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q201", "q751", #sleep problems,
+                       "q304", #nutrition
+                       "q200","q41" #pain
+                       ))) %>% 
+  colnames()
+```
+
+## Material deprivation
+
+```{r}
+materialdep <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            materialdep, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q0411"))) %>% 
+  colnames()
+```
+
+## GAD (anxiety)
+
+```{r}
+anxiety <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_anxietyDSM4.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            anxiety, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_2019_test %>% 
+  select(starts_with(c("q45", "q6010", "q621", "q7008a"))) %>% 
+  colnames()
+```
+
+# Step 3. Wave 2 harmonization
