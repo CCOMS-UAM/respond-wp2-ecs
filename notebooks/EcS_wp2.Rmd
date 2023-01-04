@@ -1927,7 +1927,9 @@ We can reverse the score to indicate social participation.
 ```{r}
 data_2019_test <-
   data_2019_test %>%
-  mutate(q6613_club_r = case_when(
+  mutate(
+          q6613_club = as.factor(q6613_club),
+          q6613_club_r = case_when(
               ((q6613_club == 3 | q6613_club == 4 | q6613_club == 5)) ~ 1,
               is.na(q6613_club) ~ NA,
               TRUE ~ 0),
@@ -1966,6 +1968,81 @@ data_2019_test <-
 
 #FIXME: 'Error in mutate(): Problem while computing `q6613_club_r = case_when(...)
 #Caused by error in 'case_When()
+#Using recode() is no solution because variables are double, not factors.
+```
+
+```{r}
+data_2019_test <-
+  data_2019 %>%
+  mutate(
+          q6613_club = as.factor(q6613_club),
+          q6619_leave = as.factor(q6619_leave),
+          q6618_relig = as.factor(q6618_relig),
+          q6621_assoc = as.factor(q6621_assoc),
+          
+          q6613_club_r = recode_factor(
+              q6613_club,
+              `1` = 0, 
+              `2` = 0,
+              `3` = 1,
+              `4` = 1,
+              `5` = 1,
+              .default = NA_real_),
+          
+           q6619_leave_r = recode_factor(
+              q6619_leave,
+              `1` = 0, 
+              `2` = 0,
+              `3` = 1,
+              `4` = 1,
+              `5` = 1,
+              .default = NA_real_),
+          
+           q6618_relig_r = recode_factor(
+              q6618_relig,
+              `1` = 0, 
+              `2` = 0,
+              `3` = 1,
+              `4` = 1,
+              `5` = 1,
+              .default = NA_real_),
+          
+           q6621_assoc_r = recode_factor(
+             q6621_assoc,
+              `1` = 0, 
+              `2` = 0,
+              `3` = 1,
+              `4` = 1,
+              `5` = 1,
+              `999` = NON_RESPONSE,
+              .default = NA_real_),
+          
+          q6613_club_r = as.character(q6613_club_r),
+          q6619_leave_r = as.character(q6619_leave_r),
+          q6618_relig_r = as.character(q6618_relig_r),
+          q6621_assoc_r = as.character(q6621_assoc_r),
+         
+         q6613_club_r = as.numeric(q6613_club_r),
+          q6619_leave_r = as.numeric(q6619_leave_r),
+          q6618_relig_r = as.numeric(q6618_relig_r),
+          q6621_assoc_r = as.numeric(q6621_assoc_r),
+         
+         social_participation = q6613_club_r + 
+                                q6618_relig_r + 
+                                q6619_leave_r +
+                                q6621_assoc_r,
+         
+         social_participation =
+           case_when(
+             (social_participation < 0) ~ NON_RESPONSE,
+             is.na(social_participation) & is.na(q6613_club) & 
+                                           is.na(q6618_relig) &
+                                           is.na(q6619_leave) &
+                                           is.na(q6621_assoc) ~ MISSING_DESIGN,
+             TRUE ~ social_participation
+           )
+             )
+#FIXME: solved! there's surely another easier way to do this.
 ```
 
 ### Checking new variable
@@ -1973,6 +2050,7 @@ data_2019_test <-
 ```{r}
 data_2019_test %>%
   freq_table(social_participation)
+#higher scores have greater social participation.
 ```
 
 The individual items are already on the dataset:
