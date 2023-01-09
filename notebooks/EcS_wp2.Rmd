@@ -224,6 +224,22 @@ interviewcovid <- data_COVID_test %>%
   
 ```
 
+```{r}
+prueba <- data_2019_test %>% left_join(
+  data_COVID_test %>% select(ID_ECS, FECHAFIN),
+  by = "ID_ECS"
+)
+```
+
+```{r}
+time_between_BL_covid <- prueba %>%  
+  mutate(
+    time_between_BL_covid = q0006_date %--% FECHAFIN, #año-mes-dia
+    time_between_BL_covid = as.period(time_between_BL_covid)
+    #,time_between_BL_covid = years(time_between_BL_covid)
+  ) %>% select(time_between_BL_covid)
+```
+
 # Step 2. Wave 1 harmonization
 
 Variables to be harmonized are the following:
@@ -399,7 +415,7 @@ ID_NAs <- c(
 ) 
 ```
 
-For those cases, we have the corect information on variables `age` and
+For those cases, we have the correct information on variables `age` and
 `q1010_year` (birthdate - year).
 
 ```{r}
@@ -411,11 +427,24 @@ data_2019 %>%
 
 ### Variables' creation
 
-The next steps were followed: 1. Create the difference in years between
-birthdate and 2019 interview date (in years). 2. Create `age_continuous`: if we
+The next steps were followed: 
+1. Create the difference in years between
+birthdate and 2019 interview date (in years). 
+2. Create `age_continuous`: if we
 have the complete information, use the diff. just created to stablish the age of
-the participants; if this data is missing, use `q1011_age`. 3. Create `age_cat`
+the participants; if this data is missing, use `q1011_age`. 
+3. Create `age_cat`
 by recategorizing `age_continuous`.
+
+```{r}
+bl_time <- data_2019_test %>%  
+  mutate(
+    bl_time = q1010_birth_date %--% q0006_date, #año-mes-dia
+    bl_time = as.period(bl_time),
+    bl_time = years(bl_time)
+  ) %>% select(bl_time)
+```
+
 
 ```{r}
 data_2019_test <-
@@ -795,7 +824,8 @@ Import the .txt that has all the responses to create HC_workers:
 
 ```{r}
 library(readr)
-occ_unique <- read_delim("C:/Users/Cris/Downloads/HC-workerCat.txt", 
+occ_unique <- read_delim("./dat/HC-workerCat.txt",
+                         #"C:/Users/Cristina/Downloads/HC-workerCat.txt"
      delim = "\t", escape_double = FALSE, 
      col_names = FALSE, trim_ws = TRUE)
 ```
@@ -1441,8 +1471,8 @@ data_2019 |>
   distinct()
 ```
 
-All variables have 91 NAs (proxy respondents). But the numbers of `888` and
-`999` could be different.
+All variables have 91 NAs (proxy respondents). But the numbers of `888`(don't
+know) and `999` (refuse) could be different.
 
 ```{r}
 data_2019 %>% 
@@ -1494,6 +1524,38 @@ grid.arrange(g1, g2, g3, g4)
 ```
 
 The pattern of NAs (999 and 888) is very similar.
+
+```{r}
+data_2019_test %>% 
+  mutate(
+    q0410g_total = as.factor(q0410g_total),
+    q0410i_ss = as.factor(q0410i_ss),
+    q0410j_government = as.factor(q0410j_government),
+    q0410k_other = as.factor(q0410k_other),
+    
+    q0410g_total_rec = recode_factor(q0410g_total,
+      "888" = "DK",
+      "999" = "refuse",
+      .default = "valid"),
+    
+    q0410i_ss_rec = recode_factor(q0410i_ss,
+      "888" = "DK",
+      "999" = "refuse",
+      .default = "valid"),
+    
+    q0410j_government_rec = recode_factor(q0410j_government,
+      "888" = "DK",
+      "999" = "refuse",
+      .default = "valid"),
+    
+     q0410k_other_rec = recode_factor(q0410k_other,
+      "888" = "DK",
+      "999" = "refuse",
+      .default = "valid")
+    ) %>% count(q0410g_total_rec,  q0410i_ss_rec, q0410j_government_rec, q0410k_other_rec)
+
+```
+
 
 ### Variable recoding
 
@@ -1918,58 +1980,6 @@ greater social isolation.
 
 We can reverse the score to indicate social participation.
 
-<!-- \*In variable_list.xlsx there is a duplicate row with social participation that -->
-
-<!-- says "size_sn", but it is a variable that does not exist in the database or in the  -->
-
-<!-- 2019 cohort documentation. -->
-
-```{r}
-data_2019_test <-
-  data_2019_test %>%
-  mutate(
-          q6613_club = as.factor(q6613_club),
-          q6613_club_r = case_when(
-              ((q6613_club == 3 | q6613_club == 4 | q6613_club == 5)) ~ 1,
-              is.na(q6613_club) ~ NA,
-              TRUE ~ 0),
-         
-          q6618_relig_r = case_when(
-             ((q6618_relig == 3 | q6618_relig == 4 |  q6618_relig == 5)) ~ 1,
-             is.na(q6618_relig) ~ NA,
-             TRUE ~ 0),
-         
-         q6619_leave_r = case_when(
-             ((q6619_leave == 3 | q6619_leave == 4 |  q6619_leave == 5)) ~ 1,
-             is.na(q6619_leave) ~ NA,
-             TRUE ~ 0),
-         
-         q6621_assoc_r = case_when(
-             ((q6621_assoc == 3 | q6621_assoc == 4 |  q6621_assoc == 5)) ~ 1,
-             q6621_assoc == 999 ~ NON_RESPONSE,
-             is.na(q6621_assoc) ~ NA,
-             TRUE ~ 0),
-         
-         social_participation = q6613_club_r + 
-                                q6618_relig_r + 
-                                q6619_leave_r +
-                                q6621_assoc_r,
-         
-         social_participation =
-           case_when(
-             (social_participation < 0) ~ NON_RESPONSE,
-             is.na(social_participation) & is.na(q6613_club) & 
-                                           is.na(q6618_relig) &
-                                           is.na(q6619_leave) &
-                                           is.na(q6621_assoc) ~ MISSING_DESIGN,
-             TRUE ~ social_participation
-           )
-             )
-
-#FIXME: 'Error in mutate(): Problem while computing `q6613_club_r = case_when(...)
-#Caused by error in 'case_When()
-#Using recode() is no solution because variables are double, not factors.
-```
 
 ```{r}
 data_2019_test <-
@@ -2306,3 +2316,74 @@ data_2019_test %>%
 ```
 
 # Step 3. Wave 2 harmonization
+
+## 3.1. Gender
+We assume that gender is the same as that recorded in Wave 1.
+
+## 3.2. Country of residence
+We assume that country of residence is the same as in Wave 1, "ES".
+
+## 3.3. Migration
+We assume that migration has not changed from Wave 1.
+
+## 3.4. & 3.5. Age
+As in wave 1, there are IDs that have a corrupted date of birth. 
+We check which ones they are.
+```{r}
+data_COVID_test %>% 
+  filter(ID_ECS %in% ID_NAs) %>% 
+  select(ID_ECS, FECHAFIN)
+```
+
+We want to know how many information we have on these cases. 
+```{r}
+ID_NAs_sub <- c(2802002,
+                3100602,
+                17801501,
+                14300101)
+```
+
+```{r}
+data_2019_test %>% 
+  filter(ID_ECS %in% ID_NAs_sub) %>% 
+  select(ID_ECS, q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day)
+```
+
+For these cases we know the value for `q1010_year` and we can make an approxima-
+tion of the age based on this. We create a variable that has the actual birth
+date for all cases on covid substudy but for the fourth missing cases, only the
+year. 
+
+To avoid problems and improve data accessibility, we do a left_join using COVID 
+database as a reference dataset and adding to it the variables related to age 
+and dates from the baseline database. 
+
+```{r}
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day, q0006_date),
+            by = "ID_ECS")
+```
+
+```{r}
+covid_time <- data_COVID_test %>%  
+  mutate(
+    covid_time = q1010_birth_date %--% FECHAFIN, #año-mes-dia
+    covid_time = as.period(covid_time),
+    covid_time = years(covid_time)
+  ) %>% select(covid_time)
+```
+
+
+```{r}
+birthday_COVID <- data_2019_test %>% 
+  mutate(
+    birthday_COVID = case_when(
+      (ID_ECS %in% ID_NAs_sub) ~ q1010_year,
+      (ID_ECS %in% id_ecs_both) ~ q1010_birth_date
+    )) %>% 
+      select(birthday_COVID)
+
+#FIXME
+```
+
