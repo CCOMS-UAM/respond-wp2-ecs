@@ -224,21 +224,6 @@ interviewcovid <- data_COVID_test %>%
   
 ```
 
-```{r}
-prueba <- data_2019_test %>% left_join(
-  data_COVID_test %>% select(ID_ECS, FECHAFIN),
-  by = "ID_ECS"
-)
-```
-
-```{r}
-time_between_BL_covid <- prueba %>%  
-  mutate(
-    time_between_BL_covid = q0006_date %--% FECHAFIN, #año-mes-dia
-    time_between_BL_covid = as.period(time_between_BL_covid)
-    #,time_between_BL_covid = years(time_between_BL_covid)
-  ) %>% select(time_between_BL_covid)
-```
 
 # Step 2. Wave 1 harmonization
 
@@ -441,8 +426,8 @@ bl_time <- data_2019_test %>%
   mutate(
     bl_time = q1010_birth_date %--% q0006_date, #año-mes-dia
     bl_time = as.period(bl_time),
-    bl_time = years(bl_time)
-  ) %>% select(bl_time)
+    bl_time = year(bl_time)
+  ) %>% select(bl_time) %>% pull()
 ```
 
 
@@ -450,11 +435,9 @@ bl_time <- data_2019_test %>%
 data_2019_test <-
   data_2019_test %>% 
   mutate(
-    diff_bday_int = year(interview2019) - year(birthday),
-    diff_bday_int = as.double(diff_bday_int),
     age_continuous = if_else(
                         ID_ECS %in% ID_NAs, q1011_age, 
-                        diff_bday_int
+                        bl_time
                         ),
     age_cat = case_when(
            age_continuous < 18 ~ 1,
@@ -2370,20 +2353,83 @@ covid_time <- data_COVID_test %>%
   mutate(
     covid_time = q1010_birth_date %--% FECHAFIN, #año-mes-dia
     covid_time = as.period(covid_time),
-    covid_time = years(covid_time)
-  ) %>% select(covid_time)
+    covid_time = year(covid_time)
+  ) %>% select(covid_time) %>%  pull()
 ```
 
 
 ```{r}
-birthday_COVID <- data_2019_test %>% 
+time_between_BL_covid <- data_COVID_test %>%  
   mutate(
-    birthday_COVID = case_when(
-      (ID_ECS %in% ID_NAs_sub) ~ q1010_year,
-      (ID_ECS %in% id_ecs_both) ~ q1010_birth_date
-    )) %>% 
-      select(birthday_COVID)
-
-#FIXME
+    time_between_BL_covid = q0006_date %--% FECHAFIN, #año-mes-dia
+    time_between_BL_covid = as.period(time_between_BL_covid)
+  ) %>% select(time_between_BL_covid) 
 ```
 
+```{r}
+freq_table(time_between_BL_covid, time_between_BL_covid) %>% 
+print(n = 300)
+```
+
+```{r}
+data_COVID_test %>% freq_table(FECHAFIN) %>% print(n = 100) #There are 102 NAs
+```
+
+```{r}
+data_COVID %>%  freq_table(FECHAFIN) %>%  print(n = 100)
+```
+
+
+```{r}
+data_COVID_test %>% freq_table(q0006_date) %>% print(n = 100) #No NAs
+```
+
+
+```{r}
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    qq1011_age = dyears(q1011_age),
+    qq1011_age = as.period(qq1011_age),
+    age_act = qq1011_age + time_between_BL_covid,
+    age_act = year(age_act),
+    age_continuous = if_else(
+                        ID_ECS %in% ID_NAs_sub, age_act, 
+                        covid_time
+                        ),
+    age_cat = case_when(
+           age_continuous < 18 ~ 1,
+           age_continuous >= 18 & age_continuous <= 44 ~ 2,
+           age_continuous >= 45 & age_continuous <= 64 ~ 3,
+           age_continuous >= 65 & age_continuous <= 94 ~ 4, 
+           age_continuous >= 95 ~ 5
+         ), 
+         age_cat = factor(x = age_cat,
+                          levels = c("1", "2", "3", "4", "5",
+                                     MISSING_DESIGN,
+                                     REFUSED_ANSWER,
+                                     NON_RESPONSE),
+                          labels = c("below 18 years", 
+                                    "18-44",
+                                    "45-64",
+                                    "65-94",
+                                    "95 years or older",
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)")))
+
+```
+
+### Checking new variable
+
+```{r}
+data_COVID_test %>% 
+  freq_table(age_cat)
+
+data_COVID_test %>% 
+  select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
+  View()
+
+#TODO: There are some cases where the continuous age is a higher number than the
+#established age. 
+```
