@@ -425,8 +425,8 @@ by recategorizing `age_continuous`.
 bl_time <- data_2019_test %>%  
   mutate(
     bl_time = q1010_birth_date %--% q0006_date, #año-mes-dia
-    bl_time = as.period(bl_time),
-    bl_time = year(bl_time)
+    #bl_time = year(bl_time)
+    bl_time = bl_time/years()
   ) %>% select(bl_time) %>% pull()
 ```
 
@@ -439,6 +439,7 @@ data_2019_test <-
                         ID_ECS %in% ID_NAs, q1011_age, 
                         bl_time
                         ),
+    age_continuous = floor(age_continuous),
     age_cat = case_when(
            age_continuous < 18 ~ 1,
            age_continuous >= 18 & age_continuous <= 44 ~ 2,
@@ -2349,11 +2350,27 @@ data_COVID_test <- data_COVID_test %>%
 ```
 
 ```{r}
+data_COVID_test %>% 
+  filter(ID_ECS %in% ID_NAs_sub) %>% 
+  select(ID_ECS, q1010_birth_date, q0006_date, FECHAFIN, q1011_age, q1010_year)
+```
+
+```{r}
+data_COVID_test %>% 
+  filter(!ID_ECS %in% ID_NAs_sub) %>% 
+  select(ID_ECS, q1010_birth_date, q0006_date, FECHAFIN, q1011_age, q1010_year)
+#%>%  View()
+
+```
+
+bl_time = bl_time/years()
+
+```{r}
 covid_time <- data_COVID_test %>%  
   mutate(
     covid_time = q1010_birth_date %--% FECHAFIN, #año-mes-dia
-    covid_time = as.period(covid_time),
-    covid_time = year(covid_time)
+    covid_time = covid_time/years(),
+    #covid_time = year(covid_time)
   ) %>% select(covid_time) %>%  pull()
 ```
 
@@ -2362,23 +2379,14 @@ covid_time <- data_COVID_test %>%
 time_between_BL_covid <- data_COVID_test %>%  
   mutate(
     time_between_BL_covid = q0006_date %--% FECHAFIN, #año-mes-dia
-    time_between_BL_covid = as.period(time_between_BL_covid)
-  ) %>% select(time_between_BL_covid) 
+    time_between_BL_covid = time_between_BL_covid/years()
+  ) %>% select(time_between_BL_covid) %>% pull()
 ```
 
-```{r}
-freq_table(time_between_BL_covid, time_between_BL_covid) %>% 
-print(n = 300)
-```
 
 ```{r}
 data_COVID_test %>% freq_table(FECHAFIN) %>% print(n = 100) #There are 102 NAs
 ```
-
-```{r}
-data_COVID %>%  freq_table(FECHAFIN) %>%  print(n = 100)
-```
-
 
 ```{r}
 data_COVID_test %>% freq_table(q0006_date) %>% print(n = 100) #No NAs
@@ -2389,14 +2397,17 @@ data_COVID_test %>% freq_table(q0006_date) %>% print(n = 100) #No NAs
 data_COVID_test <-
   data_COVID_test %>% 
   mutate(
-    qq1011_age = dyears(q1011_age),
-    qq1011_age = as.period(qq1011_age),
-    age_act = qq1011_age + time_between_BL_covid,
-    age_act = year(age_act),
+    # qq1011_age = dyears(q1011_age),
+    # qq1011_age = as.period(qq1011_age),
+    age_act = q1011_age + time_between_BL_covid,
+    #age_act = year(age_act),
     age_continuous = if_else(
                         ID_ECS %in% ID_NAs_sub, age_act, 
                         covid_time
                         ),
+    age_continuous = floor(age_continuous), #we round up to the integer age of
+    #the person (when there is one month left until a birthday, it's not said 
+    #how old we will be, but how old I am)
     age_cat = case_when(
            age_continuous < 18 ~ 1,
            age_continuous >= 18 & age_continuous <= 44 ~ 2,
@@ -2430,6 +2441,338 @@ data_COVID_test %>%
   select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
   View()
 
-#TODO: There are some cases where the continuous age is a higher number than the
-#established age. 
+#FIXME: NAs issue
 ```
+
+
+## 3.6. Employment status
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.7. Contract
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.8. Employment type
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.9. HC worker
+Same values as Wave 1.
+
+## 3.10. Profession
+Same values as Wave 1.
+
+## 3.11. Education
+Same values as Wave 1.
+
+## 3.12. Relationship status
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.13. Children
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.14. Children household
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.15. Number of children
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.16. Living alone
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+livingalone <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_social interactions_Subestudio_COVID.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            livingalone, 
+                            by = "ID_ECS")
+```
+
+The rest of individual variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(starts_with("SOLO1_")) %>% 
+  colnames()
+```
+
+## 3.17. Household size
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## 3.18. Quartiles & quintiles
+```{r}
+#TODO: Establish the same value or that was not evaluated in Wave 2.
+```
+
+## Stressors
+(Separated raw items)
+### Sleep problems
+```{r}
+data_COVID_test %>%  
+  select(num_range("SUE", 2:3)) %>% 
+  colnames()
+```
+
+### Pain
+```{r}
+data_COVID_test %>%  
+  select(num_range("DOLOR", 1:4), -DOLOR2) %>% 
+  colnames()
+```
+
+### Economy & unemployment
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+economic <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_economic.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            economic, 
+                            by = "ID_ECS")
+```
+
+The rest of individual variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(num_range("ECON", 4:5)) %>% 
+  colnames()
+```
+
+### COVID
+Five variables: infected, severity_raw, rel_isolated, rel_deceased, rel_concerned
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+covidcc <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_ailment.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            covidcc, 
+                            by = "ID_ECS")
+```
+
+The rest of individual variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(starts_with("COVID")) %>% 
+  colnames()
+```
+
+### Noise
+```{r}
+data_COVID_test %>% 
+  select(starts_with("ECON1_1")) %>% 
+  colnames()
+```
+
+##BRS (resilience scale)
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+brsw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_brief resilience scale_Subestudio_COVID.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            brsw2, 
+                            by = "ID_ECS")
+```
+
+The rest of stressors variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(starts_with("SM26")) %>% 
+  colnames()
+```
+
+## Social support (OSLO-3) & loneliness
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+socialsupw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_loneliness and social support_Subestudio_COVID.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            socialsupw2, 
+                            by = "ID_ECS")
+```
+
+The rest of separated variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(starts_with("SOLO9")) %>% 
+  colnames()
+```
+
+```{r}
+data_COVID_test %>% 
+  select(num_range("SOLO7_", 1:3)) %>% 
+  colnames()
+```
+
+## Social participation
+This variable, SOLO2, is already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(starts_with("SOLO2")) %>% 
+  colnames()
+```
+
+## Alcohol consumption
+```{r}
+data_COVID_test %>% 
+   select(starts_with("ALCOH1")) %>% 
+   colnames()
+```
+
+## Tobacco consumption
+```{r}
+data_COVID_test %>% 
+   select(starts_with("FUM1")) %>% 
+   colnames()
+#TODO: Is there a composite score?
+```
+
+## Depression
+
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_depression_ICD10.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            depression, 
+                            by = "ID_ECS")
+```
+
+The rest of individual variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(starts_with(c("SM8", "SM_3", "SM"))) %>% 
+  colnames()
+```
+
+## Suicidality
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+suicidality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_Suicidalideation.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            suicidality, 
+                            by = "ID_ECS")
+```
+
+The rest of individual variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(SM9) %>% 
+  colnames()
+```
+
+## Negative and positive affect
+We have to import this outcome (already created) from OneDrive.
+
+```{r}
+negposaffect <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_ positive and negative affect_Subestudio_COVID.dta")
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one 
+that serves as link.
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            negposaffect, 
+                            by = "ID_ECS")
+```
+
+The rest of individual variables are already on the dataset:
+
+```{r}
+data_COVID_test %>% 
+  select(num_range("SM22_", 1:5)) %>% #negative affect
+  colnames()
+```
+
+```{r}
+data_COVID_test %>% 
+  select(num_range("SM22_", 6:7)) %>% #positive  affect
+  colnames()
+```
+
+## Quality of life
+```{r}
+data_COVID_test %>% 
+  select(SM21) %>% 
+  colnames()
+```
+
+#Step 3. Combination of both datasets
+
+```{r}
+prueba <- data_2019_test %>% left_join(data_COVID_test, by = "ID_ECS") %>%
+  arrange(ID_ECS, wave)
+```
+
