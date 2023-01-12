@@ -10,7 +10,8 @@ output:
   html_notebook: null
 institute: CCOMS, Universidad Autónoma de Madrid
 editor_options:
-  chunk_output_type: console
+  chunk_output_t
+  ype: console
   markdown:
     wrap: 80
 ---
@@ -19,16 +20,16 @@ editor_options:
 
 ## Overview
 
-Here, I prepare the full Edad con Salud (2 assessment waves) to be uploaded to
-OPAL, as part of RESPOND WP2 IPD meta-analysis. I will follow the [OPAL handbook
-for
+Here, I prepare the full Edad con Salud (2 assessment waves) database to be
+uploaded to OPAL, as part of RESPOND WP2 IPD meta-analysis. I will follow the
+[OPAL handbook for
 WP2](https://drzmainz.sharepoint.com/:w:/r/sites/obiba-wp2/Shared%20Documents/harmonisation/data%20upload%20preparation/handbook_datauploadprep.docx?d=w15b8e9fe38734104a507dcedc3af3d49&csf=1&web=1&e=6Hu6Lm)
 
 1.  Inspect the Cohort 2019 and COVID substudy databases.
 2.  Harmonization process: 2.1. Create as many new variables as needed, as per
     the OPAL handbook for WP2, for 2019 cohort & COVID subestudy. 2.2. Transform
     variables that require transformation outside the OBIBA environment
-    (sentitive data) 2.3. Recode missing data
+    (sensitive data) 2.3. Recode missing data
 3.  Merge all the assessment waves in a dataset with a number of rows equal to
     wavesBYparticipants.
 4.  Remove all columns that are not included in the RESPOND WP2 codebook.
@@ -158,25 +159,25 @@ data_COVID <- data_COVID %>%
   filter(ID_ECS != id_ecs_subs_notBL)
 ```
 
-Now we duplicate both datasets for testing purposes:
-
-```{r}
-data_2019_test <- data_2019
-data_COVID_test <- data_COVID
-```
-
 ## Identifying waves
 
 ```{r}
-data_2019_test <- data_2019 %>%
+data_2019 <- data_2019 %>%
               add_column(wave = 1, .before = "ID_ECS")
   
 ```
 
 ```{r}
-data_COVID_test <- data_COVID %>%
+data_COVID <- data_COVID %>%
               add_column(wave = 2, .before = "ID_ECS")
   
+```
+
+Now we duplicate both datasets for testing purposes:
+
+```{r}
+data_2019_test <- data_2019
+data_COVID_test <- data_COVID
 ```
 
 ## Follow-up cases
@@ -224,7 +225,6 @@ interviewcovid <- data_COVID_test %>%
   
 ```
 
-
 # Step 2. Wave 1 harmonization
 
 Variables to be harmonized are the following:
@@ -252,11 +252,19 @@ Variables to be harmonized are the following:
 
 ## 2.1. Gender
 
-**Self-identified gender** - 1: male - 2: female - 3: other/diverse -991: not
-assessed -992: refused to answer -993: missing (default)
+**Self-identified gender**
 
-Our categories are: - 1 = male; - 2 = female (the question is not about the
-self-identified gender, but sex).
+-   1: male
+-   2: female
+-   3: other/diverse
+-   -991: not assessed
+-   -992: refused to answer
+-   -993: missing (default)
+
+Our categories are:
+
+-   1 = male;
+-   2 = female (the question is not about the self-identified gender, but sex).
 
 ### Variable exploration
 
@@ -272,8 +280,7 @@ data_2019 %>%
 ### Variable harmonization
 
 In this case we simply rename this variable and convert it into a factor,
-changing the labels as they are the same (the ones we have and the proposed
-ones)
+changing the labels as the values match between the two categorizations.
 
 ```{r}
 data_2019_test <- data_2019_test %>% 
@@ -319,13 +326,18 @@ data_2019_test %>%
 
 ## 2.3. Migration
 
-**Country of birth other than country of residence**: - 1 = Yes - 2 = No - 3 =
-No information - 991 = missing by design - 992 = refused to answer - 993 =
-missing (default)
+**Country of birth other than country of residence**:
 
-Our variable has registered the name of each country. As we did the sample
-collection in Spain, we can assume that responses that are different than Spain
-are indicators of migration.
+-   1 = Yes
+-   2 = No
+-   3 = No information
+-   -991 = missing by design
+-   -992 = refused to answer
+-   -993 = missing (default)
+
+Our variable in EcS `q1018_country` has registered the name of each country. As
+we did the sample collection in Spain, we can assume that responses that are
+different than Spain are indicators of migration.
 
 ### Variable exploration
 
@@ -412,14 +424,18 @@ data_2019 %>%
 
 ### Variables' creation
 
-The next steps were followed: 
-1. Create the difference in years between
-birthdate and 2019 interview date (in years). 
-2. Create `age_continuous`: if we
-have the complete information, use the diff. just created to stablish the age of
-the participants; if this data is missing, use `q1011_age`. 
-3. Create `age_cat`
-by recategorizing `age_continuous`.
+The next steps were followed:
+
+1.   Create the difference in years between birthdate and 2019 interview date
+    (in years).
+
+2.   Create `age_continuous`: if we have the complete information, use the
+    diference between birthdate and interview date (`q0006_date`) just created
+    to stablish the age of the participants; if this data is missing, use
+    `q1011_age`. We use floor() to rounding up to the participant's current
+    integer years.
+
+3.  Create `age_cat` by recategorizing `age_continuous`.
 
 ```{r}
 bl_time <- data_2019_test %>%  
@@ -429,7 +445,6 @@ bl_time <- data_2019_test %>%
     bl_time = bl_time/years()
   ) %>% select(bl_time) %>% pull()
 ```
-
 
 ```{r}
 data_2019_test <-
@@ -473,8 +488,9 @@ data_2019_test %>%
   select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
   View()
 
-#TODO: There are some cases where the continuous age is a higher number than the
-#established age. 
+data_2019_test %>% filter(ID_ECS %in% ID_NAs) %>% 
+  select(ID_ECS, age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
+  View()
 ```
 
 ## 2.6. Employment status (`q1503_work_now` & `q1504_reason`.)
@@ -491,7 +507,10 @@ data_2019_test %>%
 
 -991 = not assessed -993 = missing (default)
 
-`q1503_work_now` (c2019_w1) *Currently working?*: - 1 = Yes - 2 = No
+`q1503_work_now` (c2019_w1) *Currently working?*:
+
+-   1 = Yes
+-   2 = No
 
 `q1504_reason` (c2019_w1) *Reason not working*:
 
@@ -510,16 +529,19 @@ data_2019_test %>%
 -   13 = vacation/sick or maternity leave
 -   87 = other.
 
-As a proposal, the re-categorization to be done has to be: - 1 = Have a job
-(employed or self-employed) == `1 (q1503_work_now)` - 2 = In education
-(currently studying) == `4 (q1504_reason)` - 3 = Care work (family) / homeworker
-/ on parental leave == `1, 6` `(q1504_reason)`\*\* - 4 = On long-term sick
-leave/disability == `5 (health) (q1504_reason)`, - 5 = Unable to work due to
-reasons not mentioned elsewhere in this list (other) ==
-`3 (unpaid/voluntary), 7 (no need), 8 (not permitted), 11,`
-`12 (does not want to for a while), 13, 87 (other)` - 6 = unemployed or
-job-seeking == `2 (couldn't find a job), 10 (laid off)`, `11 (seasonal work)`, -
-7 = retired == `9 (retired/too old)`
+As a proposal, the re-categorization to be done has to be:
+
+-   1 = Have a job (employed or self-employed) == `1 (q1503_work_now)`
+-   2 = In education (currently studying) == `4 (q1504_reason)`
+-   3 = Care work (family) / homeworker / on parental leave == `1, 6`
+    `(q1504_reason)`\*\*
+-   4 = On long-term sick leave/disability == `5 (health) (q1504_reason)`,
+-   5 = Unable to work due to reasons not mentioned elsewhere in this list
+    (other) == `3 (unpaid/voluntary), 7 (no need), 8 (not permitted), 11,`
+    `12 (does not want to for a while), 13, 87 (other)`
+-   6 = unemployed or job-seeking == `2 (couldn't find a job), 10 (laid off)`,
+    `11 (seasonal work)`,
+-   7 = retired == `9 (retired/too old)`
 
 ### Variable creation
 
@@ -702,7 +724,7 @@ data_2019_test <-
        q1510e_workday == 6 ~ 4, #shift work --> other
        q1510e_workday == 7 ~ 4, #other --> other
        q1510e_workday == 888 ~ REFUSED_ANSWER,
-        is.na(q1510e_workday) ~ NON_RESPONSE
+       is.na(q1510e_workday) ~ NON_RESPONSE
 
          ),
           employment_ty = factor(x = employment_ty,
@@ -769,19 +791,19 @@ occ_unique <- data_2019 %>%
 ```
 
 ```{r}
-View(occ_unique)
+#View(occ_unique)
 ```
 
 There are 1824 unique values for this variable and 347 NAs (in both variables;
 in free-text they appear as ""). This would be useful in order to process the
-variable"profession" later on.
+variable "profession" later on.
 
 `q1510_catoccu`indicates the categorization of the 10 main groups, but not the
 subcategories, which are the ones that could be interesting to use. We'll try if
 using it as a filter is useful.
 
 Barely it does, as the principal category of our interest leaves out interesting
-occupations (e.g., auxiliar de enfermería), which are on groups 2, 3, 7, 8. As
+occupations (e.g., *auxiliar de enfermería*), which are on groups 2, 3, 7, 8. As
 it doesn't allow us to differentiate health care workers from other
 professionals, we'll just work with `q1510_occ`and explore manually all the
 free-text unique values. The ones that are interesting for us are on
@@ -829,8 +851,6 @@ data_2019_test <- data_2019 %>%
                                             "refused to answer",
                                             "missing (default)"
                                             )))
-#TODO: Explore another way of doing this using stringr (str_detect); maybe there
-#are some values that we just missed.
 ```
 
 ### Checking new variable
@@ -877,9 +897,9 @@ data_2019_test <-
   data_2019_test %>%
   mutate(
     profession = case_when(
-      q1510_catoccu ==  5 |
-      hc_worker == 1 ~  5 , #added hc_worker
+      q1510_catoccu ==  5 ~ 5,  
       #service workers --> first responders: paramedic/firefighter/police
+      hc_worker == 1 ~  4 , #hc_wroker = healthcare
       q1510_catoccu ==  10  ~  6 ,
       #armed forces --> military
       q1510_catoccu ==  1  ~  7 ,
@@ -946,7 +966,7 @@ data_2019_test <-
 ```{r}
 data_2019_test %>% 
   freq_table(profession)
-#TODO: 1429 as "others"
+#TODO: 1429 as "others" (now is 1944?)
 ```
 
 ## 2.11. Education (q1016_highest)
@@ -964,10 +984,16 @@ data_2019_test %>%
     box, if not, "missing (default)"
 
 Our variable, `q1016_highest`, has as levels (doesn't have *non-tertiary
-education*): - 0 = No formal education - 1 = Primary education not completed - 2
-= Primary education completed - 3 = Lower secondary education completed - 4 =
-Upper secondary education completed - 5 = University/college completed - 6 =
-Master degree, PhD completed - 888 = don't know
+education*):
+
+-   0 = No formal education
+-   1 = Primary education not completed
+-   2 = Primary education completed
+-   3 = Lower secondary education completed
+-   4 = Upper secondary education completed
+-   5 = University/college completed
+-   6 = Master degree, PhD completed
+-    888 = don't know
 
 As a proposal, I suggest:
 
@@ -1039,8 +1065,11 @@ data_2019_test %>%
 
 Our variable `q1012_mar_stat` is coded as:
 
-1 = never married (and no cohabiting) 2 = currently married/law-partner 3 =
-cohabiting 4 = separated/divorced 5 = widowed
+-   1 = never married (and no cohabiting)
+-   2 = currently married/law-partner
+-   3 = cohabiting
+-   4 = separated/divorced
+-   5 = widowed
 
 As the categories doesn't match exactly, I propose the following categorisation:
 
@@ -1540,7 +1569,6 @@ data_2019_test %>%
 
 ```
 
-
 ### Variable recoding
 
 These variables are originally factor variables with a value of a number from 1
@@ -1834,6 +1862,10 @@ data_2019_test <- left_join(data_2019_test,
                             by = "ID_ECS")
 ```
 
+```{r}
+data_2019_test %>% freq_table(LTE)
+```
+
 The rest of stressors variables are already on the dataset:
 
 ```{r}
@@ -1953,7 +1985,7 @@ data_2019 %>%
 To create this variable:
 
 -   Not married/not cohabiting with a partner == 1,
--   had less than monthly contact with children, other inmediate family and
+-   had less than monthly contact with children, other immediate family and
     friends (q6619_leave == 2 & 1)
 -   if no participation in any organizations, religious groups, or committees
     (q6613_club == 1; q6621_assoc == 1)
@@ -1963,7 +1995,6 @@ items here, the scale will go from 0 to 4, indicating that higher scores have
 greater social isolation.
 
 We can reverse the score to indicate social participation.
-
 
 ```{r}
 data_2019_test <-
@@ -2302,24 +2333,30 @@ data_2019_test %>%
 # Step 3. Wave 2 harmonization
 
 ## 3.1. Gender
+
 We assume that gender is the same as that recorded in Wave 1.
 
 ## 3.2. Country of residence
+
 We assume that country of residence is the same as in Wave 1, "ES".
 
 ## 3.3. Migration
+
 We assume that migration has not changed from Wave 1.
 
 ## 3.4. & 3.5. Age
-As in wave 1, there are IDs that have a corrupted date of birth. 
-We check which ones they are.
+
+As in wave 1, there are IDs that have a corrupted date of birth. We check which
+ones they are.
+
 ```{r}
 data_COVID_test %>% 
   filter(ID_ECS %in% ID_NAs) %>% 
   select(ID_ECS, FECHAFIN)
 ```
 
-We want to know how many information we have on these cases. 
+We want to know how many information we have on these cases.
+
 ```{r}
 ID_NAs_sub <- c(2802002,
                 3100602,
@@ -2336,11 +2373,11 @@ data_2019_test %>%
 For these cases we know the value for `q1010_year` and we can make an approxima-
 tion of the age based on this. We create a variable that has the actual birth
 date for all cases on covid substudy but for the fourth missing cases, only the
-year. 
+year.
 
-To avoid problems and improve data accessibility, we do a left_join using COVID 
-database as a reference dataset and adding to it the variables related to age 
-and dates from the baseline database. 
+To avoid problems and improve data accessibility, we do a left_join using COVID
+database as a reference dataset and adding to it the variables related to age
+and dates from the baseline database.
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
@@ -2374,7 +2411,6 @@ covid_time <- data_COVID_test %>%
   ) %>% select(covid_time) %>%  pull()
 ```
 
-
 ```{r}
 time_between_BL_covid <- data_COVID_test %>%  
   mutate(
@@ -2383,7 +2419,6 @@ time_between_BL_covid <- data_COVID_test %>%
   ) %>% select(time_between_BL_covid) %>% pull()
 ```
 
-
 ```{r}
 data_COVID_test %>% freq_table(FECHAFIN) %>% print(n = 100) #There are 102 NAs
 ```
@@ -2391,7 +2426,6 @@ data_COVID_test %>% freq_table(FECHAFIN) %>% print(n = 100) #There are 102 NAs
 ```{r}
 data_COVID_test %>% freq_table(q0006_date) %>% print(n = 100) #No NAs
 ```
-
 
 ```{r}
 data_COVID_test <-
@@ -2444,52 +2478,68 @@ data_COVID_test %>%
 #FIXME: NAs issue
 ```
 
+```{r}
+data_COVID_test <- data_COVID_test %>%
+              select(!c(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day, q0006_date))
+```
+
 
 ## 3.6. Employment status
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.7. Contract
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.8. Employment type
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.9. HC worker
+
 Same values as Wave 1.
 
 ## 3.10. Profession
+
 Same values as Wave 1.
 
 ## 3.11. Education
+
 Same values as Wave 1.
 
 ## 3.12. Relationship status
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.13. Children
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.14. Children household
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.15. Number of children
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.16. Living alone
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -2497,7 +2547,7 @@ livingalone <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Sa
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2515,18 +2565,21 @@ data_COVID_test %>%
 ```
 
 ## 3.17. Household size
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## 3.18. Quartiles & quintiles
+
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
 ```
 
 ## Stressors
-(Separated raw items)
-### Sleep problems
+
+(Separated raw items) \### Sleep problems
+
 ```{r}
 data_COVID_test %>%  
   select(num_range("SUE", 2:3)) %>% 
@@ -2534,6 +2587,7 @@ data_COVID_test %>%
 ```
 
 ### Pain
+
 ```{r}
 data_COVID_test %>%  
   select(num_range("DOLOR", 1:4), -DOLOR2) %>% 
@@ -2549,7 +2603,7 @@ economic <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2567,7 +2621,9 @@ data_COVID_test %>%
 ```
 
 ### COVID
-Five variables: infected, severity_raw, rel_isolated, rel_deceased, rel_concerned
+
+Five variables: `infected`, `severity_raw`, `rel_isolated`, `rel_deceased`,
+`rel_concerned`
 
 We have to import this outcome (already created) from OneDrive.
 
@@ -2576,7 +2632,7 @@ covidcc <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2594,13 +2650,15 @@ data_COVID_test %>%
 ```
 
 ### Noise
+
 ```{r}
 data_COVID_test %>% 
   select(starts_with("ECON1_1")) %>% 
   colnames()
 ```
 
-##BRS (resilience scale)
+## BRS (resilience scale) 
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -2608,7 +2666,7 @@ brsw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Ed
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2626,6 +2684,7 @@ data_COVID_test %>%
 ```
 
 ## Social support (OSLO-3) & loneliness
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -2633,7 +2692,7 @@ socialsupw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Sa
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2657,6 +2716,7 @@ data_COVID_test %>%
 ```
 
 ## Social participation
+
 This variable, SOLO2, is already on the dataset:
 
 ```{r}
@@ -2666,6 +2726,7 @@ data_COVID_test %>%
 ```
 
 ## Alcohol consumption
+
 ```{r}
 data_COVID_test %>% 
    select(starts_with("ALCOH1")) %>% 
@@ -2673,6 +2734,7 @@ data_COVID_test %>%
 ```
 
 ## Tobacco consumption
+
 ```{r}
 data_COVID_test %>% 
    select(starts_with("FUM1")) %>% 
@@ -2689,7 +2751,7 @@ depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Sal
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2707,6 +2769,7 @@ data_COVID_test %>%
 ```
 
 ## Suicidality
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -2714,7 +2777,7 @@ suicidality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Sa
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2732,6 +2795,7 @@ data_COVID_test %>%
 ```
 
 ## Negative and positive affect
+
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
@@ -2739,7 +2803,7 @@ negposaffect <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con S
 ```
 
 We join this dataset to the one containing the new variables already harmonized
-with left_join. The variable they have in common is ID_ECS and it is the one 
+with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
@@ -2763,16 +2827,211 @@ data_COVID_test %>%
 ```
 
 ## Quality of life
+
 ```{r}
 data_COVID_test %>% 
   select(SM21) %>% 
   colnames()
 ```
 
-#Step 3. Combination of both datasets
+# Step 3. Combination of both datasets
 
 ```{r}
-prueba <- data_2019_test %>% left_join(data_COVID_test, by = "ID_ECS") %>%
-  arrange(ID_ECS, wave)
+df <- bind_rows(data_2019_test, data_COVID_test)
 ```
+
+```{r}
+df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
+```
+
+```{r}
+rm(anxiety, brs, brsw2, covidcc, depression, economic, flourishing, g1, g2, g3, g4, livingalone, loneliness_ss_si, lte, materialdep, negposaf, occ_unique, personality, qol, socialsupw2, tobacco, prueba)
+```
+
+# Step 4. Adding new variables
+
+## Lockdown stringency index
+
+The file has got data from several countries. I only want to import the Spanish data.
+
+```{r}
+stringency_index <- 
+  readr::read_csv("https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker/master/data/OxCGRT_nat_latest.csv") %>% 
+  filter(CountryCode == "ESP")
+```
+
+```{r}
+stringency_index <- 
+  stringency_index %>% 
+  mutate(date = ymd(Date)) %>% 
+  select(!Date)
+```
+we use 'date' as key for joining both datasets:
+```{r}
+df <- df %>% mutate(
+  date = FECHAFIN)
+```
+
+```{r}
+df <- left_join(df,
+                stringency_index,
+                by = "date")
+rm(stringency_index)
+```
+
+## Google  Mobility
+
+We download the .zip file of the Google regional reports 
+(https://www.google.com/covid19/mobility/). Our waves are from the year 
+2019 and 2020, so we have to save the datasets for Spain in those two cycles.
+As it is the change of mobility by COVID, there is only
+information relative to 2020.
+
+
+```{r}
+mobility <- read.csv("./dat/2020_ES_Region_Mobility_Report.csv", stringsAsFactors = TRUE)
+```
+
+```{r collapse=TRUE}
+mobility %>% 
+  select(sub_region_1) %>% 
+  table() # CCAA
+mobility %>% 
+  select(sub_region_2) %>% 
+  table() # Province
+```
+
+In EcS we only have data from Madrid and Barcelona. This city value is coded in the original datasets as "origin".
+
+```{r}
+mobility <- mobility %>% 
+  filter(sub_region_2 %in% c("Barcelona") | sub_region_1 %in% c("Community of Madrid") )
+```
+
+In addition, the values of origin and the identifiers of the CCAA and provinces do not match, so we are going to create a new variable in the final dataset and in the object 'mobility' to link these two tables.
+
+```{r}
+df <- df %>% 
+   mutate(province = case_when(q0101a_psu == 9 ~ "Barcelona",
+                              q0101a_psu == 13 ~ "Community of Madrid"))
+```
+
+```{r}
+mobility <- mobility %>% 
+  mutate(
+    province = 
+      case_when(sub_region_2 == "Barcelona" ~ "Barcelona",
+                sub_region_1 == "Community of Madrid" ~ "Community of Madrid")
+  )
+```
+
+
+```{r}
+df <- left_join(df,
+                mobility,
+                by = "province")
+```
+
+## NUTS
+We import the datase obtained in OBIBA/ NUTS2021_nomenclature of territorial units
+for statistics.
+
+We have to import separately:
+- NUTS provinces (NUTS 1 to 3).
+- NUTS Urban - Rural
+- NUTS Urban-rural remoteness
+"./dat/HC-workerCat.txt"
+
+```{r}
+nuts_provinces <- read_excel("./dat/NUTS2021.xlsx", 
+                       sheet = "NUTS 1 to 3")
+```
+
+```{r}
+nuts_urbanrural <- read_excel("./dat/NUTS2021.xlsx",
+                              sheet = "Urban - Rural")
+```
+
+```{r}
+nuts_urbanruralremoteness <- read_excel("./dat/NUTS2021.xlsx",
+                                        sheet = "Urban-rural remoteness")
+```
+
+```{r}
+nuts_provinces <- 
+  nuts_provinces %>% 
+  mutate(NUTS3 = str_replace_all("NUTS level 3",
+                                   "'",
+                                   ""),
+         CODE  = str_replace_all("CODE 2021",
+                                   "'",
+                                   "")
+  )
+```
+
+```{r collapse=TRUE}
+str(nuts_provinces)
+str(nuts_urbanrural)
+str(nuts_urbanruralremoteness)
+```
+
+```{r}
+nuts_provinces  <- 
+  nuts_provinces %>% 
+      rename(nuts_id = `Code 2021` ,
+             province = `NUTS level 3`)
+
+nuts_urbanrural <- 
+  nuts_urbanrural %>% 
+  rename(nuts_id = NUTS_ID,
+         nuts_urbanrural_category = `URBAN-RURAL CATEGORY`,
+         nuts_urbanrural_label = `URBAN-RURAL LABEL`)
+
+nuts_urbanruralremoteness <- 
+  nuts_urbanruralremoteness %>% 
+  rename(nuts_id = `NUTS ID`,
+         nuts_remoteness_category = `CATEGORY CODE`,
+         nuts_remoteness_label = `CATEGORY LABEL`)
+```
+
+Succesive merging
+
+```{r}
+nuts_ds <- 
+  left_join(nuts_provinces,
+          nuts_urbanrural,
+          by = "nuts_id") %>% 
+  left_join(.,
+            nuts_urbanruralremoteness,
+            by = "nuts_id")
+```
+
+
+```{r}
+rm(nuts_provinces,
+   nuts_urbanrural,
+   nuts_urbanruralremoteness)
+```
+
+
+```{r}
+nuts_ds %>% 
+  filter(province == "Madrid")
+nuts_ds <-
+  nuts_ds %>% 
+  mutate(province = case_when(province == "Madrid" ~ "Community of Madrid",
+                              TRUE ~ province))
+nuts_ds %>% 
+  filter(province == "Community of Madrid")
+  
+```
+
+```{r}
+df_covid <- 
+  left_join(df,
+            nuts_ds,
+            by = "province")
+rm(nuts_ds) 
+```
+
 
