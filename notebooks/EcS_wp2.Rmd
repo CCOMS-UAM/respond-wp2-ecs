@@ -1858,7 +1858,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            lte, 
+                            lte %>% select(ID_ECS, LTE), 
                             by = "ID_ECS")
 ```
 
@@ -1888,9 +1888,14 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            brs, 
+                            brs %>% select(ID_ECS, resilience_scale), 
                             by = "ID_ECS")
 ```
+
+```{r}
+data_2019_test %>% freq_table(resilience_scale) %>% print(n = 100)
+```
+
 
 The rest of stressors variables are already on the dataset:
 
@@ -1914,9 +1919,24 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            loneliness_ss_si, 
+                            loneliness_ss_si %>% select(
+                              ID_ECS,
+                              social_support,
+                              loneliness,
+                              isolation
+                            ), 
                             by = "ID_ECS")
 ```
+
+```{r}
+data_2019_test %>% freq_table(social_support)
+
+data_2019_test %>% freq_table(loneliness)
+
+data_2019_test %>% freq_table(isolation)
+
+```
+
 
 The rest of stressors variables are already on the dataset:
 
@@ -2100,13 +2120,13 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            alcohol, 
+                            alcohol %>%  select(ID_ECS, alcohol_consumption), 
                             by = "ID_ECS")
 ```
 
 ```{r}
 data_2019_test %>%
-  freq_table(social_participation)
+  freq_table(alcohol_consumption)
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2131,9 +2151,14 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            tobacco, 
+                            tobacco %>% select(ID_ECS, tobacco), 
                             by = "ID_ECS")
 ```
+
+```{r}
+data_2019_test %>% freq_table(tobacco)
+```
+
 
 The rest of stressors variables are already on the dataset:
 
@@ -2155,11 +2180,12 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            depression, 
+                            depression %>% select(ID_ECS, depression_lifetime,
+                                                  depression_12m, depression_12treatment), 
                             by = "ID_ECS")
 ```
 
-The rest of stressors variables are already on the dataset:
+The rest of variables are already on the dataset:
 
 ```{r}
 data_2019_test %>% 
@@ -2179,7 +2205,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            flourishing, 
+                            flourishing %>% select(ID_ECS, flourishing_scale), 
                             by = "ID_ECS")
 ```
 
@@ -2203,7 +2229,8 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            negposaf, 
+                            negposaf %>% select(ID_ECS, negativeaffect,
+                                                positiveaffect, netaffect), 
                             by = "ID_ECS")
 ```
 
@@ -2227,7 +2254,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            qol, 
+                            qol %>% select(ID_ECS, WHOQOL_AGE), 
                             by = "ID_ECS")
 ```
 
@@ -2251,7 +2278,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            personality, 
+                            personality %>% select(ID_ECS, neuroticism, extraversion), 
                             by = "ID_ECS")
 ```
 
@@ -2294,7 +2321,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            materialdep, 
+                            materialdep %>% select(ID_ECS, material), 
                             by = "ID_ECS")
 ```
 
@@ -2318,7 +2345,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            anxiety, 
+                            anxiety %>% select(ID_ECS, GAD12m, GAD), 
                             by = "ID_ECS")
 ```
 
@@ -2552,7 +2579,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            livingalone, 
+                            livingalone %>% select(ID_ECS, living_alone), 
                             by = "ID_ECS")
 ```
 
@@ -2608,7 +2635,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            economic, 
+                            economic %>% select(ID_ECS, economy, unemployment), 
                             by = "ID_ECS")
 ```
 
@@ -2637,7 +2664,9 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            covidcc, 
+                            covidcc %>% select(ID_ECS, infected,
+                                               severity_raw, rel_isolated,
+                                               rel_deceased, rel_concerned), 
                             by = "ID_ECS")
 ```
 
@@ -2671,7 +2700,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            brsw2, 
+                            brsw2 %>% select(ID_ECS, resilience_scale), 
                             by = "ID_ECS")
 ```
 
@@ -2697,7 +2726,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            socialsupw2, 
+                            socialsupw2 %>%  select(ID_ECS, social_support, loneliness), 
                             by = "ID_ECS")
 ```
 
@@ -2756,7 +2785,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            depression, 
+                            depression %>% select(ID_ECS, d_30d_severity, depression_30d), 
                             by = "ID_ECS")
 ```
 
@@ -2782,7 +2811,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            suicidality, 
+                            suicidality %>% select(ID_ECS, suicidal), 
                             by = "ID_ECS")
 ```
 
@@ -2808,7 +2837,7 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            negposaffect, 
+                            negposaffect %>% select(ID_ECS, negativeaffect, positiveaffect, netaffect), 
                             by = "ID_ECS")
 ```
 
@@ -2838,6 +2867,7 @@ data_COVID_test %>%
 
 ```{r}
 df <- bind_rows(data_2019_test, data_COVID_test)
+#FIXME: Error: negative length vectors are not allowed
 ```
 
 ```{r}
@@ -2845,7 +2875,7 @@ df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
 ```
 
 ```{r}
-rm(anxiety, brs, brsw2, covidcc, depression, economic, flourishing, g1, g2, g3, g4, livingalone, loneliness_ss_si, lte, materialdep, negposaf, occ_unique, personality, qol, socialsupw2, tobacco, prueba)
+rm(anxiety, brs, brsw2, covidcc, depression, economic, flourishing, g1, g2, g3, g4, livingalone, loneliness_ss_si, lte, materialdep, negposaffect, occ_unique, personality, qol, socialsupw2, tobacco, prueba, alcohol, suicidality, negposaf)
 ```
 
 # Step 4. Adding new variables
@@ -2863,7 +2893,7 @@ stringency_index <-
 ```{r}
 stringency_index <- 
   stringency_index %>% 
-  mutate(date = ymd(Date)) %>% 
+  mutate(date = ymd(Date)) %>%  
   select(!Date)
 ```
 we use 'date' as key for joining both datasets:
@@ -2887,7 +2917,6 @@ We download the .zip file of the Google regional reports
 As it is the change of mobility by COVID, there is only
 information relative to 2020.
 
-
 ```{r}
 mobility <- read.csv("./dat/2020_ES_Region_Mobility_Report.csv", stringsAsFactors = TRUE)
 ```
@@ -2908,6 +2937,7 @@ mobility <- mobility %>%
   filter(sub_region_2 %in% c("Barcelona") | sub_region_1 %in% c("Community of Madrid") )
 ```
 
+
 In addition, the values of origin and the identifiers of the CCAA and provinces do not match, so we are going to create a new variable in the final dataset and in the object 'mobility' to link these two tables.
 
 ```{r}
@@ -2925,11 +2955,27 @@ mobility <- mobility %>%
   )
 ```
 
+```{r}
+mobility %>% 
+  mutate(
+    province = as.factor(province)) %>% 
+  select(province) %>% 
+  group_by(province) %>% 
+  count() %>% 
+  data.frame
+```
+
+
+```{r}
+mobility <- mobility %>%  
+  mutate(date = as.Date(date))
+```
+
 
 ```{r}
 df <- left_join(df,
                 mobility,
-                by = "province")
+                by = c("province", "date"))
 ```
 
 ## NUTS
@@ -2940,21 +2986,52 @@ We have to import separately:
 - NUTS provinces (NUTS 1 to 3).
 - NUTS Urban - Rural
 - NUTS Urban-rural remoteness
-"./dat/HC-workerCat.txt"
 
 ```{r}
-nuts_provinces <- read_excel("./dat/NUTS2021.xlsx", 
-                       sheet = "NUTS 1 to 3")
+nuts_provinces <- read_excel(
+  "./dat/NUTS2021.xlsx",
+  sheet = "NUTS 1 to 3",
+  col_types = c(
+    "text",
+    "text",
+    "text",
+    "text",
+    "text",
+    "numeric",
+    "numeric",
+    "numeric",
+    "skip",
+    "skip"
+  )
+)
 ```
 
 ```{r}
-nuts_urbanrural <- read_excel("./dat/NUTS2021.xlsx",
-                              sheet = "Urban - Rural")
+nuts_urbanrural <- read_excel(
+  "./dat/NUTS2021.xlsx",
+  sheet = "Urban - Rural",
+  col_types = c("text",
+                "numeric", "text", "skip", "skip",
+                "skip", "skip")
+)
 ```
 
 ```{r}
-nuts_urbanruralremoteness <- read_excel("./dat/NUTS2021.xlsx",
-                                        sheet = "Urban-rural remoteness")
+nuts_urbanruralremoteness <- read_excel(
+  "./dat/NUTS2021.xlsx",
+  sheet = "Urban-rural remoteness",
+  col_types = c(
+    "skip",
+    "text",
+    "text",
+    "numeric",
+    "text",
+    "skip",
+    "skip",
+    "skip",
+    "skip"
+  )
+)
 ```
 
 ```{r}
@@ -3015,8 +3092,9 @@ rm(nuts_provinces,
 
 
 ```{r}
-nuts_ds %>% 
-  filter(province == "Madrid")
+nuts_ds <- nuts_ds %>% 
+  filter(province == "Madrid" | province == "Barcelona")
+
 nuts_ds <-
   nuts_ds %>% 
   mutate(province = case_when(province == "Madrid" ~ "Community of Madrid",
@@ -3027,11 +3105,49 @@ nuts_ds %>%
 ```
 
 ```{r}
-df_covid <- 
+df <- 
   left_join(df,
             nuts_ds,
             by = "province")
 rm(nuts_ds) 
 ```
 
+# Step 5. Selecting necessary variables
 
+Firstly, we import the Edad con Salud varible list for RESPOND.
+```{r}
+ecs_variablelist <- read_excel("dat/variable_list-EcS_v3.xlsx", 
+    sheet = "EcS-table format", col_types = c("text", 
+       "skip", "numeric", "text", "skip", 
+       "skip", "skip"))
+```
+
+```{r}
+dfcolumns <- colnames(df)
+```
+
+```{r}
+ecs_varlist <- ecs_variablelist %>% select(variable) %>% pull()
+```
+
+
+
+```{r}
+df <- df %>% select(ID_ECS,
+                    wave,
+                    any_of(ecs_varlist),
+                    CountryCode:nuts_remoteness_label)
+#FIXME: "Error: negative length vectors are not allowed"
+```
+
+
+# Step 6. Recoding NAs
+I will first get a description of missing values
+
+```{r eval = FALSE}
+df %>% 
+  group_by(wave) %>% 
+  miss_var_summary() %>% 
+  filter(pct_miss == 100) %>% 
+  data.frame
+```
