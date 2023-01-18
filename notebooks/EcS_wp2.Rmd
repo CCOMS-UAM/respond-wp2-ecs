@@ -55,6 +55,7 @@ library(stringi)
 library(readstata13)
 library(readxl)
 library(ecs.data)
+library(utf8)
 
 #TODO: Add labels to all variables
 ```
@@ -75,8 +76,8 @@ library(ecs.data)
 ```{r constants}
 
 MISSING_DESIGN <- -991
-REFUSED_ANSWER <- -992 
-NON_RESPONSE <- -993
+REFUSED_ANSWER <- -992 #999 
+NON_RESPONSE <- -993 #888
 
 BASELINE_FILEPATH <- file.path(read_ecs_folder("DB"),
                                "Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
@@ -820,8 +821,9 @@ data_2019_test %>%
     q1510_occ_utf8 = str_to_lower(q1510_occ_utf8, locale = "spa"),
     q1510_occ_itf8 = stringi::stri_trans_general(q1510_occ_utf8, "Latin-ASCII")
   ) %>% 
-  select(q1510_occ, q1510_occ_utf8) %>% 
-  View()
+  select(q1510_occ, q1510_occ_utf8) 
+#%>% 
+#  View()
 ```
 
 ### Variable creation
@@ -837,7 +839,7 @@ occ_unique <- read_delim("./dat/HC-workerCat.txt",
 ```
 
 ```{r}
-data_2019_test <- data_2019 %>% 
+data_2019_test <- data_2019_test %>% 
   mutate( 
     hc_worker = if_else(q1510_occ %in% occ_unique$X1, 1, 2),
     hc_worker = factor(x = hc_worker,
@@ -1368,10 +1370,7 @@ data_2019_test <- data_2019_test %>%
         "missing (default)"
       )
     )
-  ) %>%
-  select(living_alone) %>%
-  glimpse()
-
+  )
 
 var_label(data_2019_test$living_alone) <- "Living alone"
 
@@ -1412,7 +1411,7 @@ data_2019 %>%
 ### Variable creation
 
 ```{r}
-data_2019_test <- data_2019 %>% 
+data_2019_test <- data_2019_test %>% 
   mutate(hh_size = case_when(
                   q0401_hh_total == 1 ~ "1",
                   q0401_hh_total == 2 ~ "2",
@@ -1539,7 +1538,40 @@ grid.arrange(g1, g2, g3, g4)
 The pattern of NAs (999 and 888) is very similar.
 
 ```{r}
-data_2019_test %>% 
+# temp <- data_2019_test %>% 
+#   mutate(
+#     q0410g_total = as.factor(q0410g_total),
+#     q0410i_ss = as.factor(q0410i_ss),
+#     q0410j_government = as.factor(q0410j_government),
+#     q0410k_other = as.factor(q0410k_other),
+#     
+#     q0410g_total_rec = recode_factor(q0410g_total,
+#       "888" = "DK",
+#       "999" = "refuse",
+#       .default = "valid"),
+#     
+#     q0410i_ss_rec = recode_factor(q0410i_ss,
+#       "888" = "DK",
+#       "999" = "refuse",
+#       .default = "valid"),
+#     
+#     q0410j_government_rec = recode_factor(q0410j_government,
+#       "888" = "DK",
+#       "999" = "refuse",
+#       .default = "valid"),
+#     
+#      q0410k_other_rec = recode_factor(q0410k_other,
+#       "888" = "DK",
+#       "999" = "refuse",
+#       .default = "valid")
+#     ) %>% count(q0410g_total_rec,  q0410i_ss_rec, q0410j_government_rec, q0410k_other_rec)
+
+```
+
+```{r}
+
+data_2019_test <- 
+  data_2019_test %>% 
   mutate(
     q0410g_total = as.factor(q0410g_total),
     q0410i_ss = as.factor(q0410i_ss),
@@ -1565,9 +1597,37 @@ data_2019_test %>%
       "888" = "DK",
       "999" = "refuse",
       .default = "valid")
-    ) %>% count(q0410g_total_rec,  q0410i_ss_rec, q0410j_government_rec, q0410k_other_rec)
+    )
 
 ```
+
+
+We need to make decisions to manage the values of these variables. 
+First we explore the distribution of possible response combinations.
+
+```{r}
+# temp %>% filter(if_any(everything(), `==`, "valid"))
+# #View(.Last.value)
+```
+
+
+
+```{r}
+# temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n)
+```
+
+We assume that most of the respondents' income will be in what they answer 
+in item `q0410g_total`. Therefore, if in this variable we find a "valid" 
+response, in the following ones, the don't know or refuse will become 0. 
+
+If in this variable the answer is "don't know" or "refuse", a decision will
+be made for the cases depending on which type of answer has been given to a 
+greater extent. Thus, if in "total":
+- we have a response that is a "don't know" and we find that same response in
+another variable, we classify it as "don't know" in the final sum;
+- If we have an answer that is "refuse" and we find that same answer in another
+variable, we classify it as "refuse" in the final sum. 
+
 
 ### Variable recoding
 
@@ -1587,7 +1647,7 @@ whose values are the information of the median of the established range
 
 ```{r}
 data_2019_test <- 
-  data_2019 %>% 
+  data_2019_test %>% 
   mutate(q0410g_total_r = recode_factor(q0410g_total,
                                           "999" = REFUSED_ANSWER,
                                           "888" = NON_RESPONSE,
@@ -1762,7 +1822,85 @@ data_2019_test |>
 data_2019_test <- 
   data_2019_test %>% 
   mutate(
-    hh_income_r_NA = q0410g_tot_NA + q0410i_ss_NA + q0410j_gov_NA + q0410k_other_NA)
+    # 
+    # total = case_when(q0410g_total_rec == "valid" ~ q0410g_tot_NA,
+    #                   q0410g_total_rec == "DK" ~ NON_RESPONSE, 
+    #                   q0410g_total_rec == "refuse" ~ REFUSED_ANSWER),
+    # 
+    # pension = case_when(q0410g_total_rec == "valid" &
+    #                     q0410i_ss_rec == "valid" ~ q0410i_ss_NA,
+    #                     
+    #                     q0410g_total_rec == "valid" &
+    #                     q0410i_ss_rec == "DK" ~ 0, 
+    #                     
+    #                     q0410g_total_rec == "valid" &
+    #                     q0410i_ss_rec == "refuse" ~ 0,
+    #                   
+    #                     
+    #                     q0410g_total_rec != "valid" & (
+    #                     (q0410i_ss_rec == "DK" & q0410j_government_rec == "DK") |
+    #                     (q0410i_ss_rec == "DK" & q0410j_other_rec == "DK") |
+    #                     (q0410i_other_rec == "DK" & q0410j_government_rec == "DK")
+    #                     ) ~ NON_RESPONSE,
+    #                     
+    #                     q0410g_total_rec != "valid" & (
+    #                     (q0410i_ss_rec == "refuse" & q0410j_government_rec == "refuse") |
+    #                     (q0410i_ss_rec == "refuse" & q0410j_other_rec == "refuse") |
+    #                     (q0410i_other_rec == "refuse" & q0410j_government_rec == "refuse")
+    #                     ) ~ REFUSED_ANSWER
+    #                     
+    #                     ),
+    # 
+    # government = case_when(q0410g_total_rec == "valid" &
+    #                     q0410j_government_rec == "valid" ~ q0410j_government_NA,
+    #                     
+    #                     q0410g_total_rec == "valid" &
+    #                     q0410j_government_rec == "DK" ~ 0, 
+    #                     
+    #                     q0410g_total_rec == "valid" &
+    #                     q0410j_government_rec == "refuse" ~ 0,
+    #                     
+    #                     q0410g_total_rec != "valid" & (
+    #                     (q0410i_ss_rec == "DK" & q0410j_government_rec == "DK") |
+    #                     (q0410i_ss_rec == "DK" & q0410j_other_rec == "DK") |
+    #                     (q0410i_other_rec == "DK" & q0410j_government_rec == "DK")
+    #                     ) ~ NON_RESPONSE,
+    #                     
+    #                     q0410g_total_rec != "valid" & (
+    #                     (q0410i_ss_rec == "refuse" & q0410j_government_rec == "refuse") |
+    #                     (q0410i_ss_rec == "refuse" & q0410j_other_rec == "refuse") |
+    #                     (q0410i_other_rec == "refuse" & q0410j_government_rec == "refuse")
+    #                     ) ~ REFUSED_ANSWER
+    #                     ),
+    # 
+    #   
+    # other = case_when(q0410g_total_rec == "valid" &
+    #                     q0410k_other_rec == "valid" ~ q0410j_other_NA,
+    #                     
+    #                     q0410g_total_rec == "valid" &
+    #                     q0410k_other_rec == "DK" ~ 0, 
+    #                     
+    #                     q0410g_total_rec == "valid" &
+    #                     q0410k_other_rec == "refuse" ~ 0,
+    #                     
+    #                     q0410g_total_rec != "valid" & (
+    #                     (q0410i_ss_rec == "DK" & q0410j_government_rec == "DK") |
+    #                     (q0410i_ss_rec == "DK" & q0410j_other_rec == "DK") |
+    #                     (q0410i_other_rec == "DK" & q0410j_government_rec == "DK")
+    #                     ) ~ NON_RESPONSE,
+    #                     
+    #                     q0410g_total_rec != "valid" & (
+    #                     (q0410i_ss_rec == "refuse" & q0410j_government_rec == "refuse") |
+    #                     (q0410i_ss_rec == "refuse" & q0410j_other_rec == "refuse") |
+    #                     (q0410i_other_rec == "refuse" & q0410j_government_rec == "refuse")
+    #                     ) ~ REFUSED_ANSWER
+    #                     ),
+    # 
+    hh_income_r_NA = #total + pension + government + other)
+      
+ #FIXME!!!!!!!!!!!!!
+      
+      q0410g_tot_NA + q0410i_ss_NA + q0410j_gov_NA + q0410k_other_NA)
 ```
 
 ```{r}
@@ -2018,7 +2156,7 @@ We can reverse the score to indicate social participation.
 
 ```{r}
 data_2019_test <-
-  data_2019 %>%
+  data_2019_test %>%
   mutate(
           q6613_club = as.factor(q6613_club),
           q6619_leave = as.factor(q6619_leave),
@@ -2085,7 +2223,11 @@ data_2019_test <-
                                            is.na(q6619_leave) &
                                            is.na(q6621_assoc) ~ MISSING_DESIGN,
              TRUE ~ social_participation
-           )
+           ),
+         q6613_club = as.numeric(q6613_club), #for treating NAs later
+          q6619_leave = as.numeric(q6619_leave),
+          q6618_relig = as.numeric(q6618_relig),
+          q6621_assoc = as.numeric(q6621_assoc)
              )
 #FIXME: solved! there's surely another easier way to do this.
 ```
@@ -2357,22 +2499,186 @@ data_2019_test %>%
   colnames()
 ```
 
+##2.28. Recoding NAs
+
+I will first get a description of missing values
+100% NAs:
+```{r eval = FALSE}
+data_2019_test %>% 
+  miss_var_summary() %>% 
+  filter(pct_miss == 100) %>% 
+  data.frame
+```
+
+<!-- We eliminate variables with 100% of missing values: -->
+
+<!-- ```{r} -->
+<!-- df_2019_100_missing <- data_2019_test %>%  -->
+<!--   miss_var_summary() %>%  -->
+<!--   filter(pct_miss > 90.0) %>%  -->
+<!--   select(variable)  -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- data_2019_test <- data_2019_test %>%  -->
+<!--   select(!all_of(df_2019_100_missing$variable)) -->
+<!-- ``` -->
+
+NAs, in general
+```{r}
+data_2019_test %>% 
+  miss_var_summary() %>% 
+  data.frame
+```
+
+
+### Proxy respondents
+```{r}
+data_2019_test %>% 
+  #filter(proxy == 1) %>% 
+  miss_var_summary() %>% 
+  data.frame
+```
+
+
+There are 91 NAs for proxy respondents in some items. We have to recode it
+as -991 (missing by design)
+
+```{r}
+data_2019_test <- data_2019_test %>%
+  mutate(
+    proxy = case_when(
+      is.na(q1005_proxy) ~ 0,
+      TRUE ~ 1
+    ),
+    proxy = factor(
+      x = proxy,
+      levels = c(0, 1),
+      labels = c("No", "Yes"),
+    )
+  )
+```
+
+```{r}
+data_2019_test %>% select(proxy) %>% freq_table(proxy)
+```
+
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(
+    across(
+      .cols = where(is.numeric),
+      .fns = ~if_else(proxy == "Yes",
+                     replace_na(., MISSING_DESIGN),
+                     .)
+    )
+  )
+
+```
+
+
+```{r}
+data_2019_test %>% 
+  filter(proxy == 1) %>% 
+  miss_var_summary() %>% 
+  data.frame #It works
+```
+
+### Missing (default) & refused answer
+```{r}
+data_2019_test %>% 
+  #filter(proxy == 0) %>% 
+  miss_var_summary() %>% 
+  data.frame #It works
+```
+Remaining NAs are NON_RESPONSE. 
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(
+    across(
+      where(is.numeric),
+      coalesce,
+      NON_RESPONSE
+    )
+  )
+```
+
+```{r}
+data_2019_test %>% 
+  miss_var_summary() %>% 
+  data.frame #It works
+```
+
+We'll recategorize '888' (don't know) as missing (default)
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(
+    across(
+      where(is.numeric),
+      recode,
+      `888` = NON_RESPONSE,
+      `999` = REFUSED_ANSWER
+    )
+  )
+```
+
+```{r}
+data_2019_test %>% 
+  miss_var_summary() %>% 
+  filter(pct_miss > 50) %>% 
+  data.frame #It works
+```
+
+
+
 # Step 3. Wave 2 harmonization
 
 ## 3.1. Gender
 
 We assume that gender is the same as that recorded in Wave 1.
+```{r}
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, gender),
+            by = "ID_ECS")
+```
+
 
 ## 3.2. Country of residence
 
 We assume that country of residence is the same as in Wave 1, "ES".
+```{r}
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, coresidence),
+            by = "ID_ECS")
+```
+
+```{r}
+data_COVID_test %>%  select(coresidence) %>% freq_table(coresidence)
+```
 
 ## 3.3. Migration
 
 We assume that migration has not changed from Wave 1.
 
+```{r}
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, migration),
+            by = "ID_ECS")
+```
+
+```{r}
+data_COVID_test %>%  select(migration) %>% freq_table(migration)
+```
+
 ## 3.4. & 3.5. Age
 
+### Variables exploration
 As in wave 1, there are IDs that have a corrupted date of birth. We check which
 ones they are.
 
@@ -2427,7 +2733,8 @@ data_COVID_test %>%
 
 ```
 
-bl_time = bl_time/years()
+
+### Variable creation
 
 ```{r}
 covid_time <- data_COVID_test %>%  
@@ -2454,6 +2761,29 @@ data_COVID_test %>% freq_table(FECHAFIN) %>% print(n = 100) #There are 102 NAs
 data_COVID_test %>% freq_table(q0006_date) %>% print(n = 100) #No NAs
 ```
 
+We have three situations:
+1. We have complete data to have an accurate estimate of the age: date of birth,
+date of baseline interview and covid interview. We calculate the age by doing
+covid_date - date_of_birth.
+
+2. We don't have date of birth, but covid_date and baseline_date. We calculate 
+the age by doing age on baseline + period between covid_date and baseline_date.
+
+3. We don't have date of birth nor covid_date. We estimate the age by exploring
+if the dates of baseline interview and covid_date are sequential, to extract 
+an approximation of time between the two periods.
+
+```{r}
+data_COVID_test %>% 
+  group_by(origin) %>%  
+  mutate(
+  tiempo_base = lag(q0006_date) - lead(q0006_date),
+  tiempo_covid = lag(FECHAFIN) - lead(FECHAFIN)
+) %>% 
+  select(tiempo_base, tiempo_covid)
+```
+
+
 ```{r}
 data_COVID_test <-
   data_COVID_test %>% 
@@ -2462,10 +2792,16 @@ data_COVID_test <-
     # qq1011_age = as.period(qq1011_age),
     age_act = q1011_age + time_between_BL_covid,
     #age_act = year(age_act),
-    age_continuous = if_else(
-                        ID_ECS %in% ID_NAs_sub, age_act, 
-                        covid_time
-                        ),
+    age_continuous = case_when(
+      is.na(FECHAFIN) ~ q1011_age,
+      ID_ECS %in% ID_NAs_sub ~ age_act,
+      TRUE ~ covid_time
+    ),
+    #
+    # age_continuous = if_else(
+    #                     ID_ECS %in% ID_NAs_sub, age_act, 
+    #                     covid_time
+    #                     ),
     age_continuous = floor(age_continuous), #we round up to the integer age of
     #the person (when there is one month left until a birthday, it's not said 
     #how old we will be, but how old I am)
@@ -2502,6 +2838,10 @@ data_COVID_test %>%
   select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
   View()
 
+data_COVID_test %>% 
+  filter(ID_ECS %in% ID_NAs_sub) %>% 
+  select(ID_ECS, q1010_birth_date, q0006_date, FECHAFIN, q1011_age, q1010_year, age_continuous, age_cat)
+
 #FIXME: NAs issue
 ```
 
@@ -2514,55 +2854,207 @@ data_COVID_test <- data_COVID_test %>%
 ## 3.6. Employment status
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    employment_st = MISSING_DESIGN,
+    employment_st = factor(
+      x = employment_st,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "have a job (employed or self-employed)",
+        "in education",
+        "care work (familiy) / homeworker/ on parental leave",
+        "on long-term sick leave/disability",
+        "unable to work due to reasons not mentioned elsewhere in this list",
+        "unemployed or job-seeking",
+        "retired",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"),
+    
+  )
+)
+#TODO: Establish that was not evaluated in Wave 2.
 ```
+
 
 ## 3.7. Contract
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+
+
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    contract = MISSING_DESIGN,
+    contract = factor(
+      x = contract,
+      levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "permanent",
+        "temporary",
+        "self-employed",
+        "other",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"
+  )
+    )
+  )
 ```
 
 ## 3.8. Employment type
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
+#TODO: That was not evaluated in Wave 2.
+
+
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    employment_ty = MISSING_DESIGN,
+    employment_ty = factor(x = employment_ty,
+                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("permanent",
+                                    "temporary",
+                                    "self-employed",
+                                    "other",
+                                    "not assessed",
+                                    "refused to answer",
+                                    "missing (default)"
+ )))
+    
 ```
 
 ## 3.9. HC worker
 
 Same values as Wave 1.
+```{r}
+
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, hc_worker),
+            by = "ID_ECS")
+```
+
 
 ## 3.10. Profession
 
-Same values as Wave 1.
+Same values as Wave 1 (as it is something thar is stable in time).
+
+```{r}
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, profession),
+            by = "ID_ECS")
+```
 
 ## 3.11. Education
 
 Same values as Wave 1.
 
+```{r}
+data_COVID_test <- data_COVID_test %>%
+  left_join(data_2019_test %>% 
+              select(ID_ECS, education),
+            by = "ID_ECS")
+```
+
 ## 3.12. Relationship status
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    relationship = MISSING_DESIGN,
+     relationship = factor(x = relationship,
+                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("single", 
+                                    "married/in a civil union",
+                                    "in a relationship and living together",
+                                    "in a relationship and living apart",
+                                    "divorced/separated",
+                                    "widowed",
+                                    "other",
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)")))
 ```
 
 ## 3.13. Children
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    children = MISSING_DESIGN,
+    children = factor(x = children,
+                          levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("yes", 
+                                    "no",
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)")))
 ```
 
 ## 3.14. Children household
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    children_hh = MISSING_DESIGN,
+    children_hh = factor(
+      x = children_hh,
+      levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "yes",
+        "no",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"
+      )
+    )
+  )
 ```
 
 ## 3.15. Number of children
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    nofchildren = MISSING_DESIGN,
+    nofchildren = factor(x = nofchildren,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("no children", 
+                                    "one child",
+                                    "two or three",
+                                    "four or more",
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)")))
 ```
 
 ## 3.16. Living alone
@@ -2583,6 +3075,29 @@ data_COVID_test <- left_join(data_COVID_test,
                             by = "ID_ECS")
 ```
 
+```{r}
+data_COVID_test <- data_COVID_test %>% 
+  mutate(
+    living_alone = recode_factor(living_alone,
+      "0" = "2",
+      "1" = "1"
+    ),
+living_alone = factor(
+      x = living_alone,
+      levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "alone",
+        "not alone",
+        "not assessed",
+        "refused to answer",
+        "missing (default)"
+      )
+    )
+  )
+
+var_label(data_2019_test$living_alone) <- "Living alone"
+```
+
 The rest of individual variables are already on the dataset:
 
 ```{r}
@@ -2595,18 +3110,63 @@ data_COVID_test %>%
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    hh_size = MISSING_DESIGN,
+  hh_size = factor(x = hh_size,
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("one person", 
+                                    "two persons", 
+                                    "three or four persons", 
+                                    "five or more persons", 
+                                    "live in an institution", 
+                                    "not assessed", 
+                                    "refused to answer",
+                                    "missing (default)"))
+  )
+
+var_label(data_2019_test$hh_size) <- "Household size"
 ```
 
 ## 3.18. Quartiles & quintiles
 
 ```{r}
 #TODO: Establish the same value or that was not evaluated in Wave 2.
+data_COVID_test <-
+  data_COVID_test %>% 
+  mutate(
+    hhquartile = MISSING_DESIGN,
+    hhquintile = MISSING_DESIGN,
+    
+    
+    hhquartile = factor(x = hhquartile,
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quartile", 
+                                    "second quartile", 
+                                    "third quartile", 
+                                    "fourth quartile", 
+                                    "not assessed", 
+                                    "missing (default)")),
+  
+  hhquintile = factor(x = hhquintile,
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
+                          labels = c("first quartile", 
+                                    "second quartile", 
+                                    "third quartile", 
+                                    "fourth quartile",
+                                    "fifth quintile",
+                                    "not assessed", 
+                                    "missing (default)"))
+  
+  )
 ```
 
 ## Stressors
 
-(Separated raw items) \### Sleep problems
+(Separated raw items) 
 
+### Sleep problems
 ```{r}
 data_COVID_test %>%  
   select(num_range("SUE", 2:3)) %>% 
@@ -2863,7 +3423,103 @@ data_COVID_test %>%
   colnames()
 ```
 
-# Step 3. Combination of both datasets
+##3.28. Recoding NAs
+
+I will first get a description of missing values
+100% NAs:
+```{r eval = FALSE}
+data_COVID_test %>% 
+  miss_var_summary() %>% 
+  filter(pct_miss == 100) %>% 
+  data.frame
+```
+NAs, in general
+```{r}
+data_COVID_test %>% 
+  miss_var_summary() %>% 
+  data.frame
+```
+
+### Proxy respondents
+
+```{r}
+data_COVID_test %>% 
+  select(TIPO_ENT) %>% 
+  freq_table(TIPO_ENT)
+
+data_COVID_test %>% 
+  select(TIPO_ENT) %>% 
+  str()
+```
+
+There are 54 NAs for proxy respondents in some items. We have to recode it
+as -991 (missing by design)
+
+```{r}
+data_COVID_test <- data_COVID_test %>% 
+  mutate(
+    across(
+      .cols = where(is.numeric),
+      .fns = ~if_else(TIPO_ENT == 2,
+                     replace_na(., MISSING_DESIGN),
+                     .)
+    ) 
+  )
+
+```
+
+
+```{r}
+data_COVID_test %>% 
+  #filter(TIPO_ENT == 2) %>% 
+  miss_var_summary() %>% 
+  data.frame
+```
+
+Remaining NAs are NON_RESPONSE. 
+
+```{r}
+data_COVID_test <- data_COVID_test %>% 
+  mutate(
+    across(
+      where(is.numeric),
+      coalesce,
+      NON_RESPONSE
+    )
+  )
+```
+
+```{r}
+data_COVID_test %>% 
+  miss_var_summary() %>% 
+  data.frame #It works
+```
+
+We'll recategorize '888' (don't know) as missing (default)
+
+```{r}
+data_COVID_test <- data_COVID_test %>% 
+  mutate(
+    across(
+      where(is.numeric),
+      recode,
+      `9` = NON_RESPONSE,
+      `888` = NON_RESPONSE,
+      `999` = REFUSED_ANSWER
+    )
+  )
+```
+
+```{r}
+data_COVID_test %>% 
+  miss_var_summary() %>% 
+  filter(pct_miss > 50) %>% 
+  data.frame #It works
+```
+
+
+
+# Step 4. Combination of both datasets
 
 ```{r}
 df <- bind_rows(data_2019_test, data_COVID_test)
@@ -2878,7 +3534,8 @@ df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
 rm(anxiety, brs, brsw2, covidcc, depression, economic, flourishing, g1, g2, g3, g4, livingalone, loneliness_ss_si, lte, materialdep, negposaffect, occ_unique, personality, qol, socialsupw2, tobacco, prueba, alcohol, suicidality, negposaf)
 ```
 
-# Step 4. Adding new variables
+
+# Step 5. Adding new variables
 
 ## Lockdown stringency index
 
@@ -3137,17 +3794,29 @@ df <- df %>% select(ID_ECS,
                     wave,
                     any_of(ecs_varlist),
                     CountryCode:nuts_remoteness_label)
-#FIXME: "Error: negative length vectors are not allowed"
 ```
 
 
-# Step 6. Recoding NAs
-I will first get a description of missing values
+```{r}
+df <- df %>% 
+  mutate(
+    across(
+      where(is.numeric),
+      coalesce,
+      MISSING_DESIGN
+    )
+  )
+```
 
-```{r eval = FALSE}
-df %>% 
-  group_by(wave) %>% 
-  miss_var_summary() %>% 
-  filter(pct_miss == 100) %>% 
-  data.frame
+
+```{r}
+df <- df %>% 
+  mutate(
+    across(
+      where(is.factor),
+      fct_explicit_na,
+      na_level = MISSING_DESIGN
+    )
+  )
+#FIXME! Falta arreglar esto de los NAs (NAs en ola 2 que no se registraron en Ola 1)
 ```
