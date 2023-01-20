@@ -290,9 +290,9 @@ data_2019_test <- data_2019_test %>%
                           labels = c("male", 
                                     "female",
                                     "other/diverse",
-                                    "not assessed",
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN,
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 ```
 
 ### Checking new variable
@@ -365,9 +365,9 @@ data_2019_test <-
                           labels = c("yes", 
                                     "no",
                                     "no information",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 ```
 
 ### Checking new variable
@@ -473,9 +473,9 @@ data_2019_test <-
                                     "45-64",
                                     "65-94",
                                     "95 years or older",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 
 ```
 
@@ -486,12 +486,12 @@ data_2019_test %>%
   freq_table(age_cat)
 
 data_2019_test %>% 
-  select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
-  View()
+  select(age_continuous, age_cat, q1011_age, q1010_birth_date) 
+#%>% View()
 
 data_2019_test %>% filter(ID_ECS %in% ID_NAs) %>% 
-  select(ID_ECS, age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
-  View()
+  select(ID_ECS, age_continuous, age_cat, q1011_age, q1010_birth_date)
+#%>% View()
 ```
 
 ## 2.6. Employment status (`q1503_work_now` & `q1504_reason`.)
@@ -596,9 +596,9 @@ data_2019_test <-
         "unable to work due to reasons not mentioned elsewhere in this list",
         "unemployed or job-seeking",
         "retired",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -664,9 +664,9 @@ data_2019_test <-
         "temporary",
         "self-employed",
         "other",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -734,9 +734,9 @@ data_2019_test <-
                                     "temporary",
                                     "self-employed",
                                     "other",
-                                    "not assessed",
-                                    "refused to answer",
-                                    "missing (default)"
+                                    MISSING_DESIGN,
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE
  )))
 
 
@@ -849,9 +849,9 @@ data_2019_test <- data_2019_test %>%
                                              NON_RESPONSE),
                                   labels = c("yes",
                                             "no",
-                                            "not assessed",
-                                            "refused to answer",
-                                            "missing (default)"
+                                            MISSING_DESIGN,
+                                            REFUSED_ANSWER,
+                                            NON_RESPONSE
                                             )))
 ```
 
@@ -954,9 +954,9 @@ data_2019_test <-
         "installation, maintenance, cleaning, and repairs",
         "currently not working",
         "other",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -983,7 +983,7 @@ data_2019_test %>%
     level)
 -   4 = no formal education / less than basic (no schooling, early childhood
     education) -991 = not assessed -993: level not stated - if following yellow
-    box, if not, "missing (default)"
+    box, if not, NON_RESPONSE
 
 Our variable, `q1016_highest`, has as levels (doesn't have *non-tertiary
 education*):
@@ -1037,9 +1037,9 @@ data_2019_test <-
         "secondary/intermediate",
         "tertiary/advanced",
         "no formal education",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -1115,9 +1115,9 @@ data_2019_test <-
                                     "divorced/separated",
                                     "widowed",
                                     "other",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 ```
 
 ### Checking new variable
@@ -1165,9 +1165,9 @@ data_2019_test <-
                           levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
                           labels = c("yes", 
                                     "no",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 
 ```
 
@@ -1254,9 +1254,9 @@ data_2019_test <-
       labels = c(
         "yes",
         "no",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -1323,9 +1323,9 @@ data_2019_test <-
                                     "one child",
                                     "two or three",
                                     "four or more",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 
 ```
 
@@ -1365,9 +1365,9 @@ data_2019_test <- data_2019_test %>%
       labels = c(
         "alone",
         "not alone",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -1426,9 +1426,9 @@ data_2019_test <- data_2019_test %>%
                                     "three or four persons", 
                                     "five or more persons", 
                                     "live in an institution", 
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)"))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE))
   )
 
 var_label(data_2019_test$hh_size) <- "Household size"
@@ -1533,6 +1533,10 @@ g4 <- ggplot(data_2019) +
   xlim(800, 1200)
 
 grid.arrange(g1, g2, g3, g4)
+```
+
+```{r}
+rm(g1, g2, g3, g4)
 ```
 
 The pattern of NAs (999 and 888) is very similar.
@@ -1936,8 +1940,8 @@ data_2019_test <- data_2019_test %>%
                                     "second quartile", 
                                     "third quartile", 
                                     "fourth quartile", 
-                                    "not assessed", 
-                                    "missing (default)")),
+                                    MISSING_DESIGN, 
+                                    NON_RESPONSE)),
   
   hhquintile = case_when(
                           hh_income_r_NA <= quintiles19[1] ~ 1,
@@ -1959,8 +1963,8 @@ data_2019_test <- data_2019_test %>%
                                     "third quartile", 
                                     "fourth quartile",
                                     "fifth quintile",
-                                    "not assessed", 
-                                    "missing (default)"))
+                                    MISSING_DESIGN, 
+                                    NON_RESPONSE))
   
   )
                           
@@ -2604,6 +2608,49 @@ data_2019_test <- data_2019_test %>%
     )
   )
 ```
+edad_vars <- grep("edad", names(df), value = TRUE)
+
+```{r}
+vector_cadena_888 <- grep(c("999"), names(data_2019_test), value = TRUE)
+vector_cadena_888 <- pull(vector_cadena_888)
+
+
+data_2019_test %>% select(where(is.factor)) %>% map(., levels) %>% filter(. == "888")
+
+variables <- c("q0410g_total", "q0410i_ss", "q0410j_government", "q0410k_other")
+
+dfprueba <- data_2019_test %>%
+  mutate(
+    across(
+
+    )
+  )
+
+dfprueba <- data_2019_test %>%
+  across(
+    filter,
+    . == 888
+  ) %>%
+  mutate(
+    across(
+     where(is.factor),
+      ~ case_when(`888` ~ NON_RESPONSE,
+                  #`999` ~ REFUSED_ANSWER,
+                  TRUE ~ .)
+    )
+  )
+
+dfprueba <- data_2019_test %>%
+  mutate(
+    across(
+      all_of(variables),
+      ~case_when(`888` ~ NON_RESPONSE,
+                  `999` ~ REFUSED_ANSWER,
+                  TRUE ~ .)
+    )
+  )
+```
+
 
 ```{r}
 data_2019_test %>% 
@@ -2822,9 +2869,9 @@ data_COVID_test <-
                                     "45-64",
                                     "65-94",
                                     "95 years or older",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 
 ```
 
@@ -2880,9 +2927,9 @@ data_COVID_test <-
         "unable to work due to reasons not mentioned elsewhere in this list",
         "unemployed or job-seeking",
         "retired",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"),
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE),
     
   )
 )
@@ -2908,9 +2955,9 @@ data_COVID_test <-
         "temporary",
         "self-employed",
         "other",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
   )
     )
   )
@@ -2932,9 +2979,9 @@ data_COVID_test <-
                                     "temporary",
                                     "self-employed",
                                     "other",
-                                    "not assessed",
-                                    "refused to answer",
-                                    "missing (default)"
+                                    MISSING_DESIGN,
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE
  )))
     
 ```
@@ -2991,9 +3038,9 @@ data_COVID_test <-
                                     "divorced/separated",
                                     "widowed",
                                     "other",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 ```
 
 ## 3.13. Children
@@ -3009,9 +3056,9 @@ data_COVID_test <-
                           levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
                           labels = c("yes", 
                                     "no",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 ```
 
 ## 3.14. Children household
@@ -3029,9 +3076,9 @@ data_COVID_test <-
       labels = c(
         "yes",
         "no",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -3052,9 +3099,9 @@ data_COVID_test <-
                                     "one child",
                                     "two or three",
                                     "four or more",
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)")))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
 ```
 
 ## 3.16. Living alone
@@ -3088,9 +3135,9 @@ living_alone = factor(
       labels = c(
         "alone",
         "not alone",
-        "not assessed",
-        "refused to answer",
-        "missing (default)"
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
       )
     )
   )
@@ -3121,9 +3168,9 @@ data_COVID_test <-
                                     "three or four persons", 
                                     "five or more persons", 
                                     "live in an institution", 
-                                    "not assessed", 
-                                    "refused to answer",
-                                    "missing (default)"))
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE))
   )
 
 var_label(data_2019_test$hh_size) <- "Household size"
@@ -3146,8 +3193,8 @@ data_COVID_test <-
                                     "second quartile", 
                                     "third quartile", 
                                     "fourth quartile", 
-                                    "not assessed", 
-                                    "missing (default)")),
+                                    MISSING_DESIGN, 
+                                    NON_RESPONSE)),
   
   hhquintile = factor(x = hhquintile,
                           levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
@@ -3156,8 +3203,8 @@ data_COVID_test <-
                                     "third quartile", 
                                     "fourth quartile",
                                     "fifth quintile",
-                                    "not assessed", 
-                                    "missing (default)"))
+                                    MISSING_DESIGN, 
+                                    NON_RESPONSE))
   
   )
 ```
@@ -3815,8 +3862,28 @@ df <- df %>%
     across(
       where(is.factor),
       fct_explicit_na,
-      na_level = MISSING_DESIGN
+      na_level = as.character(MISSING_DESIGN)
     )
   )
 #FIXME! Falta arreglar esto de los NAs (NAs en ola 2 que no se registraron en Ola 1)
 ```
+
+```{r}
+df1 <- df %>% 
+  mutate(
+    across(
+      where(is.factor),
+      ~ case_when(`888` ~ NON_RESPONSE,
+                  `999` ~ REFUSED_ANSWER,
+                  TRUE ~ .)
+    )
+  )
+
+df1
+```
+
+library(dplyr)
+test %>% 
+   mutate(across(c(bob, sally, rita), 
+             ~ case_when(. > baseline ~ baseline, 
+                       . <= baseline ~ .)))
