@@ -419,8 +419,8 @@ For those cases, we have the correct information on variables `age` and
 ```{r}
 data_2019 %>%  
   filter(ID_ECS %in% ID_NAs) %>% 
-  select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) %>% 
-  View()
+  select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) 
+#%>%  View()
 ```
 
 ### Variables' creation
@@ -2608,47 +2608,29 @@ data_2019_test <- data_2019_test %>%
     )
   )
 ```
-edad_vars <- grep("edad", names(df), value = TRUE)
 
 ```{r}
-vector_cadena_888 <- grep(c("999"), names(data_2019_test), value = TRUE)
-vector_cadena_888 <- pull(vector_cadena_888)
-
-
-data_2019_test %>% select(where(is.factor)) %>% map(., levels) %>% filter(. == "888")
-
-variables <- c("q0410g_total", "q0410i_ss", "q0410j_government", "q0410k_other")
-
-dfprueba <- data_2019_test %>%
+data_2019_test <- data_2019_test %>% 
   mutate(
     across(
-
+      where(
+    ~c("888") %in% levels(.)),
+   .fns = recode_factor,
+   `888` = as.character(NON_RESPONSE)
     )
   )
 
-dfprueba <- data_2019_test %>%
-  across(
-    filter,
-    . == 888
-  ) %>%
+data_2019_test <- data_2019_test %>% 
   mutate(
     across(
-     where(is.factor),
-      ~ case_when(`888` ~ NON_RESPONSE,
-                  #`999` ~ REFUSED_ANSWER,
-                  TRUE ~ .)
+      where(
+    ~c("999") %in% levels(.)),
+   .fns = recode_factor,
+   `999` = as.character(REFUSED_ANSWER)
     )
   )
-
-dfprueba <- data_2019_test %>%
-  mutate(
-    across(
-      all_of(variables),
-      ~case_when(`888` ~ NON_RESPONSE,
-                  `999` ~ REFUSED_ANSWER,
-                  TRUE ~ .)
-    )
-  )
+   
+   
 ```
 
 
@@ -2882,8 +2864,8 @@ data_COVID_test %>%
   freq_table(age_cat)
 
 data_COVID_test %>% 
-  select(age_continuous, age_cat, q1011_age, q1010_birth_date) %>% 
-  View()
+  select(age_continuous, age_cat, q1011_age, q1010_birth_date) 
+#%>% View()
 
 data_COVID_test %>% 
   filter(ID_ECS %in% ID_NAs_sub) %>% 
@@ -3816,7 +3798,22 @@ df <-
 rm(nuts_ds) 
 ```
 
-# Step 5. Selecting necessary variables
+# Step 6. Hashed IDs
+The WP2 handbook for harmonisation reads that a unique identifier (random
+integer) shoudl be assigned to each participant. We'll use `digest` function
+and package.
+
+```{r}
+library(digest)
+
+df <- df %>% rowwise() %>% 
+  mutate(
+    hashed_id = digest(df$ID_ECS, algo = "md5"))
+
+```
+
+
+# Step 7. Selecting necessary variables
 
 Firstly, we import the Edad con Salud varible list for RESPOND.
 ```{r}
@@ -3835,14 +3832,17 @@ ecs_varlist <- ecs_variablelist %>% select(variable) %>% pull()
 ```
 
 
-
 ```{r}
-df <- df %>% select(ID_ECS,
+df <- df %>% select(hashed_id,
                     wave,
                     any_of(ecs_varlist),
                     CountryCode:nuts_remoteness_label)
 ```
 
+
+#Step 8. Setting variable labels
+
+#Step 9. Confirming that there are no more NAs
 
 ```{r}
 df <- df %>% 
@@ -3881,9 +3881,3 @@ df1 <- df %>%
 
 df1
 ```
-
-library(dplyr)
-test %>% 
-   mutate(across(c(bob, sally, rita), 
-             ~ case_when(. > baseline ~ baseline, 
-                       . <= baseline ~ .)))
