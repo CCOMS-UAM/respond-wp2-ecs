@@ -144,7 +144,7 @@ rm(raw_COVID_colnames)
 
 ## Checking rows
 
-On COVID substudy there's one case that is not on baseline wave. We have to
+There's one case on COVID substudy that is not on baseline wave. We have to
 remove it. Firstly, we detect it using anti_join():
 
 ```{r}
@@ -159,6 +159,11 @@ And then we remove it (is ID_ECS == 6900702)
 data_COVID <- data_COVID %>% 
   filter(ID_ECS != id_ecs_subs_notBL)
 ```
+
+```{r}
+rm(id_ecs_subs_notBL)
+```
+
 
 ## Identifying waves
 
@@ -183,7 +188,7 @@ data_COVID_test <- data_COVID
 
 ## Follow-up cases
 
-In order to know what cases are in both waves, we use semi_join:
+In order to know which cases are in both waves, we use semi_join:
 
 ```{r}
 id_ecs_both <- data_COVID_test %>%
@@ -275,7 +280,7 @@ data_2019 %>%
 
 data_2019 %>%
   select(q1009_sex) %>%
-  summarise_all(funs(sum(is.na(.))))
+  summarise_all(~sum(is.na(.)))
 ```
 
 ### Variable harmonization
@@ -345,7 +350,7 @@ different than Spain are indicators of migration.
 ```{r}
 data_2019 %>%
   select(q1018_country) %>%
-  summarise_all(funs(sum(is.na(.)))) #No NAs
+  summarise_all(~sum(is.na(.))) #No NAs
 
 data_2019 %>% 
   freq_table(q1018_country) # 1 = Spain, !1 = other countries
@@ -631,7 +636,7 @@ Changes made after consulting with IPD-Respond team:
 ```{r}
 data_2019 %>%
   select(q1510b_contract_earner) %>%
-  summarise_all(funs(sum(is.na(.))))
+  summarise_all(~sum(is.na(.))) #741
 
 data_2019 %>% 
   freq_table(q1510b_contract_earner)
@@ -705,7 +710,8 @@ In EcS (`q1510_workday`):
 
 ```{r}
 data_2019 %>%
-  summarise_all(funs(sum(is.na(.))))
+  select(q1510e_workday) %>% 
+  summarise_all(~sum(is.na(.)))
 
 data_2019 %>%
   freq_table(q1510e_workday)
@@ -781,7 +787,7 @@ To proceed, we follow the next steps:
 ```{r}
 data_2019 %>%
   select(q1510_occ, q1510_catoccu) %>%
-  summarise_all(funs(sum(is.na(.)))) #Both variables has the same NAs, 
+  summarise_all(~sum(is.na(.))) #Both variables has the same NAs, 
 #only is just that on the free-text variable, NAs looks like "".
 ```
 
@@ -847,8 +853,8 @@ data_2019_test <- data_2019_test %>%
                                              MISSING_DESIGN, 
                                              REFUSED_ANSWER, 
                                              NON_RESPONSE),
-                                  labels = c("yes",
-                                            "no",
+                                  labels = c("1",
+                                            "2",
                                             MISSING_DESIGN,
                                             REFUSED_ANSWER,
                                             NON_RESPONSE
@@ -885,7 +891,7 @@ assumptions to a minimum and when in doubt, code things as other:
 ```{r}
 data_2019 %>%
   select(q1510_catoccu) %>%
-  summarise_all(funs(sum(is.na(.))))
+  summarise_all(~sum(is.na(.)))
 
 data_2019 %>% 
   freq_table(q1510_catoccu) 
@@ -901,7 +907,7 @@ data_2019_test <-
     profession = case_when(
       q1510_catoccu ==  5 ~ 5,  
       #service workers --> first responders: paramedic/firefighter/police
-      hc_worker == 1 ~  4 , #hc_wroker = healthcare
+      hc_worker == 1 ~  4, #hc_wroker = healthcare
       q1510_catoccu ==  10  ~  6 ,
       #armed forces --> military
       q1510_catoccu ==  1  ~  7 ,
@@ -1009,7 +1015,7 @@ As a proposal, I suggest:
 ```{r}
 data_2019 %>%
   select(q1016_highest) %>%
-  summarise_all(funs(sum(is.na(.)))) #No NAs, but 888 as DK.
+  summarise_all(~sum(is.na(.))) #No NAs, but 888 as DK.
 
 data_2019 %>% 
   freq_table(q1016_highest)
@@ -1088,7 +1094,7 @@ As the categories doesn't match exactly, I propose the following categorisation:
 ```{r}
 data_2019 %>%
   select(q1012_mar_stat) %>%
-  summarise_all(funs(sum(is.na(.)))) #No NAs
+  summarise_all(~sum(is.na(.))) #No NAs
 
 data_2019 %>%
   freq_table(q1012_mar_stat)
@@ -1143,7 +1149,7 @@ Our variables `q1056` & `q1058` ask about biological and adopted children
 ```{r}
 data_2019 %>%
   select(q1056, q1058) %>%
-  summarise_all(funs(sum(is.na(.)))) #No NAs
+  summarise_all(~sum(is.na(.))) #No NAs
 
 data_2019 %>% 
   freq_table(q1056) #1 = yes (2241); #2 = no (761)
@@ -1193,21 +1199,11 @@ ages are in the participants' household.
 
 ```{r}
 data_2019 %>%
-  select(q0407_age_01, q0407_age_08, q0407_age_10) %>%
-  summarise_all(funs(sum(is.na(.)))) #A lot of NAs
+  select(q0407_age_01:q0407_age_10) %>%
+  summarise_all(~sum(is.na(.))) #A lot of NAs
 
 data_2019 %>%
-  select(
-    q0407_age_01,
-    q0407_age_02,
-    q0407_age_03,
-    q0407_age_04,
-    q0407_age_05,
-    q0407_age_06,
-    q0407_age_07,
-    q0407_age_08,
-    q0407_age_10
-  ) %>%
+  select(q0407_age_01:q0407_age_10) %>%
   glimpse()
 ```
 
@@ -1287,7 +1283,7 @@ DK). Our proposal is to combine both.
 ```{r}
 data_2019 %>%
   select(q1057, q1059) %>%
-  summarise_all(funs(sum(is.na(.)))) #NAs
+  summarise_all(~sum(is.na(.))) #NAs
 
 data_2019 %>%
   freq_table(q1057) 
@@ -1350,7 +1346,7 @@ data_2019 %>%
 
 data_2019 %>%
   select(q0401_hh_total) %>%
-  summarise_all(funs(sum(is.na(.)))) #No NAs
+  summarise_all(~sum(is.na(.))) #No NAs
 ```
 
 ### Variable creation
@@ -1402,7 +1398,7 @@ any case on our sample.
 ```{r}
 data_2019 %>%
   select(q0401_hh_total) %>%
-  summarise_all(funs(sum(is.na(.)))) #No NAs
+  summarise_all(~sum(is.na(.))) #No NAs
 
 data_2019 %>%
   freq_table(q0401_hh_total) 
@@ -1615,7 +1611,6 @@ First we explore the distribution of possible response combinations.
 ```
 
 
-
 ```{r}
 # temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n)
 ```
@@ -1757,7 +1752,7 @@ We check that NAs are well recoded (-992, -993 & NAs)
 ```{r}
 data_2019_test %>%
   select(q0410g_total_r, q0410i_ss_r, q0410j_government_r, q0410k_other_r) %>%
-  summarise_all(funs(sum(is.na(.)))) #Están bien los NAs, 91 de proxy
+  summarise_all(~sum(is.na(.))) #Están bien los NAs, 91 de proxy
 ```
 
 ```{r}
@@ -1808,7 +1803,7 @@ data_2019_test %>%
 ```{r}
 data_2019_test %>%
   select(q0410g_tot_NA, q0410i_ss_NA, q0410j_gov_NA, q0410k_other_NA) %>%
-  summarise_all(funs(sum(is.na(.))))
+  summarise_all(~sum(is.na(.)))
 ```
 
 Right now the NAs are MISSING_DESIGN (proxy) and NON_RESPONSE. While the proxy
@@ -1827,9 +1822,7 @@ data_2019_test <-
   data_2019_test %>% 
   mutate(
     # 
-    # total = case_when(q0410g_total_rec == "valid" ~ q0410g_tot_NA,
-    #                   q0410g_total_rec == "DK" ~ NON_RESPONSE, 
-    #                   q0410g_total_rec == "refuse" ~ REFUSED_ANSWER),
+    # total = q0410g_tot_NA,
     # 
     # pension = case_when(q0410g_total_rec == "valid" &
     #                     q0410i_ss_rec == "valid" ~ q0410i_ss_NA,
@@ -2127,7 +2120,7 @@ data_2019_test %>%
 
 data_2019 %>%
   select(q6613_club, q6618_relig, q6619_leave, q6621_assoc) %>%
-  summarise_all(funs(sum(is.na(.))))
+  summarise_all(~sum(is.na(.)))
 
 data_2019 %>% 
   freq_table(q6613_club)
@@ -3842,10 +3835,10 @@ df <- df %>% select(hashed_id,
 
 #Step 8. Setting variable labels
 
-#Step 9. Confirming that there are no more NAs
+#Step 9. Checking that there are no more NAs
 
 ```{r}
-df <- df %>% 
+df <- df |> ungroup() |>
   mutate(
     across(
       where(is.numeric),
@@ -3853,11 +3846,14 @@ df <- df %>%
       MISSING_DESIGN
     )
   )
+
+
 ```
 
 
-```{r}
-df <- df %>% 
+```{r, eval=FALSE}
+#| eval: false
+df <- df %>%
   mutate(
     across(
       where(is.factor),
@@ -3868,8 +3864,9 @@ df <- df %>%
 #FIXME! Falta arreglar esto de los NAs (NAs en ola 2 que no se registraron en Ola 1)
 ```
 
-```{r}
-df1 <- df %>% 
+```{r, eval = FALSE}
+#| eval: false
+df1 <- df %>%
   mutate(
     across(
       where(is.factor),
