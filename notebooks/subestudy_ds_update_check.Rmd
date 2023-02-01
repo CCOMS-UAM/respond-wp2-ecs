@@ -1,0 +1,322 @@
+---
+title: "Dataset update checks on COVID substudy"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), 'First created on 30 Sept. 2022. Updated on %d de %B de %Y')`"
+output:
+  html_document:
+    df_print: paged
+  toc: yes
+  toc_float: yes
+  html_notebook: null
+institute: CCOMS, Universidad Autónoma de Madrid
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: 80
+---
+
+## Required libraries
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(ecs.data)
+library(haven)
+library(readxl)
+library(labelled)
+library(glue)
+library(waldo)
+```
+
+# File system constants:
+
+## Folders:
+
+```{r}
+DATASET_FOLDER <- read_ecs_folder("DB")
+SUBSTUDY_FOLDER <- file.path(DATASET_FOLDER, "Subestudio_COVID")
+```
+
+## File paths:
+
+```{r}
+RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.sav")
+MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.sav")
+
+```
+
+# Introduction
+
+This document checks the updates performed on the Subestudy COVID dataset. It
+compares the updated version with the latest version of the raw dataset with the
+most recent modified version by Demometrica. The expected result is that both
+datasets are different and matches what Eva from demometrica sended us:
+
+CRP: *En la variable "FECHAFIN" tenemos 102 valores perdidos que no sabemos,*
+*por un lado, si es información que se puede recuperar; por otro, existen*
+*incongruencias con otras variables. Hay algunos casos en los que pone "cita"*
+*o incluso "rechazo" en la variable "ESTADO_ENTREVISTA", lo que no debería*
+*ocurrir; y hay casos que señalan "No contesta" que sí tienen datos en
+FECHAFIN.* *Si los valores perdidos en FECHAFIN se deben corresponder a
+entrevistas que no* *se llegaron a realizar porque no se pudo contactar con los
+participantes* *no debería ocurrir nada de esto, ¿cierto?*
+
+Eva: *Buenos días, Cristina* *He estado revisando en los ficheros que yo tenía
+anteriores a este y en todos* *los casos eran contactos que se hicieron los días
+29 y 30 de Junio, y alguno* *del 1 de julio, y que en estos casos no se
+fusionaron los datos.* *Te he actualizado la base que tu me enviaste.* *La fecha
+como bien dices, es la última vez que se hizo el contacto con el* *participante
+y el resultado fue una cita, no contesta, etc.*
+
+NOTE: This document is only a proof-of-concept, based on Dani document' that
+compares the raw datasetfile with the latest historical version at the date
+indicated in the document metadata (16-01-2023). The latest dataset file and
+historical version backup are from 13-01-2023, 13:09.
+
+# Dataset loading
+
+```{r}
+# Load the two datasets
+updated_dataset <- read_sav(MOD_PATH)
+original_dataset  <- read_sav(RAW_DS_PATH)
+```
+
+# Checking differences 
+
+## Differences in dataset attributes:
+
+```{r}
+original_attributes  <- original_dataset   |> attributes()
+updated_attributes <- updated_dataset |> attributes()
+diff_attributes    <- compare(
+  original_attributes, updated_attributes,
+  max_diffs   = Inf,
+  x_arg       = "original",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+## Differences in variable attributes:
+
+```{r}
+original_var_attrs  <- original_dataset   |> map(attributes)
+updated_var_attrs <- updated_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  original_var_attrs, updated_var_attrs,
+  max_diffs   = Inf,
+  x_arg       = "original",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+## Differences in variable values:
+
+```{r}
+var_names <- original_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    original_var  <- original_dataset   |> select(ID_ECS, old = !!sym(.x))
+    updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(original_var, updated_var, by = "ID_ECS")   |>
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+# Differences in variable attributes:
+
+```{r}
+diff_var_attrs
+```
+
+# Differences in values
+
+```{r}
+
+print(diff_values, n = 105)
+```
+
+105 values that were lost on `FECHAFIN` were introduced. However, there's still
+some errors: some dates called "29/06/202" should be "29/06/2020"
+
+```{r}
+updated_dataset <- updated_dataset %>% 
+  mutate(
+    FECHAFIN = recode_factor(FECHAFIN,
+              "29/06/202" = "29/06/2020"
+    )
+  )
+```
+
+We run again the previous code until this point to check if the errors have been
+fixed:
+
+# Checking differences 
+
+## Differences in dataset attributes:
+
+```{r}
+original_attributes  <- original_dataset   |> attributes()
+updated_attributes <- updated_dataset |> attributes()
+diff_attributes    <- compare(
+  original_attributes, updated_attributes,
+  max_diffs   = Inf,
+  x_arg       = "original",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+## Differences in variable attributes:
+
+```{r}
+original_var_attrs  <- original_dataset   |> map(attributes)
+updated_var_attrs <- updated_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  original_var_attrs, updated_var_attrs,
+  max_diffs   = Inf,
+  x_arg       = "original",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+## Differences in variable values:
+
+```{r}
+var_names <- original_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    original_var  <- original_dataset   |> select(ID_ECS, old = !!sym(.x))
+    updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(original_var, updated_var, by = "ID_ECS")   |>
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+# Differences in variable attributes:
+
+```{r}
+diff_var_attrs
+```
+
+# Differences in values
+
+```{r}
+
+print(diff_values, n = 105)
+```
+
+# Saving new version
+
+```{r}
+write_sav(updated_dataset, "C:/Users/Cristina/Documents/workspace/ECS_Substudy_Mod_CRP.sav")
+```
+
+#Checking SAV dataset
+
+```{r}
+# Load the two datasets
+updated_dataset <- read_sav(MOD_PATH)
+spss_dataset  <- read_sav("C:/Users/Cristina/Documents/workspace/ECS_Substudy_Mod_CRP.sav")
+```
+
+
+# Checking differences 
+
+## Differences in dataset attributes:
+
+```{r}
+spss_attributes  <- spss_dataset   |> attributes()
+updated_attributes <- updated_dataset |> attributes()
+diff_attributes    <- compare(
+  spss_attributes, updated_attributes,
+  max_diffs   = Inf,
+  x_arg       = "spss",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+## Differences in variable attributes:
+
+```{r}
+spss_var_attrs  <- spss_dataset   |> map(attributes)
+updated_var_attrs <- updated_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  spss_var_attrs, updated_var_attrs,
+  max_diffs   = Inf,
+  x_arg       = "spss",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+## Differences in variable values:
+
+```{r}
+var_names <- spss_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    spss_var  <- spss_dataset   |> select(ID_ECS, old = !!sym(.x))
+    updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(spss_var, updated_var, by = "ID_ECS")   |>
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+# Differences in variable attributes:
+
+```{r}
+diff_var_attrs
+```
+
+# Differences in values
+
+```{r}
+
+print(diff_values, n = 105)
+```

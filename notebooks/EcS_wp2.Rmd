@@ -10,8 +10,7 @@ output:
   html_notebook: null
 institute: CCOMS, Universidad Autónoma de Madrid
 editor_options:
-  chunk_output_t
-  ype: console
+  chunk_output_type: console
   markdown:
     wrap: 80
 ---
@@ -1902,7 +1901,7 @@ data_2019_test <-
 
 ```{r}
 data_2019_test %>% 
-  freq_table(hh_income_r_NA)
+  freq_table(hh_income_r_NA) %>% print(n = 168)
 ```
 
 We have 99 NAs, including MISSING_DESIGN and NON_RESPONSE.
