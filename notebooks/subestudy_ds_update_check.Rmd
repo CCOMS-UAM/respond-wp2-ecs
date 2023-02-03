@@ -35,13 +35,15 @@ library(waldo)
 ```{r}
 DATASET_FOLDER <- read_ecs_folder("DB")
 SUBSTUDY_FOLDER <- file.path(DATASET_FOLDER, "Subestudio_COVID")
+HISTORY_FOLDER <- file.path(SUBSTUDY_FOLDER, "Antiguas")
 ```
 
 ## File paths:
 
 ```{r}
-RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.sav")
+RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.dta")
 MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.sav")
+HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-02_10-32")
 
 ```
 
@@ -238,7 +240,8 @@ print(diff_values, n = 105)
 
 # Saving new version
 
-```{r}
+```{r, echo = FALSE, eval = FALSE}
+
 write_sav(updated_dataset, "C:/Users/Cristina/Documents/workspace/ECS_Substudy_Mod_CRP.sav")
 ```
 
