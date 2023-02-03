@@ -43,7 +43,7 @@ HISTORY_FOLDER <- file.path(SUBSTUDY_FOLDER, "Antiguas")
 ```{r}
 RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.dta")
 MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.sav")
-HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-02_10-32")
+HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-02_10-32.dta")
 
 ```
 
@@ -79,15 +79,20 @@ historical version backup are from 13-01-2023, 13:09.
 
 ```{r}
 # Load the two datasets
-updated_dataset <- read_sav(MOD_PATH)
-original_dataset  <- read_sav(RAW_DS_PATH)
+#updated_dataset <- read_sav(MOD_PATH)
+#original_dataset  <- read_sav(RAW_DS_PATH)
+
+actual_dataset  <- read_stata(RAW_DS_PATH)
+historico_dataset <- read_stata(HISTORICO_PATH)
+
+
 ```
 
-# Checking differences 
+<!-- # Checking differences -->
 
-## Differences in dataset attributes:
+<!-- ## Differences in dataset attributes:  -->
 
-```{r}
+```{r eval = FALSE, echo = FALSE}
 original_attributes  <- original_dataset   |> attributes()
 updated_attributes <- updated_dataset |> attributes()
 diff_attributes    <- compare(
@@ -99,9 +104,9 @@ diff_attributes    <- compare(
 )
 ```
 
-## Differences in variable attributes:
+<!-- ## Differences in variable attributes: -->
 
-```{r}
+```{r eval = FALSE, echo = FALSE}
 original_var_attrs  <- original_dataset   |> map(attributes)
 updated_var_attrs <- updated_dataset |> map(attributes)
 diff_var_attrs    <- compare(
@@ -113,9 +118,9 @@ diff_var_attrs    <- compare(
 )
 ```
 
-## Differences in variable values:
+<!-- ## Differences in variable values: -->
 
-```{r}
+```{r eval = FALSE, echo = FALSE}
 var_names <- original_dataset |>
   select(-ID_ECS)           |>
   colnames()                |>
@@ -127,6 +132,170 @@ diff_values <- var_names |> imap_dfr(
     updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
     
     full_join(original_var, updated_var, by = "ID_ECS")   |>
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+<!-- # Differences in variable attributes: -->
+
+```{r eval = FALSE, echo = FALSE}
+diff_var_attrs
+```
+
+<!-- # Differences in values -->
+
+```{r eval = FALSE, echo = FALSE}
+
+print(diff_values, n = 105)
+```
+
+<!-- 105 values that were lost on `FECHAFIN` were introduced. However, there's still -->
+<!-- some errors: some dates called "29/06/202" should be "29/06/2020" -->
+
+```{r eval = FALSE, echo = FALSE}
+updated_dataset <- updated_dataset %>% 
+  mutate(
+    FECHAFIN = recode_factor(FECHAFIN,
+              "29/06/202" = "29/06/2020"
+    )
+  )
+```
+
+<!-- We run again the previous code until this point to check if the errors have been -->
+<!-- fixed: -->
+
+<!-- # Checking differences -->
+
+<!-- ## Differences in dataset attributes: -->
+
+```{r eval = FALSE, echo = FALSE}
+original_attributes  <- original_dataset   |> attributes()
+updated_attributes <- updated_dataset |> attributes()
+diff_attributes    <- compare(
+  original_attributes, updated_attributes,
+  max_diffs   = Inf,
+  x_arg       = "original",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+<!-- ## Differences in variable attributes: -->
+
+```{r eval = FALSE, echo = FALSE}
+original_var_attrs  <- original_dataset   |> map(attributes)
+updated_var_attrs <- updated_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  original_var_attrs, updated_var_attrs,
+  max_diffs   = Inf,
+  x_arg       = "original",
+  y_arg       = "updated",
+  list_as_map = TRUE
+)
+```
+
+<!-- ## Differences in variable values: -->
+
+```{r eval = FALSE, echo = FALSE}
+var_names <- original_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    original_var  <- original_dataset   |> select(ID_ECS, old = !!sym(.x))
+    updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(original_var, updated_var, by = "ID_ECS")   |>
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+<!-- # Differences in variable attributes: -->
+
+```{r eval = FALSE, echo = FALSE}
+diff_var_attrs
+```
+
+<!-- # Differences in values -->
+
+```{r eval = FALSE, echo = FALSE}
+
+print(diff_values, n = 105)
+```
+
+<!-- # Saving new version -->
+
+```{r, echo = FALSE, eval = FALSE}
+
+write_sav(updated_dataset, "C:/Users/Cristina/Documents/workspace/ECS_Substudy_Mod_CRP.sav")
+```
+
+# Checking new .dta dataset
+
+## Checking differences
+
+### Differences in dataset attributes:
+
+```{r}
+actual_attributes  <- actual_dataset   |> attributes()
+historico_attributes <- historico_dataset |> attributes()
+diff_attributes    <- compare(
+  historico_attributes, actual_attributes, 
+  max_diffs   = Inf,
+  x_arg       = "historico",
+  y_arg       = "actual",
+  list_as_map = TRUE
+)
+```
+
+### Differences in variable attributes:
+
+```{r}
+actual_var_attrs  <- actual_dataset   |> map(attributes)
+historico_var_attrs <- historico_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  historico_var_attrs, actual_var_attrs, 
+  max_diffs   = Inf,
+  x_arg       = "historico",
+  y_arg       = "actual",
+  list_as_map = TRUE
+)
+```
+
+### Differences in variable values:
+
+```{r}
+var_names <- historico_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    historico_var  <- historico_dataset   |> select(ID_ECS, old = !!sym(.x))
+    actual_var <- actual_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(historico_var, actual_var, by = "ID_ECS")   |>
       filter((old != new) | (is.na(old) != is.na(new))) |>
       mutate(
         across(
@@ -157,7 +326,7 @@ print(diff_values, n = 105)
 some errors: some dates called "29/06/202" should be "29/06/2020"
 
 ```{r}
-updated_dataset <- updated_dataset %>% 
+actual_dataset <- actual_dataset %>% 
   mutate(
     FECHAFIN = recode_factor(FECHAFIN,
               "29/06/202" = "29/06/2020"
@@ -165,161 +334,16 @@ updated_dataset <- updated_dataset %>%
   )
 ```
 
-We run again the previous code until this point to check if the errors have been
-fixed:
-
-# Checking differences 
-
-## Differences in dataset attributes:
+We check the change we have made:
 
 ```{r}
-original_attributes  <- original_dataset   |> attributes()
-updated_attributes <- updated_dataset |> attributes()
-diff_attributes    <- compare(
-  original_attributes, updated_attributes,
-  max_diffs   = Inf,
-  x_arg       = "original",
-  y_arg       = "updated",
-  list_as_map = TRUE
-)
+actual_dataset %>%  select(FECHAFIN
+                          ) %>% distinct() %>% print(n = 34)
+
 ```
 
-## Differences in variable attributes:
+# Save new version:
 
 ```{r}
-original_var_attrs  <- original_dataset   |> map(attributes)
-updated_var_attrs <- updated_dataset |> map(attributes)
-diff_var_attrs    <- compare(
-  original_var_attrs, updated_var_attrs,
-  max_diffs   = Inf,
-  x_arg       = "original",
-  y_arg       = "updated",
-  list_as_map = TRUE
-)
-```
-
-## Differences in variable values:
-
-```{r}
-var_names <- original_dataset |>
-  select(-ID_ECS)           |>
-  colnames()                |>
-  set_names()
-
-diff_values <- var_names |> imap_dfr(
-  ~{
-    original_var  <- original_dataset   |> select(ID_ECS, old = !!sym(.x))
-    updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
-    
-    full_join(original_var, updated_var, by = "ID_ECS")   |>
-      filter((old != new) | (is.na(old) != is.na(new))) |>
-      mutate(
-        across(
-          -ID_ECS,
-          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
-        )
-      )
-  },
-  .id = "Variable"
-)
-n_diff_values <- diff_values |> nrow()
-```
-
-# Differences in variable attributes:
-
-```{r}
-diff_var_attrs
-```
-
-# Differences in values
-
-```{r}
-
-print(diff_values, n = 105)
-```
-
-# Saving new version
-
-```{r, echo = FALSE, eval = FALSE}
-
-write_sav(updated_dataset, "C:/Users/Cristina/Documents/workspace/ECS_Substudy_Mod_CRP.sav")
-```
-
-#Checking SAV dataset
-
-```{r}
-# Load the two datasets
-updated_dataset <- read_sav(MOD_PATH)
-spss_dataset  <- read_sav("C:/Users/Cristina/Documents/workspace/ECS_Substudy_Mod_CRP.sav")
-```
-
-
-# Checking differences 
-
-## Differences in dataset attributes:
-
-```{r}
-spss_attributes  <- spss_dataset   |> attributes()
-updated_attributes <- updated_dataset |> attributes()
-diff_attributes    <- compare(
-  spss_attributes, updated_attributes,
-  max_diffs   = Inf,
-  x_arg       = "spss",
-  y_arg       = "updated",
-  list_as_map = TRUE
-)
-```
-
-## Differences in variable attributes:
-
-```{r}
-spss_var_attrs  <- spss_dataset   |> map(attributes)
-updated_var_attrs <- updated_dataset |> map(attributes)
-diff_var_attrs    <- compare(
-  spss_var_attrs, updated_var_attrs,
-  max_diffs   = Inf,
-  x_arg       = "spss",
-  y_arg       = "updated",
-  list_as_map = TRUE
-)
-```
-
-## Differences in variable values:
-
-```{r}
-var_names <- spss_dataset |>
-  select(-ID_ECS)           |>
-  colnames()                |>
-  set_names()
-
-diff_values <- var_names |> imap_dfr(
-  ~{
-    spss_var  <- spss_dataset   |> select(ID_ECS, old = !!sym(.x))
-    updated_var <- updated_dataset |> select(ID_ECS, new = !!sym(.x))
-    
-    full_join(spss_var, updated_var, by = "ID_ECS")   |>
-      filter((old != new) | (is.na(old) != is.na(new))) |>
-      mutate(
-        across(
-          -ID_ECS,
-          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
-        )
-      )
-  },
-  .id = "Variable"
-)
-n_diff_values <- diff_values |> nrow()
-```
-
-# Differences in variable attributes:
-
-```{r}
-diff_var_attrs
-```
-
-# Differences in values
-
-```{r}
-
-print(diff_values, n = 105)
+write_dta(actual_dataset, "C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Completo.dta")
 ```
