@@ -342,8 +342,12 @@ actual_dataset %>%  select(FECHAFIN
 
 ```
 
+```{r}
+Edad_con_salud_Fichero_Completo <- actual_dataset
+```
+
 # Save new version:
 
 ```{r}
-write_dta(actual_dataset, "C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Completo.dta")
+write_dta(Edad_con_salud_Fichero_Completo, path = SUBSTUDY_FOLDER)
 ```
