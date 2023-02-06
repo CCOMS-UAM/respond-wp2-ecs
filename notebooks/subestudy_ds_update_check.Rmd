@@ -349,5 +349,5 @@ Edad_con_salud_Fichero_Completo <- actual_dataset
 # Save new version:
 
 ```{r}
-write_dta(Edad_con_salud_Fichero_Completo, path = SUBSTUDY_FOLDER)
+write_dta(actual_dataset, path = RAW_DS_PATH)
 ```
