@@ -904,9 +904,9 @@ data_2019_test <-
   data_2019_test %>%
   mutate(
     profession = case_when(
-      q1510_catoccu ==  5 ~ 5,  
       #service workers --> first responders: paramedic/firefighter/police
       hc_worker == 1 ~  4, #hc_wroker = healthcare
+      q1510_catoccu ==  5 ~ 5,  
       q1510_catoccu ==  10  ~  6 ,
       #armed forces --> military
       q1510_catoccu ==  1  ~  7 ,
@@ -1768,10 +1768,10 @@ data_2019_test <- data_2019_test %>%
   
   hhquintile = factor(x = hhquintile,
                           levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
-                          labels = c("first quartile", 
-                                    "second quartile", 
-                                    "third quartile", 
-                                    "fourth quartile",
+                          labels = c("first quintile", 
+                                    "second quintile", 
+                                    "third quintile", 
+                                    "fourth quintile",
                                     "fifth quintile",
                                     MISSING_DESIGN, 
                                     NON_RESPONSE))
