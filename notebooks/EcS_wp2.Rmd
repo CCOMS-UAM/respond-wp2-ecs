@@ -1700,10 +1700,14 @@ data_2019_test <- data_2019_test %>%
   mutate(
     across(q0410g_total_r:q0410k_other_r, as.character),
     across(q0410g_total_r:q0410k_other_r, as.integer),
-    across(q0410g_total_r:q0410k_other_r, ~na_if(., 888)),
-    across(q0410g_total_r:q0410k_other_r, ~na_if(., 999)),
+    q0410g_total_r_NA = q0410g_total_r,
+    q0410i_ss_r_NA = q0410i_ss_r,
+    q0410j_government_r_NA = q0410j_government_r,
+    q0410k_other_r_NA = q0410k_other_r,
+    across(q0410g_total_r:q0410k_other_r, ~na_if(., NON_RESPONSE)),
+    across(q0410g_total_r:q0410k_other_r, ~na_if(., REFUSED_ANSWER)),
     across(q0410g_total_r:q0410k_other_r, ~coalesce(., 0)),
-    hh_income_r_NA = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r
+    hh_income_r = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r
   )
 #FIXME!!!
 ```
@@ -1713,7 +1717,7 @@ data_2019_test <- data_2019_test %>%
 
 ```{r}
 data_2019_test %>% 
-  freq_table(hh_income_r_NA) %>% print(n = 168)
+  freq_table(hh_income_r) %>% print(n = 168)
 ```
 
 We have 99 NAs, including MISSING_DESIGN and NON_RESPONSE.
@@ -1726,17 +1730,18 @@ quintiles19 <- c(8847, 12997, 17422, 24104)
 ```{r}
 data_2019_test <- data_2019_test %>% 
   mutate(
-  hhquartile = case_when(
-                          hh_income_r_NA <= quartiles19[1] ~ 1,
-                          hh_income_r_NA > quartiles19[1] & hh_income_r_NA <= quartiles19[2] ~ 2,
-                          hh_income_r_NA > quartiles19[2] & hh_income_r_NA <= quartiles19[3] ~ 3,
-                          hh_income_r_NA > quartiles19[3] ~ 4,
-                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
-                                                  is.na(q0410i_ss_r) &
-                                                  is.na(q0410j_government_r) &
-                                                  is.na(q0410k_other_r)
-                                                           ~ MISSING_DESIGN,
-                          is.na(hh_income_r_NA) ~ NON_RESPONSE),   
+  hhquartile = case_when(hh_income_r >= 0 & is.na(q0410j_government) &
+                                             is.na(q0410k_other) &  
+                                             is.na(q0410i_ss) ~ MISSING_DESIGN,
+                          hh_income_r >= 0 & (q0410i_ss_r_NA == NON_RESPONSE 
+                                              | q0410j_government_r_NA == NON_RESPONSE
+                                              | q0410k_other_r_NA == NON_RESPONSE) 
+                                                ~ NON_RESPONSE,
+                          hh_income_r <= quartiles19[1] ~ 1,
+                          hh_income_r > quartiles19[1] & hh_income_r <= quartiles19[2] ~ 2,
+                          hh_income_r > quartiles19[2] & hh_income_r <= quartiles19[3] ~ 3,
+                          hh_income_r > quartiles19[3] ~ 4
+                          ),
   
   hhquartile = factor(x = hhquartile,
                           levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
@@ -1747,18 +1752,19 @@ data_2019_test <- data_2019_test %>%
                                     MISSING_DESIGN, 
                                     NON_RESPONSE)),
   
-  hhquintile = case_when(
-                          hh_income_r_NA <= quintiles19[1] ~ 1,
-                          hh_income_r_NA > quintiles19[1] & hh_income_r_NA <= quintiles19[2] ~ 2,
-                          hh_income_r_NA > quintiles19[2] & hh_income_r_NA <= quintiles19[3] ~ 3,
-                          hh_income_r_NA > quintiles19[3] & hh_income_r_NA <= quintiles19[4] ~ 4,
-                          hh_income_r_NA > quintiles19[4] ~ 5,
-                          is.na(hh_income_r_NA) & is.na(q0410g_total_r) & 
-                                                  is.na(q0410i_ss_r) &
-                                                  is.na(q0410j_government_r) &
-                                                  is.na(q0410k_other_r)
-                                                           ~ MISSING_DESIGN,
-                          is.na(hh_income_r_NA) ~ NON_RESPONSE),
+  hhquintile = case_when(hh_income_r >= 0 & is.na(q0410j_government) &
+                                             is.na(q0410k_other) &  
+                                             is.na(q0410i_ss) ~ MISSING_DESIGN,
+                          hh_income_r >= 0 & (q0410i_ss_r_NA == NON_RESPONSE 
+                                              | q0410j_government_r_NA == NON_RESPONSE
+                                              | q0410k_other_r_NA == NON_RESPONSE) 
+                                                ~ NON_RESPONSE,
+                          hh_income_r <= quintiles19[1] ~ 1,
+                          hh_income_r > quintiles19[1] & hh_income_r <= quintiles19[2] ~ 2,
+                          hh_income_r > quintiles19[2] & hh_income_r <= quintiles19[3] ~ 3,
+                          hh_income_r > quintiles19[3] & hh_income_r <= quintiles19[4] ~ 4,
+                          hh_income_r > quintiles19[4] ~ 5),
+  
   
   hhquintile = factor(x = hhquintile,
                           levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
@@ -3688,4 +3694,11 @@ df1 <- df %>%
   )
 
 df1
+```
+
+# Step 10. Save .RDS
+
+```{r eval = FALSE}
+saveRDS(df, "data/ecs_wp2_anonymised.rds")
+df_rds <- readRDS("data/ecs_wp2_anonymised.rds")
 ```
