@@ -329,8 +329,9 @@ some errors: some dates called "29/06/202" should be "29/06/2020"
 actual_dataset <- actual_dataset %>% 
   mutate(
     FECHAFIN = recode_factor(FECHAFIN,
-              "29/06/202" = "29/06/2020"
-    )
+              "29/06/202" = "29/06/2020",
+    ),
+    FECHAFIN = as_factor(FECHAFIN)
   )
 ```
 

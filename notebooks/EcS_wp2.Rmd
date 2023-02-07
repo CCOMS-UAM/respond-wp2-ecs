@@ -55,6 +55,7 @@ library(readstata13)
 library(readxl)
 library(ecs.data)
 library(utf8)
+library(digest)
 
 #TODO: Add labels to all variables
 ```
@@ -207,13 +208,18 @@ data_2019_test <- data_2019_test %>%
     q0006_date = lubridate::ymd(q0006_date),
     q1010_birth_date = lubridate::ymd(q1010_birth_date)
   )
+```
 
 
+```{r dates-format}
 data_COVID_test <- data_COVID %>% 
   mutate(
+  FECHAFIN = as_factor(FECHAFIN),
   FECHAFIN = lubridate::dmy(FECHAFIN)
-)  
-  
+) 
+```
+
+```{r}
 birthday <- data_2019_test %>% 
   mutate(
     q1010_birth_date = lubridate::ymd(q1010_birth_date)) %>% 
@@ -227,7 +233,6 @@ interview2019 <- data_2019_test %>%
 interviewcovid <- data_COVID_test %>% 
     select(FECHAFIN) %>% 
     pull()
-  
 ```
 
 # Step 2. Wave 1 harmonization
@@ -973,8 +978,11 @@ data_2019_test <-
 ```{r}
 data_2019_test %>% 
   freq_table(profession)
-#TODO: 1429 as "others" (now is 1944?)
 ```
+
+The vast majority is classified as "other" (1897/3002). It is not a very 
+useful variable; it requires to work with free-text variables. 
+
 
 ## 2.11. Education (q1016_highest)
 
@@ -1792,7 +1800,11 @@ data_2019_test %>%
   freq_table(hhquintile)
 ```
 
-Finally we got 91 as not assessed (proxy respondants) and 996 missing (default).
+```{r}
+rm(quintiles19, quartiles19)
+```
+
+Finally we got 91 as not assessed (proxy respondants) and 386 missing (default).
 
 ## From here, variables that do not need harmonization but do need to be in Wave 1.
 
@@ -1826,6 +1838,10 @@ data_2019_test %>%
   colnames()
 ```
 
+```{r}
+rm(lte)
+```
+
 ## BRS (resilience scale)
 
 We have to import this outcome (already created) from OneDrive.
@@ -1855,6 +1871,10 @@ The rest of stressors variables are already on the dataset:
 data_2019_test %>% 
   select(starts_with(c("q753", "q754"))) %>% 
   colnames()
+```
+
+```{r}
+rm(brs)
 ```
 
 ## Social support & Loneliness
@@ -1889,7 +1909,6 @@ data_2019_test %>% freq_table(isolation)
 
 ```
 
-
 The rest of stressors variables are already on the dataset:
 
 ```{r}
@@ -1897,6 +1916,11 @@ data_2019_test %>%
   select(starts_with(c("q63"))) %>% 
   colnames()
 ```
+
+```{r}
+rm(loneliness_ss_si)
+```
+
 
 ## Social participation
 
@@ -2043,7 +2067,6 @@ data_2019_test <-
           q6618_relig = as.numeric(q6618_relig),
           q6621_assoc = as.numeric(q6621_assoc)
              )
-#FIXME: solved! there's surely another easier way to do this.
 ```
 
 ### Checking new variable
@@ -2061,6 +2084,7 @@ data_2019_test %>%
   select(starts_with(c("q661", "q662"))) %>% 
   colnames()
 ```
+
 
 ## Alcohol consumption
 
@@ -2093,6 +2117,12 @@ data_2019_test %>%
   colnames()
 ```
 
+
+```{r}
+rm(alcohol)
+```
+
+
 ## Tobacco consumption
 
 We have to import this outcome (already created) from OneDrive.
@@ -2115,7 +2145,6 @@ data_2019_test <- left_join(data_2019_test,
 data_2019_test %>% freq_table(tobacco)
 ```
 
-
 The rest of stressors variables are already on the dataset:
 
 ```{r}
@@ -2123,6 +2152,12 @@ data_2019_test %>%
   select(starts_with(c("q300"))) %>% 
   colnames()
 ```
+
+
+```{r}
+rm(tobacco)
+```
+
 
 ## Depression
 
@@ -2149,6 +2184,11 @@ data_2019_test %>%
   colnames()
 ```
 
+
+```{r}
+rm(depression)
+```
+
 ## Flourishing scale
 
 ```{r}
@@ -2171,6 +2211,11 @@ The rest of stressors variables are already on the dataset:
 data_2019_test %>% 
   select(starts_with(c("q75"))) %>% 
   colnames()
+```
+
+
+```{r}
+rm(flourishing)
 ```
 
 ## Negative and positive affect
@@ -2198,6 +2243,10 @@ data_2019_test %>%
   colnames()
 ```
 
+```{r}
+rm(negposaf)
+```
+
 ## Quality of life
 
 ```{r}
@@ -2222,6 +2271,10 @@ data_2019_test %>%
   colnames()
 ```
 
+```{r}
+rm(qol)
+```
+
 ## Extraversion and neuroticism
 
 ```{r}
@@ -2244,6 +2297,10 @@ The rest of stressors variables are already on the dataset:
 data_2019_test %>% 
   select(starts_with(c("q464", "q465"))) %>% 
   colnames()
+```
+
+```{r}
+rm(personality)
 ```
 
 ## Self-efficacy
@@ -2289,6 +2346,10 @@ data_2019_test %>%
   colnames()
 ```
 
+```{r}
+rm(materialdep)
+```
+
 ## GAD (anxiety)
 
 ```{r}
@@ -2311,6 +2372,10 @@ The rest of stressors variables are already on the dataset:
 data_2019_test %>% 
   select(starts_with(c("q45", "q6010", "q621", "q7008a"))) %>% 
   colnames()
+```
+
+```{r}
+rm(anxiety)
 ```
 
 ##2.28. Recoding NAs
@@ -2349,7 +2414,7 @@ data_2019_test %>%
 ### Proxy respondents
 ```{r}
 data_2019_test %>% 
-  #filter(proxy == 1) %>% 
+  filter(proxy == 1) %>% 
   miss_var_summary() %>% 
   data.frame
 ```
@@ -2447,27 +2512,6 @@ data_2019_test <- data_2019_test %>%
 ```{r}
 data_2019_test %>% 
   miss_var_summary() %>% 
-  data.frame #It works
-```
-
-We'll recategorize '888' (don't know) as missing (default)
-
-```{r}
-data_2019_test <- data_2019_test %>% 
-  mutate(
-    across(
-      where(is.numeric),
-      recode,
-      `888` = NON_RESPONSE,
-      `999` = REFUSED_ANSWER
-    )
-  )
-```
-
-```{r}
-data_2019_test %>% 
-  miss_var_summary() %>% 
-  filter(pct_miss > 50) %>% 
   data.frame #It works
 ```
 
@@ -2632,7 +2676,6 @@ data_COVID_test <-
     age_act = q1011_age + time_between_BL_covid,
     #age_act = year(age_act),
     age_continuous = case_when(
-      is.na(FECHAFIN) ~ q1011_age,
       ID_ECS %in% ID_NAs_sub ~ age_act,
       TRUE ~ covid_time
     ),
@@ -2725,16 +2768,16 @@ data_COVID_test <-
     
   )
 )
-#TODO: Establish that was not evaluated in Wave 2.
+```
+
+```{r}
+data_COVID_test |> freq_table(employment_st)
 ```
 
 
 ## 3.7. Contract
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
-
-
 data_COVID_test <-
   data_COVID_test %>% 
   mutate(
@@ -2755,12 +2798,14 @@ data_COVID_test <-
   )
 ```
 
+```{r}
+data_COVID_test |> freq_table(contract)
+```
+
+
 ## 3.8. Employment type
 
 ```{r}
-#TODO: That was not evaluated in Wave 2.
-
-
 data_COVID_test <-
   data_COVID_test %>% 
   mutate(
@@ -2778,6 +2823,11 @@ data_COVID_test <-
     
 ```
 
+```{r}
+data_COVID_test |> freq_table(employment_ty)
+```
+
+
 ## 3.9. HC worker
 
 Same values as Wave 1.
@@ -2789,6 +2839,9 @@ data_COVID_test <- data_COVID_test %>%
             by = "ID_ECS")
 ```
 
+```{r}
+data_COVID_test |> freq_table(hc_worker)
+```
 
 ## 3.10. Profession
 
@@ -2799,6 +2852,10 @@ data_COVID_test <- data_COVID_test %>%
   left_join(data_2019_test %>% 
               select(ID_ECS, profession),
             by = "ID_ECS")
+```
+
+```{r}
+data_COVID_test |> freq_table(profession)
 ```
 
 ## 3.11. Education
@@ -2812,11 +2869,14 @@ data_COVID_test <- data_COVID_test %>%
             by = "ID_ECS")
 ```
 
+```{r}
+data_COVID_test |> freq_table(education)
+```
+
+
 ## 3.12. Relationship status
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
-
 data_COVID_test <-
   data_COVID_test %>% 
   mutate(
@@ -2835,11 +2895,14 @@ data_COVID_test <-
                                     NON_RESPONSE)))
 ```
 
+```{r}
+data_COVID_test |> freq_table(relationship)
+```
+
+
 ## 3.13. Children
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
-
 data_COVID_test <-
   data_COVID_test %>% 
   mutate(
@@ -2851,6 +2914,10 @@ data_COVID_test <-
                                     MISSING_DESIGN, 
                                     REFUSED_ANSWER,
                                     NON_RESPONSE)))
+```
+
+```{r}
+data_COVID_test |> freq_table(children)
 ```
 
 ## 3.14. Children household
@@ -2876,6 +2943,10 @@ data_COVID_test <-
   )
 ```
 
+```{r}
+data_COVID_test |> freq_table(children_hh)
+```
+
 ## 3.15. Number of children
 
 ```{r}
@@ -2895,6 +2966,12 @@ data_COVID_test <-
                                     REFUSED_ANSWER,
                                     NON_RESPONSE)))
 ```
+
+
+```{r}
+data_COVID_test |> freq_table(nofchildren)
+```
+
 
 ## 3.16. Living alone
 
@@ -2917,24 +2994,27 @@ data_COVID_test <- left_join(data_COVID_test,
 ```{r}
 data_COVID_test <- data_COVID_test %>% 
   mutate(
-    living_alone = recode_factor(living_alone,
+    living_alone = as.character(living_alone),
+    living_alone = recode(living_alone,
       "0" = "2",
       "1" = "1"
     ),
-living_alone = factor(
+    living_alone = as.integer(living_alone),
+    living_alone = coalesce(living_alone, NON_RESPONSE),
+    
+    living_alone = factor(
       x = living_alone,
-      levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      levels = c("1", "2", NON_RESPONSE, MISSING_DESIGN, REFUSED_ANSWER),
       labels = c(
         "alone",
         "not alone",
+        NON_RESPONSE,
         MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
+        REFUSED_ANSWER
+        
       )
     )
   )
-
-var_label(data_2019_test$living_alone) <- "Living alone"
 ```
 
 The rest of individual variables are already on the dataset:
@@ -2945,10 +3025,15 @@ data_COVID_test %>%
   colnames()
 ```
 
+```{r}
+data_COVID_test |> freq_table(living_alone)
+```
+
+
+
 ## 3.17. Household size
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
 data_COVID_test <-
   data_COVID_test %>% 
   mutate(
@@ -2965,8 +3050,13 @@ data_COVID_test <-
                                     NON_RESPONSE))
   )
 
-var_label(data_2019_test$hh_size) <- "Household size"
 ```
+
+```{r}
+data_COVID_test |> freq_table(hh_size)
+```
+
+
 
 ## 3.18. Quartiles & quintiles
 
@@ -2980,26 +3070,34 @@ data_COVID_test <-
     
     
     hhquartile = factor(x = hhquartile,
-                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+                          levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
                           labels = c("first quartile", 
                                     "second quartile", 
                                     "third quartile", 
                                     "fourth quartile", 
                                     MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
                                     NON_RESPONSE)),
   
   hhquintile = factor(x = hhquintile,
-                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
-                          labels = c("first quartile", 
-                                    "second quartile", 
-                                    "third quartile", 
-                                    "fourth quartile",
+                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+                          labels = c("first quintile", 
+                                    "second quintile", 
+                                    "third quintile", 
+                                    "fourth quintile",
                                     "fifth quintile",
                                     MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
                                     NON_RESPONSE))
   
   )
 ```
+
+```{r}
+data_COVID_test |> freq_table(hhquartile)
+data_COVID_test |> freq_table(hhquintile)
+```
+
 
 ## Stressors
 
@@ -3046,6 +3144,11 @@ data_COVID_test %>%
   colnames()
 ```
 
+```{r}
+rm(economic, livingalone, occ_unique)
+```
+
+
 ### COVID
 
 Five variables: `infected`, `severity_raw`, `rel_isolated`, `rel_deceased`,
@@ -3076,6 +3179,11 @@ data_COVID_test %>%
   select(starts_with("COVID")) %>% 
   colnames()
 ```
+
+```{r}
+rm(covidcc)
+```
+
 
 ### Noise
 
@@ -3111,6 +3219,11 @@ data_COVID_test %>%
   colnames()
 ```
 
+```{r}
+rm(brsw2)
+```
+
+
 ## Social support (OSLO-3) & loneliness
 
 We have to import this outcome (already created) from OneDrive.
@@ -3143,6 +3256,11 @@ data_COVID_test %>%
   colnames()
 ```
 
+```{r}
+rm(socialsupw2)
+```
+
+
 ## Social participation
 
 This variable, SOLO2, is already on the dataset:
@@ -3167,7 +3285,6 @@ data_COVID_test %>%
 data_COVID_test %>% 
    select(starts_with("FUM1")) %>% 
    colnames()
-#TODO: Is there a composite score?
 ```
 
 ## Depression
@@ -3196,6 +3313,11 @@ data_COVID_test %>%
   colnames()
 ```
 
+```{r}
+rm(depression)
+```
+
+
 ## Suicidality
 
 We have to import this outcome (already created) from OneDrive.
@@ -3220,6 +3342,10 @@ The rest of individual variables are already on the dataset:
 data_COVID_test %>% 
   select(SM9) %>% 
   colnames()
+```
+
+```{r}
+rm(suicidality)
 ```
 
 ## Negative and positive affect
@@ -3252,6 +3378,10 @@ data_COVID_test %>%
 data_COVID_test %>% 
   select(num_range("SM22_", 6:7)) %>% #positive  affect
   colnames()
+```
+
+```{r}
+rm(negposaffect)
 ```
 
 ## Quality of life
@@ -3310,7 +3440,7 @@ data_COVID_test <- data_COVID_test %>%
 
 ```{r}
 data_COVID_test %>% 
-  #filter(TIPO_ENT == 2) %>% 
+  filter(TIPO_ENT == 2) %>% 
   miss_var_summary() %>% 
   data.frame
 ```
@@ -3362,16 +3492,12 @@ data_COVID_test %>%
 
 ```{r}
 df <- bind_rows(data_2019_test, data_COVID_test)
-#FIXME: Error: negative length vectors are not allowed
 ```
 
 ```{r}
 df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
 ```
 
-```{r}
-rm(anxiety, brs, brsw2, covidcc, depression, economic, flourishing, g1, g2, g3, g4, livingalone, loneliness_ss_si, lte, materialdep, negposaffect, occ_unique, personality, qol, socialsupw2, tobacco, prueba, alcohol, suicidality, negposaf)
-```
 
 
 # Step 5. Adding new variables
@@ -3606,6 +3732,7 @@ df <-
             nuts_ds,
             by = "province")
 rm(nuts_ds) 
+rm(mobility)
 ```
 
 # Step 6. Hashed IDs
@@ -3614,8 +3741,6 @@ integer) shoudl be assigned to each participant. We'll use `digest` function
 and package.
 
 ```{r}
-library(digest)
-
 df <- df %>% rowwise() %>% 
   mutate(
     hashed_id = digest(df$ID_ECS, algo = "md5"))
@@ -3625,7 +3750,7 @@ df <- df %>% rowwise() %>%
 
 # Step 7. Selecting necessary variables
 
-Firstly, we import the Edad con Salud varible list for RESPOND.
+Firstly, we import the Edad con Salud variable list for RESPOND.
 ```{r}
 ecs_variablelist <- read_excel("dat/variable_list-EcS_v3.xlsx", 
     sheet = "EcS-table format", col_types = c("text", 
@@ -3645,6 +3770,25 @@ ecs_varlist <- ecs_variablelist %>% select(variable) %>% pull()
 ```{r}
 df <- df %>% select(hashed_id,
                     wave,
+                    gender,
+                    coresidence,
+                    migration,
+                    age_cat,
+                    age_continuous,
+                    employment_st,
+                    contract,
+                    employment_ty,
+                    hc_worker,
+                    profession,
+                    education,
+                    relationship,
+                    children,
+                    children_hh,
+                    nofchildren,
+                    living_alone,
+                    hh_size,
+                    hhquartile,
+                    hhquintile,
                     any_of(ecs_varlist),
                     CountryCode:nuts_remoteness_label)
 ```
@@ -3696,9 +3840,16 @@ df1 <- df %>%
 df1
 ```
 
+```{r}
+df %>% 
+  miss_var_summary() %>% 
+  data.frame
+```
+
 # Step 10. Save .RDS
 
 ```{r eval = FALSE}
-saveRDS(df, "data/ecs_wp2_anonymised.rds")
-df_rds <- readRDS("data/ecs_wp2_anonymised.rds")
+saveRDS(df, "./dat/ecs_wp2_anonymised.rds")
+
+df_rds <- readRDS("./dat/ecs_wp2_anonymised.rds")
 ```
