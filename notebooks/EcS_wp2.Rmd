@@ -219,22 +219,6 @@ data_COVID_test <- data_COVID %>%
 ) 
 ```
 
-```{r}
-birthday <- data_2019_test %>% 
-  mutate(
-    q1010_birth_date = lubridate::ymd(q1010_birth_date)) %>% 
-  select(q1010_birth_date) %>% 
-  pull()
-
-interview2019 <- data_2019_test %>% 
-      select(q0006_date) %>% 
-      pull()
-
-interviewcovid <- data_COVID_test %>% 
-    select(FECHAFIN) %>% 
-    pull()
-```
-
 # Step 2. Wave 1 harmonization
 
 Variables to be harmonized are the following:
@@ -1806,6 +1790,15 @@ rm(quintiles19, quartiles19)
 
 Finally we got 91 as not assessed (proxy respondants) and 386 missing (default).
 
+## Province
+It will be useful to join mobility dataset.
+```{r}
+data_2019_test <- data_2019_test |> mutate(province = case_when(q0101a_psu == 9 ~ "Barcelona",
+                              q0101a_psu == 13 ~ "Community of Madrid")
+)
+```
+
+
 ## From here, variables that do not need harmonization but do need to be in Wave 1.
 
 ## Stressors
@@ -2189,7 +2182,7 @@ data_2019_test %>%
 rm(depression)
 ```
 
-## Flourishing scale
+## Flourishing scale (eudaimonic wellbeing)
 
 ```{r}
 flourishing <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Flourishing Scale.dta")
@@ -2377,6 +2370,74 @@ data_2019_test %>%
 ```{r}
 rm(anxiety)
 ```
+
+
+## Outcome variables related to loneliness and social interaction:
+
+```{r}
+socialint <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/history/Social_interaction.dta")
+
+```
+
+We join this dataset to the one containing the new variables already harmonized
+with left_join. The variable they have in common is ID_ECS and it is the one
+that serves as link.
+
+```{r}
+data_2019_test <- left_join(data_2019_test,
+                            socialint %>% select(ID_ECS,
+                                                 size_sn,
+                                                 social_int_ff_pre,
+                                                 social_int_vr_pre,
+                                                 social_int_total_pre), 
+                            by = "ID_ECS")
+```
+
+### Network size (size_sn)
+Sum of all the affirmative responses to the **social network** items. Range goes
+from 0 to 8. 
+
+```{r}
+data_2019_test |> select(q6010a_spouse:q6010k_inlaw)
+```
+
+
+### Social interaction face-to-face (pre-lockdown) (social_int_ff_pre)
+Sum score of face-to-face social interactions with members of their social
+network.
+Missing values in the face-to-face social interaction items (section q6210)
+were recoded as 1 (“Never”) when the corresponding social network item 
+was 2 (“No”). Then, all responses were summed up.
+
+The variable ranges from 7 - 35.
+
+```{r}
+data_2019_test |> select(q6211_spouse:q6217v_friends)
+```
+
+
+### Social interaction virtual (pre-lockdown) (social_int_vr_pre)
+Sum score of technology-mediated social interactions with members of their
+social network.
+Missing values in the technology-mediated social interaction items 
+(section q6210v) were recoded as 1 “Never”) when the corresponding social 
+network item was 2 (“No”). Then, all responses to these items, plus 
+additional item q6221v were summed up.
+
+```{r}
+data_2019_test |> select(q6211_spouse:q6221v_unknown)
+```
+
+### Social interaction score total (pre-lockdown) (social_int_total_pre)
+Sum score of social interactions (face-to-face or technology-mediated)
+interactions with member of their social network.
+Sum of social_int_ff_pre and social_int_vr_pre. Ranges from 15 to 75.
+
+```{r}
+data_2019_test |> select(q6211_spouse:q6221v_unknown)
+```
+
+
 
 ##2.28. Recoding NAs
 
@@ -3260,6 +3321,38 @@ data_COVID_test %>%
 rm(socialsupw2)
 ```
 
+## Social interaction
+
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+                            socialint %>% select(ID_ECS,
+                                                 pers_rel_affected,
+                                                 time_alone), 
+                            by = "ID_ECS")
+```
+
+### Change in personal relationships (post-lockdown)
+Whether the participant declares their personal relationships have been
+affected by the lockdown.
+SOLO3 recoded as -1, 0, or 1, to indicate whether personal relationships are 
+perceived to heve worsened, stayed unchanged, or improved, respectively.
+
+```{r}
+data_COVID_test$SOLO3
+#data_COVID_test |> select(ID_ECS, SOLO3)
+```
+
+### Time alone
+No further processing from variable SOLO4.
+
+```{r}
+#data_COVID_test |> select(SOLO4)
+```
+
+```{r}
+rm(socialint)
+```
+
 
 ## Social participation
 
@@ -3489,6 +3582,12 @@ data_COVID_test %>%
 
 
 # Step 4. Combination of both datasets
+```{r}
+data_COVID_test <- left_join(data_COVID_test,
+          data_2019_test |> select(ID_ECS,province),
+           by = "ID_ECS") #useful for merging google mobility indexes
+```
+
 
 ```{r}
 df <- bind_rows(data_2019_test, data_COVID_test)
@@ -3511,7 +3610,7 @@ stringency_index <-
   readr::read_csv("https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker/master/data/OxCGRT_nat_latest.csv") %>% 
   filter(CountryCode == "ESP")
 ```
-
+There is only NAs on this dataset?
 ```{r}
 stringency_index <- 
   stringency_index %>% 
@@ -3563,17 +3662,12 @@ mobility <- mobility %>%
 In addition, the values of origin and the identifiers of the CCAA and provinces do not match, so we are going to create a new variable in the final dataset and in the object 'mobility' to link these two tables.
 
 ```{r}
-df <- df %>% 
-   mutate(province = case_when(q0101a_psu == 9 ~ "Barcelona",
-                              q0101a_psu == 13 ~ "Community of Madrid"))
-```
-
-```{r}
 mobility <- mobility %>% 
   mutate(
     province = 
       case_when(sub_region_2 == "Barcelona" ~ "Barcelona",
-                sub_region_1 == "Community of Madrid" ~ "Community of Madrid")
+                sub_region_1 == "Community of Madrid" ~ "Community of Madrid"),
+    wave = 2
   )
 ```
 
@@ -3597,7 +3691,12 @@ mobility <- mobility %>%
 ```{r}
 df <- left_join(df,
                 mobility,
-                by = c("province", "date"))
+                by = c("date", "province", "wave"))
+```
+
+Checking everything works just fine:
+```{r}
+df |> select(ID_ECS, wave, date, province, country_region_code:residential_percent_change_from_baseline)
 ```
 
 ## NUTS
@@ -3735,16 +3834,43 @@ rm(nuts_ds)
 rm(mobility)
 ```
 
+##UNSD Methodology
+
+```{r}
+UNSDcodes <- read_excel("./dat/UNSD — Methodology.xlsx")
+```
+
+```{r}
+UNSDcodes <- UNSDcodes |> filter(`Country_or_Area` == "Spain")
+```
+
+```{r}
+df <- df |> 
+  mutate(
+    ISO_alpha2 = coresidence
+)
+```
+
+
+```{r}
+df <- left_join(df,
+                UNSDcodes,
+                by = "ISO_alpha2")
+```
+
+
 # Step 6. Hashed IDs
 The WP2 handbook for harmonisation reads that a unique identifier (random
 integer) shoudl be assigned to each participant. We'll use `digest` function
 and package.
 
 ```{r}
-df <- df %>% rowwise() %>% 
+df <- df %>% group_by(ID_ECS) |> 
   mutate(
-    hashed_id = digest(df$ID_ECS, algo = "md5"))
+    hashed_id = digest(ID_ECS, algo = "md5"))
 
+
+#ungroup() |> rowwise() %>% 
 ```
 
 
@@ -3758,9 +3884,6 @@ ecs_variablelist <- read_excel("dat/variable_list-EcS_v3.xlsx",
        "skip", "skip"))
 ```
 
-```{r}
-dfcolumns <- colnames(df)
-```
 
 ```{r}
 ecs_varlist <- ecs_variablelist %>% select(variable) %>% pull()
@@ -3768,7 +3891,7 @@ ecs_varlist <- ecs_variablelist %>% select(variable) %>% pull()
 
 
 ```{r}
-df <- df %>% select(hashed_id,
+df <- df %>% ungroup() |> select(hashed_id,
                     wave,
                     gender,
                     coresidence,
@@ -3809,35 +3932,6 @@ df <- df |> ungroup() |>
   )
 
 
-```
-
-
-```{r, eval=FALSE}
-#| eval: false
-df <- df %>%
-  mutate(
-    across(
-      where(is.factor),
-      fct_explicit_na,
-      na_level = as.character(MISSING_DESIGN)
-    )
-  )
-#FIXME! Falta arreglar esto de los NAs (NAs en ola 2 que no se registraron en Ola 1)
-```
-
-```{r, eval = FALSE}
-#| eval: false
-df1 <- df %>%
-  mutate(
-    across(
-      where(is.factor),
-      ~ case_when(`888` ~ NON_RESPONSE,
-                  `999` ~ REFUSED_ANSWER,
-                  TRUE ~ .)
-    )
-  )
-
-df1
 ```
 
 ```{r}
