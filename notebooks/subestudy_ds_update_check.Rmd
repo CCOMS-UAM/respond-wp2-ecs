@@ -43,7 +43,7 @@ HISTORY_FOLDER <- file.path(SUBSTUDY_FOLDER, "Antiguas")
 ```{r}
 RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.dta")
 MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.sav")
-HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-02_10-32.dta")
+HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-06_13-36.dta")
 
 ```
 
@@ -293,9 +293,14 @@ var_names <- historico_dataset |>
 diff_values <- var_names |> imap_dfr(
   ~{
     historico_var  <- historico_dataset   |> select(ID_ECS, old = !!sym(.x))
-    actual_var <- actual_dataset |> select(ID_ECS, new = !!sym(.x))
-    
+                                                    
+    actual_var <- actual_dataset |> select(ID_ECS, new = !!sym(.x)) 
+                                           
     full_join(historico_var, actual_var, by = "ID_ECS")   |>
+      mutate(
+        old = as.character(old),
+        new = as.character(new)
+      ) %>% 
       filter((old != new) | (is.na(old) != is.na(new))) |>
       mutate(
         across(
