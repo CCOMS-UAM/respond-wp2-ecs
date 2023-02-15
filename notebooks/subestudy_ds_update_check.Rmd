@@ -292,13 +292,13 @@ var_names <- historico_dataset |>
 
 diff_values <- var_names |> imap_dfr(
   ~{
-    historico_var  <- historico_dataset   |> select(ID_ECS, old = !!sym(.x)) |> 
-      mutate(old = as.character(old))
-    actual_var <- actual_dataset |> select(ID_ECS, new = !!sym(.x)) |> mutate(
-      new = as.character(new)
-    )
-    
+    historico_var  <- historico_dataset   |> select(ID_ECS, old = !!sym(.x))
+    actual_var <- actual_dataset |> select(ID_ECS, new = !!sym(.x)) 
     full_join(historico_var, actual_var, by = "ID_ECS")   |>
+      mutate(
+        old = as.character(old),
+        new = as.character(new)
+      ) %>% 
       filter((old != new) | (is.na(old) != is.na(new))) |>
       mutate(
         across(
