@@ -6,7 +6,7 @@ output:
   html_document:
     df_print: paged
   toc: yes
-  toc_float: yes
+  toc-float: yes
   html_notebook: null
 institute: CCOMS, Universidad Autónoma de Madrid
 editor_options:
@@ -3939,7 +3939,7 @@ df %>%
 
 # Step 10. Save .RDS
 
-```{r eval = FALSE}
+```{r}
 saveRDS(df, "./dat/ecs_wp2_anonymised.rds")
 
 df_rds <- readRDS("./dat/ecs_wp2_anonymised.rds")
