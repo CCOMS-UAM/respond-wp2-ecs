@@ -3332,10 +3332,10 @@ data_COVID_test <- left_join(data_COVID_test,
 Whether the participant declares their personal relationships have been
 affected by the lockdown.
 SOLO3 recoded as -1, 0, or 1, to indicate whether personal relationships are 
-perceived to heve worsened, stayed unchanged, or improved, respectively.
+perceived to have worsened, stayed unchanged, or improved, respectively.
 
 ```{r}
-data_COVID_test$SOLO3
+#data_COVID_test$SOLO3
 #data_COVID_test |> select(ID_ECS, SOLO3)
 ```
 
