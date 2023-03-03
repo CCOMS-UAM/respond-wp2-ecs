@@ -1,0 +1,249 @@
+---
+title: "Dataset update checks on COVID substudy"
+author: "Cristina Rodríguez-Prada"
+date: "`r format(lubridate::today(), 'First created on 30 Sept. 2022. Updated on %d de %B de %Y')`"
+output:
+  html_document:
+    df_print: paged
+  toc: yes
+  toc_float: yes
+  html_notebook: null
+institute: CCOMS, Universidad Autónoma de Madrid
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: 80
+---
+
+## Required libraries
+
+```{r library}
+library(tidyverse)
+library(haven)
+library(ecs.data)
+library(haven)
+library(readxl)
+library(labelled)
+library(glue)
+library(waldo)
+```
+
+## File system constants:
+
+## Folders:
+```{r}
+DATASET_FOLDER <- read_ecs_folder("DB")
+SUBSTUDY_FOLDER <- file.path(DATASET_FOLDER, "Subestudio_COVID")
+HISTORY_FOLDER <- file.path(SUBSTUDY_FOLDER, "Antiguas")
+```
+
+## File paths:
+```{r}
+RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.dta")
+MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.dta")
+BACKUP_PATH    <- file.path(HISTORY_FOLDER, "snapshot_2022-04-04_11-10.dta")
+```
+
+
+# Introduction
+This document checks the updates performed on the Subestudy COVID dataset by 
+Demometrica. It compares the updated version with the latest version of the raw 
+dataset with the most recent modified version by Demometrica. 
+The expected result is that both datasets are different and matches what Eva
+from demometrica sended us:
+
+CRP: *En la variable "FECHAFIN" tenemos 102 valores perdidos que no sabemos,*
+*por un lado, si es información que se puede recuperar; por otro, existen*
+*incongruencias con otras variables. Hay algunos casos en los que pone "cita"*
+*o incluso "rechazo" en la variable "ESTADO_ENTREVISTA", lo que no debería*
+*ocurrir; y hay casos que señalan "No contesta" que sí tienen datos en*
+*FECHAFIN.* *Si los valores perdidos en FECHAFIN se deben corresponder a*
+*entrevistas que no* *se llegaron a realizar porque no se pudo contactar con los*
+*participantes* *no debería ocurrir nada de esto, ¿cierto?*
+
+Eva: *Buenos días, Cristina* *He estado revisando en los ficheros que yo tenía*
+*anteriores a este y en todos* *los casos eran contactos que se hicieron los días*
+*29 y 30 de Junio, y alguno* *del 1 de julio, y que en estos casos no se*
+*fusionaron los datos.* *Te he actualizado la base que tu me enviaste.* *La fecha*
+*como bien dices, es la última vez que se hizo el contacto con el* *participante*
+*y el resultado fue una cita, no contesta, etc.*
+
+**NOTE**: This document is only a proof-of-concept, based on Dani document' that
+compares the raw datasetfile with the latest historical version at the date
+indicated in the document metadata (13-02-2023). The latest dataset file and
+historical version backup are from 13-02-2023.
+
+# Dataset loading
+Files are in Stata 13, and therefore the UTF-8 encoding must be explicitly 
+stated when reading the datasets into R. However, `encoding = 'UTF-8` when it 
+comes to COVID subestudy gives an error: _Unable to convert string to the_
+_requested encoding (invalid byte sequence)._
+```{r}
+#Load the three datasets
+current_dataset <- read_stata(RAW_DS_PATH)
+modified_dataset <- read_stata(MOD_PATH)
+backup_dataset  <- read_stata(BACKUP_PATH)
+```
+
+
+# Checking differences with current dataset
+To explore systematically these differences, we use waldo::compare():
+```{r}
+# Differences in dataset attributes:
+current_attributes  <- current_dataset   |> attributes()
+modified_attributes <- modified_dataset |> attributes()
+diff_attributes    <- compare(
+  current_attributes, modified_attributes,
+  max_diffs   = Inf,
+  x_arg       = "current",
+  y_arg       = "modified",
+  list_as_map = TRUE
+)
+
+# Differences in variable attributes:
+current_var_attrs  <- current_dataset   |> map(attributes)
+modified_var_attrs <- modified_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  current_var_attrs, modified_var_attrs,
+  max_diffs   = Inf,
+  x_arg       = "current",
+  y_arg       = "modified",
+  list_as_map = TRUE
+)
+
+# Differences in variable values:
+var_names <- current_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    current_var  <- current_dataset   |> select(ID_ECS, old = !!sym(.x))
+    modified_var <- modified_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(current_var, modified_var, by = "ID_ECS")   |>
+      mutate(
+        old = as.character(old),
+        new = as.character(new)
+      ) |> 
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+## Differences in values
+```{r}
+diff_values
+```
+
+## Differences in variable attributes
+```{r}
+diff_var_attrs
+```
+
+
+# Checking differences with backup dataset
+To explore systematically these differences, we use waldo::compare():
+```{r}
+# Differences in dataset attributes:
+backup_attributes  <- backup_dataset   |> attributes()
+modified_attributes <- modified_dataset |> attributes()
+diff_attributes    <- compare(
+  backup_attributes, modified_attributes,
+  max_diffs   = Inf,
+  x_arg       = "backup",
+  y_arg       = "modified",
+  list_as_map = TRUE
+)
+
+# Differences in variable attributes:
+backup_var_attrs  <- backup_dataset   |> map(attributes)
+modified_var_attrs <- modified_dataset |> map(attributes)
+diff_var_attrs    <- compare(
+  backup_var_attrs, modified_var_attrs,
+  max_diffs   = Inf,
+  x_arg       = "backup",
+  y_arg       = "modified",
+  list_as_map = TRUE
+)
+
+# Differences in variable values:
+var_names <- backup_dataset |>
+  select(-ID_ECS)           |>
+  colnames()                |>
+  set_names()
+
+
+diff_values <- var_names |> imap_dfr(
+  ~{
+    backup_var  <- backup_dataset   |> select(ID_ECS, old = !!sym(.x))
+    modified_var <- modified_dataset |> select(ID_ECS, new = !!sym(.x))
+    
+    full_join(backup_var, modified_var, by = "ID_ECS")   |>
+        mutate(
+        old = as.character(old),
+        new = as.character(new)
+      ) |> 
+      filter((old != new) | (is.na(old) != is.na(new))) |>
+      mutate(
+        across(
+          -ID_ECS,
+          ~if (is.labelled(.)) as_factor(.) else as.character(.) |> as_factor()
+        )
+      )
+  },
+  .id = "Variable"
+)
+n_diff_values <- diff_values |> nrow()
+```
+
+## Differences in values
+```{r}
+diff_values
+```
+
+## Differences in variable attributes
+```{r}
+diff_var_attrs
+```
+
+
+# Problem solving
+```{r}
+modified_dataset |>
+  select(FECHAFIN) |>  
+  mutate(FECHAFIN = sjlabelled::as_label(FECHAFIN)) |> 
+  freqtables::freq_table(FECHAFIN) |> 
+  print(n = 50)
+```
+
+```{r}
+modified_dataset <- modified_dataset |>
+  mutate(FECHAFIN = sjlabelled::as_label(FECHAFIN),
+         FECHAFIN = as.character(FECHAFIN),
+         FECHAFIN = lubridate::dmy(FECHAFIN))
+```
+
+```{r}
+modified_dataset |> select(FECHAFIN) |> str()
+```
+
+```{r}
+write_dta(modified_dataset, path = "C:/Users/Cristina/Documents/workspace/prueba-fecha.dta", version = 13L)
+```
+
+```{r}
+prueba_fecha <- read_dta("C:/Users/Cristina/Documents/workspace/prueba-fecha.dta", encoding = "UTF-8")
+```
+
+

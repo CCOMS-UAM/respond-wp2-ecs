@@ -43,7 +43,7 @@ HISTORY_FOLDER <- file.path(SUBSTUDY_FOLDER, "Antiguas")
 ```{r}
 RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.dta")
 MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.sav")
-HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-06_13-36.dta")
+HISTORICO_PATH <- file.path(HISTORY_FOLDER, "snapshot_2023-02-13_14-54.dta")
 
 ```
 

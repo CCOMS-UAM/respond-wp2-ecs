@@ -197,6 +197,25 @@ id_ecs_both <- data_COVID_test %>%
                pull()
 ```
 
+On the other hand, we need to make sure that each unique ID is represented
+two times in the dataset, regardless of whether they completed one or both
+assessment waves. As we are harmonizing wave by wave, this has to be added on the
+COVID substudy database. 
+
+```{r}
+unique_ids <- data_2019 |> 
+  select(ID_ECS) |> 
+  group_by(ID_ECS) |> 
+  summarise(n = n()) |> select(ID_ECS)
+```
+
+```{r}
+data_COVID_test <- right_join(data_COVID_test,
+                             unique_ids,
+                             by = "ID_ECS")
+```
+
+
 ## Adjusting date format
 
 Date format is important because we are using this variables to create some of
@@ -307,7 +326,17 @@ the NUTS code (see below/later on on this script).
 data_2019_test <-
   data_2019_test %>% 
   mutate(
-    coresidence = "ES"
+    coresidence = "ES",
+    coresidence = factor(coresidence,
+                         levels = c("ES", "2", "3", MISSING_DESIGN,
+                                                REFUSED_ANSWER, 
+                                                NON_RESPONSE),
+                          labels = c("yes", 
+                                    "no",
+                                    "no information",
+                                    MISSING_DESIGN, 
+                                    REFUSED_ANSWER,
+                                    NON_RESPONSE)))
   )
 ```
 
@@ -724,10 +753,10 @@ data_2019_test <-
          ),
           employment_ty = factor(x = employment_ty,
                           levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("permanent",
-                                    "temporary",
-                                    "self-employed",
-                                    "other",
+                          labels = c("Full time",
+                                    "Part time",
+                                    "No paid work",
+                                    "Other",
                                     MISSING_DESIGN,
                                     REFUSED_ANSWER,
                                     NON_RESPONSE
@@ -841,8 +870,8 @@ data_2019_test <- data_2019_test %>%
                                              MISSING_DESIGN, 
                                              REFUSED_ANSWER, 
                                              NON_RESPONSE),
-                                  labels = c("1",
-                                            "2",
+                                  labels = c("yes",
+                                            "no",
                                             MISSING_DESIGN,
                                             REFUSED_ANSWER,
                                             NON_RESPONSE
@@ -3930,6 +3959,17 @@ df <- df |> ungroup() |>
       MISSING_DESIGN
     )
   )
+```
+
+```{r}
+df <- df |> ungroup() |>
+  mutate(
+    across(
+      where(is.numeric),
+      coalesce,
+      888
+    )
+  )
 
 
 ```
@@ -3942,8 +3982,30 @@ df %>%
 
 # Step 10. Save .RDS
 
-```{r eval = FALSE}
+
+```{r}
+prueba <- df |>
+       slice_sample(prop = 0.20)
+```
+
+```{r}
+saveRDS(prueba, "./dat/prueba.rds")
+
+prueba_rds <- readRDS("./dat/prueba.rds")
+```
+
+```{r}
 saveRDS(df, "./dat/ecs_wp2_anonymised.rds")
 
 df_rds <- readRDS("./dat/ecs_wp2_anonymised.rds")
+```
+
+```{r}
+test <- df |> filter(wave == 2)
+```
+
+```{r}
+saveRDS(test, "./dat/test.rds")
+
+test_rds <- readRDS("./dat/test.rds")
 ```
