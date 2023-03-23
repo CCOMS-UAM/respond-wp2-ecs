@@ -1731,7 +1731,6 @@ data_2019_test <- data_2019_test %>%
     across(q0410g_total_r:q0410k_other_r, ~coalesce(., 0)),
     hh_income_r = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r
   )
-#FIXME!!!
 ```
 
 
