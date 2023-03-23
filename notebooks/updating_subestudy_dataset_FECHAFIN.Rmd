@@ -42,6 +42,8 @@ HISTORY_FOLDER <- file.path(SUBSTUDY_FOLDER, "Antiguas")
 RAW_DS_PATH    <- file.path(SUBSTUDY_FOLDER, "Edad_con_salud_Fichero_Completo.dta")
 MOD_PATH    <- file.path("C:/Users/Cristina/Documents/workspace/Edad_con_salud_Fichero_Mod.dta")
 BACKUP_PATH    <- file.path(HISTORY_FOLDER, "snapshot_2022-04-04_11-10.dta")
+
+CHANGELOG_PATH <- file.path(SUBSTUDY_FOLDER, "Modificaciones_BBDD_COVID-19_substudy.xlsx" )
 ```
 
 
@@ -83,6 +85,9 @@ _requested encoding (invalid byte sequence)._
 current_dataset <- read_stata(RAW_DS_PATH)
 modified_dataset <- read_stata(MOD_PATH)
 backup_dataset  <- read_stata(BACKUP_PATH)
+
+#Load the changelog file to read in the changes in the latest update:
+changelog <- read_excel(CHANGELOG_PATH)
 ```
 
 
