@@ -1550,73 +1550,6 @@ grid.arrange(g1, g2, g3, g4)
 rm(g1, g2, g3, g4)
 ```
 
-The pattern of NAs (999 and 888) is very similar.
-
-```{r}
-# temp <- data_2019_test %>% 
-#   mutate(
-#     q0410g_total = as.factor(q0410g_total),
-#     q0410i_ss = as.factor(q0410i_ss),
-#     q0410j_government = as.factor(q0410j_government),
-#     q0410k_other = as.factor(q0410k_other),
-#     
-#     q0410g_total_rec = recode_factor(q0410g_total,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid"),
-#     
-#     q0410i_ss_rec = recode_factor(q0410i_ss,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid"),
-#     
-#     q0410j_government_rec = recode_factor(q0410j_government,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid"),
-#     
-#      q0410k_other_rec = recode_factor(q0410k_other,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid")
-#     ) %>% count(q0410g_total_rec,  q0410i_ss_rec, q0410j_government_rec, q0410k_other_rec)
-
-```
-
-```{r}
-
-# data_2019_test <- 
-#   data_2019_test %>% 
-#   mutate(
-#     q0410g_total = as.factor(q0410g_total),
-#     q0410i_ss = as.factor(q0410i_ss),
-#     q0410j_government = as.factor(q0410j_government),
-#     q0410k_other = as.factor(q0410k_other),
-#     
-#     q0410g_total_rec = recode_factor(q0410g_total,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid"),
-#     
-#     q0410i_ss_rec = recode_factor(q0410i_ss,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid"),
-#     
-#     q0410j_government_rec = recode_factor(q0410j_government,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid"),
-#     
-#      q0410k_other_rec = recode_factor(q0410k_other,
-#       "888" = "DK",
-#       "999" = "refuse",
-#       .default = "valid")
-#     )
-
-```
-
-
 We need to make decisions to manage the values of these variables. 
 First we explore the distribution of possible response combinations.
 
@@ -1629,6 +1562,8 @@ First we explore the distribution of possible response combinations.
 ```{r}
 # temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n)
 ```
+
+The pattern of NAs (999 and 888) is very similar.
 
 We assume that most of the respondents' income will be in what they answer 
 in item `q0410g_total`. Therefore, if in this variable we find a "valid" 
