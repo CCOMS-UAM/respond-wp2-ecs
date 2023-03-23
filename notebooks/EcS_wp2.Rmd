@@ -108,7 +108,7 @@ purposes.
 
 ```{r data-importation}
 data_2019 <- read_dta(BASELINE_FILEPATH, encoding = "UTF-8")
-data_COVID <- read_dta(COVID_FILEPATH)
+data_COVID <- read_dta(COVID_FILEPATH, encoding = "UTF-8")
 ```
 
 # Step 1. Data inspection
