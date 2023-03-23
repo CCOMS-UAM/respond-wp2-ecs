@@ -504,6 +504,7 @@ data_2019_test <-
 ### Checking new variable
 
 ```{r}
+#Check the "estimated age" matches with q1011_age even in the cases that we don't have q1010_birth_date
 data_2019_test %>% 
   freq_table(age_cat)
 
