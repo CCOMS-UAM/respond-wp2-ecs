@@ -191,10 +191,10 @@ data_COVID_test <- data_COVID
 In order to know which cases are in both waves, we use semi_join:
 
 ```{r}
-id_ecs_both <- data_COVID_test %>%
-               semi_join(data_2019_test, by = "ID_ECS") %>% 
-               select(ID_ECS) %>% 
-               pull()
+# id_ecs_both <- data_COVID_test %>%
+#                semi_join(data_2019_test, by = "ID_ECS") %>% 
+#                select(ID_ECS) %>% 
+#                pull()
 ```
 
 On the other hand, we need to make sure that each unique ID is represented
