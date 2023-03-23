@@ -227,11 +227,8 @@ data_2019_test <- data_2019_test %>%
     q0006_date = lubridate::ymd(q0006_date),
     q1010_birth_date = lubridate::ymd(q1010_birth_date)
   )
-```
 
-
-```{r dates-format}
-data_COVID_test <- data_COVID %>% 
+data_COVID_test <- data_COVID_test %>% 
   mutate(
   FECHAFIN = as_factor(FECHAFIN),
   FECHAFIN = lubridate::dmy(FECHAFIN)
@@ -1755,7 +1752,7 @@ rm(quintiles19, quartiles19)
 Finally we got 91 as not assessed (proxy respondants) and 386 missing (default).
 
 ## Province
-It will be useful to join mobility dataset.
+It will be useful for joining mobility dataset.
 ```{r}
 data_2019_test <- data_2019_test |> mutate(province = case_when(q0101a_psu == 9 ~ "Barcelona",
                               q0101a_psu == 13 ~ "Community of Madrid")
@@ -2649,7 +2646,6 @@ covid_time <- data_COVID_test %>%
   mutate(
     covid_time = q1010_birth_date %--% FECHAFIN, #año-mes-dia
     covid_time = covid_time/years(),
-    #covid_time = year(covid_time)
   ) %>% select(covid_time) %>%  pull()
 ```
 
@@ -3917,30 +3913,22 @@ df %>%
 
 # Step 10. Save .RDS
 
-
 ```{r}
-prueba <- df |>
-       slice_sample(prop = 0.20)
+saveRDS(df, "./dat/df_test.rds")
+
+test <- readRDS("./dat/df_test.rds")
 ```
 
 ```{r}
-saveRDS(prueba, "./dat/prueba.rds")
+#Wave 1
+w2019 <- df |> filter(wave == 1)
+saveRDS(w2019, "./dat/c2019_test.rds")
 
-prueba_rds <- readRDS("./dat/prueba.rds")
+wCOVID <- df |> filter(wave == 2)
+saveRDS(wCOVID, "./dat/wCOVID_test.rds")
 ```
 
 ```{r}
-saveRDS(df, "./dat/ecs_wp2_anonymised.rds")
-
-df_rds <- readRDS("./dat/ecs_wp2_anonymised.rds")
+freq_table(wCOVID, q1510e_workday)
 ```
 
-```{r}
-test <- df |> filter(wave == 2)
-```
-
-```{r}
-saveRDS(test, "./dat/test.rds")
-
-test_rds <- readRDS("./dat/test.rds")
-```
