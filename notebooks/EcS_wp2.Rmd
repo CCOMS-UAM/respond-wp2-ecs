@@ -336,7 +336,7 @@ data_2019_test <-
                                     "no information",
                                     MISSING_DESIGN, 
                                     REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+                                    NON_RESPONSE))
   )
 ```
 
