@@ -461,6 +461,7 @@ The next steps were followed:
 3.  Create `age_cat` by recategorizing `age_continuous`.
 
 ```{r}
+#Age at the time the interview was done (in years)
 bl_time <- data_2019_test %>%  
   mutate(
     bl_time = q1010_birth_date %--% q0006_date, #año-mes-dia
