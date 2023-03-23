@@ -805,7 +805,8 @@ To proceed, we follow the next steps:
 ```{r}
 data_2019 %>%
   select(q1510_occ, q1510_catoccu) %>%
-  summarise_all(~sum(is.na(.))) #Both variables has the same NAs, 
+  summarise_all(~sum(is.na(.))) 
+#Both variables has the same NAs, 
 #only is just that on the free-text variable, NAs looks like "".
 ```
 
@@ -824,8 +825,8 @@ in free-text they appear as ""). This would be useful in order to process the
 variable "profession" later on.
 
 `q1510_catoccu`indicates the categorization of the 10 main groups, but not the
-subcategories, which are the ones that could be interesting to use. We'll try if
-using it as a filter is useful.
+subcategories, which are the ones that could be interesting for us to use. 
+We'll try if using it as a filter is useful.
 
 Barely it does, as the principal category of our interest leaves out interesting
 occupations (e.g., *auxiliar de enfermería*), which are on groups 2, 3, 7, 8. As
@@ -846,8 +847,7 @@ data_2019_test %>%
     q1510_occ_itf8 = stringi::stri_trans_general(q1510_occ_utf8, "Latin-ASCII")
   ) %>% 
   select(q1510_occ, q1510_occ_utf8) 
-#%>% 
-#  View()
+
 ```
 
 ### Variable creation
@@ -924,7 +924,7 @@ data_2019_test <-
   mutate(
     profession = case_when(
       #service workers --> first responders: paramedic/firefighter/police
-      hc_worker == 1 ~  4, #hc_wroker = healthcare
+      hc_worker == "yes" ~  4, #hc_worker = healthcare
       q1510_catoccu ==  5 ~ 5,  
       q1510_catoccu ==  10  ~  6 ,
       #armed forces --> military
