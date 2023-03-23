@@ -441,20 +441,20 @@ For those cases, we have the correct information on variables `age` and
 ```{r}
 data_2019 %>%  
   filter(ID_ECS %in% ID_NAs) %>% 
-  select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) 
-#%>%  View()
+  select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) #%>%
+  #View()
 ```
 
 ### Variables' creation
 
 The next steps were followed:
 
-1.   Create the difference in years between birthdate and 2019 interview date
+1.   Create the difference in years between birth-date and 2019 interview date
     (in years).
 
 2.   Create `age_continuous`: if we have the complete information, use the
-    diference between birthdate and interview date (`q0006_date`) just created
-    to stablish the age of the participants; if this data is missing, use
+    difference between birth-date and interview date (`q0006_date`) just created
+    to establish the age of the participants; if this data is missing, use
     `q1011_age`. We use floor() to rounding up to the participant's current
     integer years.
 
@@ -464,7 +464,6 @@ The next steps were followed:
 bl_time <- data_2019_test %>%  
   mutate(
     bl_time = q1010_birth_date %--% q0006_date, #año-mes-dia
-    #bl_time = year(bl_time)
     bl_time = bl_time/years()
   ) %>% select(bl_time) %>% pull()
 ```
