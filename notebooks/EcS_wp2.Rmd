@@ -164,21 +164,6 @@ data_COVID <- data_COVID %>%
 rm(id_ecs_subs_notBL)
 ```
 
-
-## Identifying waves
-
-```{r}
-data_2019 <- data_2019 %>%
-              add_column(wave = 1, .before = "ID_ECS")
-  
-```
-
-```{r}
-data_COVID <- data_COVID %>%
-              add_column(wave = 2, .before = "ID_ECS")
-  
-```
-
 Now we duplicate both datasets for testing purposes:
 
 ```{r}
@@ -213,6 +198,35 @@ unique_ids <- data_2019 |>
 data_COVID_test <- right_join(data_COVID_test,
                              unique_ids,
                              by = "ID_ECS")
+```
+
+## Identifying waves
+
+<!-- # ```{r} -->
+<!-- # data_2019 <- data_2019 %>% -->
+<!-- #               add_column(wave = 1, .before = "ID_ECS") -->
+<!-- #    -->
+<!-- # ``` -->
+<!-- #  -->
+<!-- # ```{r} -->
+<!-- # data_COVID <- data_COVID %>% -->
+<!-- #               add_column(wave = 2, .before = "ID_ECS") -->
+<!-- #    -->
+<!-- # ``` -->
+
+
+```{r}
+data_2019_test <- data_2019_test %>%
+              add_column(wave = 1, .after = "ID_ECS") 
+              
+data_2019_test <- data_2019_test |> select(ID_ECS, wave, everything())  
+```
+
+```{r}
+data_COVID_test <- data_COVID_test %>%
+              add_column(wave = 2, .after = "ID_ECS")
+
+data_COVID_test <- data_COVID_test |> select(ID_ECS, wave, everything()) 
 ```
 
 
