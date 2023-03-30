@@ -3576,7 +3576,7 @@ data_COVID_test %>%
 # Step 4. Combination of both datasets
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-          data_2019_test |> select(ID_ECS,province),
+          data_2019_test |> select(ID_ECS, province),
            by = "ID_ECS") #useful for merging google mobility indexes
 ```
 
