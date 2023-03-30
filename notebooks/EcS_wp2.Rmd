@@ -2774,6 +2774,8 @@ data_COVID_test <- data_COVID_test %>%
 ```
 
 
+
+
 ## 3.6. Employment status
 
 ```{r}
@@ -3502,7 +3504,7 @@ data_COVID_test <- data_COVID_test %>%
   mutate(
     across(
       .cols = where(is.numeric),
-      .fns = ~if_else(TIPO_ENT == 2,
+      .fns = ~if_else(TIPO_ENT == 2 | is.na(TIPO_ENT), #Alternativa == 2,
                      replace_na(., MISSING_DESIGN),
                      .)
     ) 
@@ -3510,12 +3512,22 @@ data_COVID_test <- data_COVID_test %>%
 
 ```
 
+```{r}
+data_COVID_test <- data_COVID_test %>% 
+  mutate(
+    across(
+      .cols = c("age_cat"),
+      .fns = ~if_else(TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN),
+              fct_na_value_to_level(age_cat, level = "-991")
+    )
+  )
+```
 
 ```{r}
 data_COVID_test %>% 
-  filter(TIPO_ENT == 2) %>% 
+  filter(TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN) %>% 
   miss_var_summary() %>% 
-  data.frame
+  data.frame #variables hthat have 95% of missing with this filter are character variables that we don't use here
 ```
 
 Remaining NAs are NON_RESPONSE. 
