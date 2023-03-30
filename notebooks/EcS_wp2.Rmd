@@ -339,12 +339,10 @@ data_2019_test <-
   mutate(
     coresidence = "ES",
     coresidence = factor(coresidence,
-                         levels = c("ES", "2", "3", MISSING_DESIGN,
+                         levels = c("ES", MISSING_DESIGN,
                                                 REFUSED_ANSWER, 
                                                 NON_RESPONSE),
-                          labels = c("yes", 
-                                    "no",
-                                    "no information",
+                          labels = c("ES", 
                                     MISSING_DESIGN, 
                                     REFUSED_ANSWER,
                                     NON_RESPONSE))
