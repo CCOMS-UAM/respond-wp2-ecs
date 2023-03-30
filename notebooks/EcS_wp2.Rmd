@@ -2549,9 +2549,17 @@ data_2019_test %>%
   data.frame #It works
 ```
 
+#Arrange by ID_ECS
 
+```{r}
+data_2019_test <- data_2019_test |> arrange(desc(ID_ECS))
+```
 
 # Step 3. Wave 2 harmonization
+
+```{r}
+data_COVID_test <- data_COVID_test |> arrange(desc(ID_ECS))
+```
 
 ## 3.1. Gender
 
