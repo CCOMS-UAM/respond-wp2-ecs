@@ -56,6 +56,7 @@ library(readxl)
 library(ecs.data)
 library(utf8)
 library(digest)
+library(forcats)
 
 #TODO: Add labels to all variables
 ```
@@ -3494,6 +3495,7 @@ data_COVID_test %>%
 data_COVID_test %>% 
   select(TIPO_ENT) %>% 
   str()
+
 ```
 
 There are 54 NAs for proxy respondents in some items. We have to recode it
@@ -3510,6 +3512,17 @@ data_COVID_test <- data_COVID_test %>%
     ) 
   )
 
+```
+
+```{r}
+data_COVID_test %>% 
+  mutate(
+    age_cat = if_else(
+      (TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN),
+      forcats::fct_na_value_to_level(age_cat, level = "-991"),
+      age_cat
+      )
+  ) %>% select(age_cat) %>% freq_table(age_cat)
 ```
 
 ```{r}
