@@ -3624,8 +3624,113 @@ df <- df %>% mutate(
 df <- left_join(df,
                 stringency_index,
                 by = "date")
-rm(stringency_index)
+#rm(stringency_index)
 ```
+
+Now that these values are included in the complete dataset, it is necessary to 
+modify the missing values. If we are at wave == 1, the missing values are 
+MISSING_DESIGN (since these are policy indicators that were taken with respect 
+to the COVID-19 pandemic). If we are in wave == 2, the missing values are 
+NON_RESPONSE.
+
+```{r}
+#Character variables
+df <- df %>% mutate(
+  CountryName = if_else(wave == 1, coalesce(CountryName, "-991"), CountryName),
+  # missing_design = -991
+  CountryName = if_else(wave == 2, coalesce(CountryName, "-993"), CountryName),
+  #non_response = -993
+  CountryCode = if_else(wave == 1, coalesce(CountryCode, "-991"), CountryCode),
+  # missing_design = -991
+  CountryCode = if_else(wave == 2, coalesce(CountryCode, "-993"), CountryCode),
+  #non_response = -993
+  Jurisdiction = if_else(wave == 1, coalesce(Jurisdiction, "-991"), Jurisdiction),
+  # missing_design = -991
+  Jurisdiction = if_else(wave == 2, coalesce(Jurisdiction, "-993"), Jurisdiction),
+  #non_response = -993
+  `V2B_Vaccine age eligibility/availability age floor (general population summary)` =
+    if_else(
+      wave == 1,
+      coalesce(
+        `V2B_Vaccine age eligibility/availability age floor (general population summary)`,
+        "-991"
+      ),
+      `V2B_Vaccine age eligibility/availability age floor (general population summary)`
+    ),
+  # missing_design = -991
+  `V2B_Vaccine age eligibility/availability age floor (general population summary)` = if_else(
+    wave == 2,
+    coalesce(
+      `V2B_Vaccine age eligibility/availability age floor (general population summary)`,
+      "-993"
+    ),
+    `V2B_Vaccine age eligibility/availability age floor (general population summary)`
+  ),
+  #non_response = -993
+  `V2C_Vaccine age eligibility/availability age floor (at risk summary)` =
+    if_else(
+      wave == 1,
+      coalesce(
+        `V2C_Vaccine age eligibility/availability age floor (at risk summary)`,
+        "-991"
+      ),
+      `V2C_Vaccine age eligibility/availability age floor (at risk summary)`
+    ),
+  # missing_design = -991
+  `V2C_Vaccine age eligibility/availability age floor (at risk summary)` = if_else(
+    wave == 2,
+    coalesce(
+      `V2C_Vaccine age eligibility/availability age floor (at risk summary)`,
+      "-993"
+    ),
+    `V2C_Vaccine age eligibility/availability age floor (at risk summary)`
+  ),
+  #non_response = -993
+  MajorityVaccinated = if_else(
+    wave == 1,
+    coalesce(MajorityVaccinated, "-991"),
+    MajorityVaccinated
+  ),
+  # missing_design = -991
+  MajorityVaccinated = if_else(
+    wave == 2,
+    coalesce(MajorityVaccinated, "-993"),
+    MajorityVaccinated
+  ),
+  #non_response = -993
+  
+)
+#Logical to integer variables
+df <- df %>% mutate(
+  across(
+    .cols = where(is.logical),
+    .fns = ~as.integer(.)
+  )
+)
+
+
+df <- df %>% mutate(
+  across(
+    .cols = c(RegionName, RegionCode, `C1M_School closing`:`V2A_Vaccine Availability (summary)`, `V2D_Medically/ clinically vulnerable (Non-elderly)`:`ConfirmedDeaths`, `PopulationVaccinated`:EconomicSupportIndex_ForDisplay),
+    .fns = ~if_else(wave == 1,
+                     replace_na(., MISSING_DESIGN),
+                     .)
+  )
+)
+
+df <- df %>% mutate(
+  across(
+    .cols = c(RegionName, RegionCode, `C1M_School closing`:`V2A_Vaccine Availability (summary)`, `V2D_Medically/ clinically vulnerable (Non-elderly)`:`ConfirmedDeaths`, `PopulationVaccinated`:EconomicSupportIndex_ForDisplay),
+    .fns = ~if_else(wave == 2,
+                     replace_na(., NON_RESPONSE),
+                     .)
+  )
+)
+
+df %>% select(ID_ECS, wave, CountryName:EconomicSupportIndex_ForDisplay)
+```
+
+
 
 ## Google  Mobility
 
