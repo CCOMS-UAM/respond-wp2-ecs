@@ -3583,7 +3583,6 @@ data_COVID_test <- left_join(data_COVID_test,
            by = "ID_ECS") #useful for merging google mobility indexes
 ```
 
-
 ```{r}
 df <- bind_rows(data_2019_test, data_COVID_test)
 ```
@@ -3592,6 +3591,8 @@ df <- bind_rows(data_2019_test, data_COVID_test)
 df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
 ```
 
+Now a bunch of NAs appear for all the baseline variables that were not measured 
+in wave 2. This will have to be changed later with the full database.
 
 
 # Step 5. Adding new variables
