@@ -4054,10 +4054,11 @@ df <- df %>% mutate(
 
 df <- df %>% mutate(
   across(
-    .cols = c(Intermediate_Region_Code, Intermediate_Region_Name, LDC:SIDS),
+    .cols = c(Intermediate_Region_Code, Intermediate_Region_Name, LDC:SIDS, `NUTS level 2`),
     .fns = ~coalesce(., MISSING_DESIGN)
   ))
 
+rm(stringency_index, UNSDcodes, unique_ids, bl_time, covid_time, ID_NAs, ID_NAs_sub, time_between_BL_covid)
 ```
 
 
@@ -4069,8 +4070,9 @@ and package.
 
 ```{r}
 df <- df %>% group_by(ID_ECS) |> 
-  mutate(
-    hashed_id = digest(ID_ECS, algo = "md5"))
+  mutate( 
+    hashed_id = digest(ID_ECS, algo = "md5")) %>% 
+  select(hashed_id, everything())
 
 
 #ungroup() |> rowwise() %>% 
@@ -4123,6 +4125,20 @@ df <- df %>% ungroup() |> select(hashed_id,
 #Step 8. Setting variable labels
 
 #Step 9. Checking that there are no more NAs
+
+```{r}
+
+df %>% mutate(
+  across(
+    .cols = any_of(colnames(data_2019_test)), 
+    .fns = ~if_else(wave == 2, 
+                   coalesce(., MISSING_DESIGN),
+                   .)
+  )
+)
+
+```
+
 
 ```{r}
 df <- df |> ungroup() |>
