@@ -3592,7 +3592,8 @@ df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
 ```
 
 Now a bunch of NAs appear for all the baseline variables that were not measured 
-in wave 2. This will have to be changed later with the full database.
+in wave 2. This will have to be changed later with the full database (they 
+have to be "MISSING_DESIGN").
 
 
 # Step 5. Adding new variables
@@ -3694,6 +3695,44 @@ Checking everything works just fine:
 ```{r}
 df |> select(ID_ECS, wave, date, province, country_region_code:residential_percent_change_from_baseline)
 ```
+
+We have to correct missing values. There are two types of missing values. 
+For cases on wave == 1, they must be "MISSING_DESIGN" (as they not apply on 
+baseline cases)
+For cases on wave == 2, they must be "NON_RESPONSE" (as they apply in wCOVID,
+but there is no response for them).
+
+Also, we have to keep in mind that variables from mobility dataset have different
+structure. Variables `country_region_code:sub_region_2` and `iso_3166_2_code` and
+`place_id` are factors, while 
+`retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline`
+are integers. `metro_area` and `census_fips_code` are LOGI variables. We must apply
+different strategies to treat NAs values. 
+
+```{r}
+#Integer variables
+df <- df %>% 
+  mutate(
+    across(
+      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline),
+      .fns = ~if_else(wave == 1,
+                     replace_na(., MISSING_DESIGN),
+                     .)
+    ) 
+  )
+
+df <- df %>% 
+  mutate(
+    across(
+      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline),
+      .fns = ~if_else(wave == 2,
+                     replace_na(., NON_RESPONSE),
+                     .)
+    )
+    ) 
+
+```
+
 
 ## NUTS
 We import the datase obtained in OBIBA/ NUTS2021_nomenclature of territorial units
