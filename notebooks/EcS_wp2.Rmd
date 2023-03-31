@@ -3711,10 +3711,17 @@ different strategies to treat NAs values.
 
 ```{r}
 #Integer variables
+
+df <- df %>%
+  mutate(
+    census_fips_code = as.integer(census_fips_code),
+    metro_area = as.integer(metro_area)
+  )
+
 df <- df %>% 
   mutate(
     across(
-      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline),
+      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline, census_fips_code, metro_area),
       .fns = ~if_else(wave == 1,
                      replace_na(., MISSING_DESIGN),
                      .)
@@ -3724,15 +3731,41 @@ df <- df %>%
 df <- df %>% 
   mutate(
     across(
-      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline),
+      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline, census_fips_code, metro_area),
       .fns = ~if_else(wave == 2,
                      replace_na(., NON_RESPONSE),
                      .)
     )
     ) 
 
+
+
 ```
 
+```{r}
+#Factor variables 
+#
+df <- df %>% 
+  mutate(
+    across(
+      .cols = c(country_region_code:sub_region_2, iso_3166_2_code, place_id),
+      .fns = ~if_else(wave == 1,
+                      forcats::fct_na_value_to_level(., level = "-991"),
+                      .) #missing design
+    )
+  )
+
+df <- df %>% 
+  mutate(
+    across(
+      .cols = c(country_region_code:sub_region_2, iso_3166_2_code, place_id),
+      .fns = ~if_else(wave == 2,
+                      forcats::fct_na_value_to_level(., level = "-993"),
+                      .) #non response
+    )
+  )
+
+```
 
 ## NUTS
 We import the datase obtained in OBIBA/ NUTS2021_nomenclature of territorial units
