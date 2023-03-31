@@ -3515,32 +3515,22 @@ data_COVID_test <- data_COVID_test %>%
 ```
 
 ```{r}
-data_COVID_test %>% 
+data_COVID_test <- data_COVID_test %>% 
   mutate(
     age_cat = if_else(
       (TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN),
       forcats::fct_na_value_to_level(age_cat, level = "-991"),
       age_cat
       )
-  ) %>% select(age_cat) %>% freq_table(age_cat)
-```
-
-```{r}
-data_COVID_test <- data_COVID_test %>% 
-  mutate(
-    across(
-      .cols = c("age_cat"),
-      .fns = ~if_else(TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN),
-              fct_na_value_to_level(age_cat, level = "-991")
-    )
   )
 ```
+
 
 ```{r}
 data_COVID_test %>% 
   filter(TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN) %>% 
   miss_var_summary() %>% 
-  data.frame #variables hthat have 95% of missing with this filter are character variables that we don't use here
+  data.frame #variables that have 95% of missing with this filter are character variables that we don't use here
 ```
 
 Remaining NAs are NON_RESPONSE. 
