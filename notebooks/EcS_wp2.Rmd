@@ -4003,6 +4003,17 @@ df <-
   left_join(df,
             nuts_ds,
             by = "province")
+
+df %>% select(colnames(nuts_ds))
+
+df <- df %>% 
+  mutate(
+    Country = "Spain",
+    `NUTS level 1` = coalesce(`NUTS level 1`, "-991",
+    `NUTS level 2` = coalesce(`NUTS level 2`, "-991")
+  )
+  )
+
 rm(nuts_ds) 
 rm(mobility)
 ```
@@ -4030,6 +4041,25 @@ df <- left_join(df,
                 UNSDcodes,
                 by = "ISO_alpha2")
 ```
+
+```{r}
+df %>% select(colnames(UNSDcodes))
+
+df <- df %>% mutate(
+  across(
+    .cols = c(Intermediate_Region_Name, LDC, LLDC, SIDS),
+    .fns = ~as.integer(.)
+  )
+)
+
+df <- df %>% mutate(
+  across(
+    .cols = c(Intermediate_Region_Code, Intermediate_Region_Name, LDC:SIDS),
+    .fns = ~coalesce(., MISSING_DESIGN)
+  ))
+
+```
+
 
 
 # Step 6. Hashed IDs
