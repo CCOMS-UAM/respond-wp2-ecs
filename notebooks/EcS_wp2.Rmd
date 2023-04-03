@@ -4047,7 +4047,7 @@ df %>% select(colnames(UNSDcodes))
 
 df <- df %>% mutate(
   across(
-    .cols = c(Intermediate_Region_Name, LDC, LLDC, SIDS),
+    .cols = c(Intermediate_Region_Name, LDC, LLDC, SIDS, `NUTS level 2`),
     .fns = ~as.integer(.)
   )
 )
@@ -4058,9 +4058,12 @@ df <- df %>% mutate(
     .fns = ~coalesce(., MISSING_DESIGN)
   ))
 
-rm(stringency_index, UNSDcodes, unique_ids, bl_time, covid_time, ID_NAs, ID_NAs_sub, time_between_BL_covid)
 ```
 
+
+```{r}
+rm(stringency_index, UNSDcodes, unique_ids, bl_time, covid_time, ID_NAs, ID_NAs_sub, time_between_BL_covid)
+```
 
 
 # Step 6. Hashed IDs
