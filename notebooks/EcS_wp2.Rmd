@@ -4130,41 +4130,78 @@ df <- df %>% ungroup() |> select(hashed_id,
 #Step 9. Checking that there are no more NAs
 
 ```{r}
-
-df %>% mutate(
+#"true" NAs
+df <- df %>% mutate(
   across(
-    .cols = any_of(colnames(data_2019_test)), 
+    .cols = where(is.numeric) & any_of(colnames(data_2019_test)), 
     .fns = ~if_else(wave == 2, 
                    coalesce(., MISSING_DESIGN),
                    .)
   )
 )
 
+df <- df %>% mutate(
+  across(
+    .cols = where(is.numeric) & any_of(colnames(data_2019_test)), 
+    .fns = ~if_else(wave == 1, 
+                   coalesce(., NON_RESPONSE),
+                   .)
+  )
+)
+
+df <- df %>% mutate(
+  across(
+    .cols = where(is.numeric) & any_of(colnames(data_COVID_test)), 
+    .fns = ~if_else(wave == 1, 
+                   coalesce(., MISSING_DESIGN),
+                   .)
+  )
+)
+
+df <- df %>% mutate(
+  across(
+    .cols = where(is.numeric) & any_of(colnames(data_COVID_test)), 
+    .fns = ~if_else(wave == 2, 
+                   coalesce(., NON_RESPONSE),
+                   .)
+  )
+)
 ```
 
-
 ```{r}
-df <- df |> ungroup() |>
+#Recoding 888 & 999
+
+df <- df %>% ungroup() %>% 
   mutate(
     across(
-      where(is.numeric),
-      coalesce,
-      MISSING_DESIGN
-    )
-  )
-```
-
-```{r}
-df <- df |> ungroup() |>
-  mutate(
-    across(
-      where(is.numeric),
-      coalesce,
-      888
+      .cols = where(is.numeric),
+      .fns = ~na_if(., 888) #non_response
     )
   )
 
+df <- df %>% ungroup() %>% 
+  mutate(
+    across(
+      .cols = where(is.numeric),
+      .fns = ~coalesce(., NON_RESPONSE)
+    )
+  )
 
+df <- df %>% ungroup() %>% 
+  mutate(
+    across(
+      .cols = where(is.numeric),
+      .fns = ~na_if(., 999) #refused_answer
+    )
+  )
+
+df <- df %>% ungroup() %>% 
+  mutate(
+    across(
+      .cols = where(is.numeric),
+      .fns = ~coalesce(., REFUSED_ANSWER)
+    )
+  )
 ```
 
 ```{r}
