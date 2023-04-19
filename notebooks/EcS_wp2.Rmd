@@ -866,7 +866,7 @@ Import the .txt that has all the responses to create HC_workers:
 
 ```{r}
 library(readr)
-occ_unique <- read_delim("../dat/HC-workerCat.txt",
+occ_unique <- read_delim("./dat/HC-workerCat.txt",
                          #"C:/Users/Cristina/Downloads/HC-workerCat.txt"
      delim = "\t", escape_double = FALSE, 
      col_names = FALSE, trim_ws = TRUE)
@@ -3741,7 +3741,7 @@ As it is the change of mobility by COVID, there is only
 information relative to 2020.
 
 ```{r}
-mobility <- read.csv("../dat/2020_ES_Region_Mobility_Report.csv", stringsAsFactors = TRUE)
+mobility <- read.csv("./dat/2020_ES_Region_Mobility_Report.csv", stringsAsFactors = TRUE)
 ```
 
 ```{r collapse=TRUE}
@@ -3883,7 +3883,7 @@ We have to import separately:
 
 ```{r}
 nuts_provinces <- read_excel(
-  "../dat/NUTS2021.xlsx",
+  "./dat/NUTS2021.xlsx",
   sheet = "NUTS 1 to 3",
   col_types = c(
     "text",
@@ -3902,7 +3902,7 @@ nuts_provinces <- read_excel(
 
 ```{r}
 nuts_urbanrural <- read_excel(
-  "../dat/NUTS2021.xlsx",
+  "./dat/NUTS2021.xlsx",
   sheet = "Urban - Rural",
   col_types = c("text",
                 "numeric", "text", "skip", "skip",
@@ -3912,7 +3912,7 @@ nuts_urbanrural <- read_excel(
 
 ```{r}
 nuts_urbanruralremoteness <- read_excel(
-  "../dat/NUTS2021.xlsx",
+  "./dat/NUTS2021.xlsx",
   sheet = "Urban-rural remoteness",
   col_types = c(
     "skip",
@@ -4021,7 +4021,7 @@ rm(mobility)
 ##UNSD Methodology
 
 ```{r}
-UNSDcodes <- read_excel("../dat/UNSD — Methodology.xlsx")
+UNSDcodes <- read_excel("./dat/UNSD — Methodology.xlsx")
 ```
 
 ```{r}
@@ -4086,7 +4086,7 @@ df <- df %>% group_by(ID_ECS) |>
 
 Firstly, we import the Edad con Salud variable list for RESPOND.
 ```{r}
-ecs_variablelist <- read_excel("../dat/variable_list-EcS_v3.xlsx", 
+ecs_variablelist <- read_excel("./dat/variable_list-EcS_v3.xlsx", 
     sheet = "EcS-table format", col_types = c("text", 
        "skip", "numeric", "text", "skip", 
        "skip", "skip"))
@@ -4210,35 +4210,207 @@ df %>%
   data.frame
 ```
 
+Eliminamos las labels de los valores perdidos originales, que han sido sustituidos
+por la familia de -991, -993
 ```{r}
-df %>% as_factor() %>% pull(q1510e_workday) %>% fct_drop(only = c("DK", "Refusal")) %>% levels()
+#df %>% as_factor() %>% pull(q1510e_workday) %>% fct_drop(only = c("DK", "Refusal")) %>% levels()
 
-df %>% mutate(
+df <- df %>% mutate(
   across(
-    .cols = ,
-    .fns = as_factor
+    .cols = c(q1510e_workday, 
+              q1510b_contract_earner,
+              q1510_catoccu,
+              q1016_highest,
+              q1018_country,
+              q1012_mar_stat,
+              q0410g_total,
+              q0410i_ss,
+              q0410j_government,
+              q0410k_other,
+              q4659_ill,
+              q4660_illrelative,
+              q4661_died,
+              q4662_diedrelative,
+              q4663_separation,
+              q4664_brokeoff,
+              q4665_problem,
+              q4666_unemployed,
+              q4667_sacked,
+              q4668_financial,
+              q4669_police,
+              q4670_stolen,
+              q6310_help_neig,
+              q6320_close,
+              q6330_concern,
+              SOLO9A, #"No sabe"
+              SOLO9B,
+              SOLO9C, #"No sabe", ""No aplicable""
+              SOLO2,
+              SOLO2A,
+              q3009a,
+              q3009b,# "DK"     "refuse"
+              q3009c,
+              q3009d,
+              q3009e,
+              q3009f,
+              q3009g,
+              ALCOH1, #"No sabe"
+              FUM1A, #"NS/NC(NO LEER)"    
+              q4211, #"DK"     "Refuse"
+              q4213,
+              q4214,
+              q4215,
+              q4216,
+              q4220a,
+              q4220b,
+              q4220c,
+              q4220d,
+              q4220e,
+              q4220f,
+              q4222a,
+              q4222b,
+              q4222c,
+              q4222d,
+              q4222e,
+              q4222l,
+              q4222m,
+              q4222n,
+              q4222o,
+              q4222p,
+              q4222q,
+              q4222r,
+              q4222s,
+              q4222t,
+              q4222u,
+              q4222v,
+              q4224,
+              q4224a,
+              q4224b,
+              q4700a, # "Not applicable" "DK"             "Refuse"
+              q4700b,
+              q4700c,
+              q4700d,
+              SM8_1, #"NS/NC (no leer)" "NS/NC"
+              SM8_2,
+              SM8_3, #"NS/NC (no leer)" "NS/NC"
+              SM8_4,
+              SM8_5, #"NS/NC (no leer)" "NS/NC"
+              SM8_6,
+              SM8_7, #"NS/NC (no leer)" "NS/NC"
+              SM8_8,
+              SM8_9, #"NS/NC (no leer)" "NS/NC"
+              SM8_10,
+              SM_3, #"NS/NC (no leer)"
+              SM4,
+              SM5,
+              SM6,
+              SM7,
+              q7528,
+              q7529,
+              q7530,
+              q7531,
+              q7532,
+              q7533,
+              q7534,
+              q7535,
+              q7009a_energy,
+              q7009b_control,
+              q7009c_achieve,
+              q7009d_money,
+              q7010b_intimate,
+              SM21, # "DK"      "Refused"
+              q2016_sleep,
+              q2017_rested,
+              SUE3, #"NS/NC"
+              q2007_pains,
+              q2009_difficulty,
+              q4112,
+              q4120,
+              DOLOR1,
+              DOLOR3,
+              DOLOR4,
+              q0411c,
+              q0411d,
+              q0411e,
+              q0411f,
+              q0411g,
+              q0411h,
+              q0411i,
+              ECON4,
+              ECON5,
+              ECON1_1,
+              q4550_worrylife,
+              q4573_episode12,
+              q6211_spouse,
+              q6212_parents,
+              q6213_children,
+              q6214a_grand,
+              q6215a_siblings,
+              q6215b_inlaw,
+              q6217_friends,
+              q6211v_spouse,
+              q6212v_parents,
+              q6213v_children,
+              q6214av_grand,
+              q6215av_siblings,
+              q6215bv_inlaw,
+              q6217v_friends,
+              q4585_ideation,
+              q4586_age,
+              q4587_ideat12,
+              q4588_age,
+              q4589_planification,
+              q4590_age,
+              q4591_planif12,
+              q4592_age,
+              q4593_attempt,
+              q4594_times,
+              q4595_age,
+              q4596_type,
+              q4597_type12,
+              q4598_age,
+              q4599a_damage,
+              q4599b_attention,
+              q4599c_hospi,
+              SM9,
+              SOLO3,
+              SOLO5,
+              SOLO5B,
+              SOLO6,
+              SOLO6B,
+              SOLO8A),
+    .fns = ~as_factor(.) |>  fct_drop(only = c("DK", "Refusal", 
+                                              "No sabe", "No aplicable", 
+                                              "Refused", "NS/NC", "NS/NC (no leer)",
+                                              "Not applicable", "NS/NC(NO LEER)",
+                                              "refuse", "Refuse", "DK/ RF", "NS/NC (NO LEER)",
+                                              "NS/NC (NO LEER)", "Dk", "RF", "DK/RF", "No lo sabe",
+                                              "No lo sabe (insistir en que dé una respuesta)",
+                                              "NS/NC (NO LEER)", "NA", "NS/NC (NO LEER)"
+                                              ))
   )
 )
 
-df %>% select()
+#as_factor() %>% pull(q1510e_workday) %>% fct_drop(only = c("DK", "Refusal"))
+
 ```
 
 
 # Step 10. Save .RDS
 
 ```{r}
-saveRDS(df, "../dat/df_test.rds")
+saveRDS(df, "./dat/df_test.rds")
 
-test <- readRDS("../dat/df_test.rds")
+test <- readRDS("./dat/df_test.rds")
 ```
 
 ```{r}
 #Wave 1
 w2019 <- df |> filter(wave == 1)
-saveRDS(w2019, "../dat/c2019_test.rds")
+saveRDS(w2019, "./dat/c2019_test.rds")
 
 wCOVID <- df |> filter(wave == 2)
-saveRDS(wCOVID, "../dat/wCOVID_test.rds")
+saveRDS(wCOVID, "./dat/wCOVID_test.rds")
 ```
 
 ```{r}
