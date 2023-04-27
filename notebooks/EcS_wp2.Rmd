@@ -4395,6 +4395,74 @@ df <- df %>% mutate(
 
 ```
 
+# Creates Annotations
+```{r}
+#TODO: PENDING!!!
+df %>% select(q1510e_workday)
+
+attr(df$q1510e_workday, "label")
+
+labelled::var_label(df$q1510e_workday)
+
+
+df %>% mutate(
+  across(
+    .cols = everything(),
+    .fns = {~attr(., "Annotations") <- labelled::var_label(.)},
+    return(.)
+  )
+)
+```
+
+# Creates "Label" for Opal
+
+We extract the labels from Variable List RESPOND file. These are the ones that
+we want to appear in "label" section on Opal. 
+```{r}
+labels_codebook <- ecs_variablelist %>% 
+  select(label, variable) %>%
+  drop_na() %>%
+  filter(variable %in% colnames(df)) %>% 
+  with(., 
+       split(label,
+             factor(variable, levels = unique(variable))))
+
+
+label_codebook <- ecs_variablelist %>% 
+  select(label, variable) %>%
+  drop_na() %>%
+  filter(variable %in% colnames(df))
+
+test <- df %>% mutate(
+  across(
+    .cols = all_of(label_codebook$variable),
+    .fns = ~sjlabelled::set_label(., labels_codebook$label)
+  )
+) #doesn't work (labels are the same)
+
+
+test <- df %>% mutate(
+  across(
+    .cols = all_of(label_codebook$variable),
+    .fns = ~sjlabelled::set_label(., label_codebook$label)
+  )
+) #Esto hace que todas las variables tengan como label toooodas las etiquetas
+
+test <- df %>% mutate(
+  across(
+    .cols = all_of(label_codebook$variable),
+    .fns = ~{labelled::var_label(.) <- labels_codebook}
+  )
+) #Doesn't work: "value should be a single character string or null
+
+test <- df
+labelled::var_label(test) <- labels_codebook 
+#Error: `value` should be a single character string or NULL
+
+
+str(test)
+```
+
 
 # Step 10. Save .RDS
 
