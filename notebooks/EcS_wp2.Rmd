@@ -4605,40 +4605,7 @@ labels_codebook <- ecs_variablelist %>%
        split(label,
              factor(variable, levels = unique(variable))))
 
-
-label_codebook <- ecs_variablelist %>% 
-  select(label, variable) %>%
-  drop_na() %>%
-  filter(variable %in% colnames(df))
-
-test <- df %>% mutate(
-  across(
-    .cols = all_of(label_codebook$variable),
-    .fns = ~sjlabelled::set_label(., labels_codebook$label)
-  )
-) #doesn't work (labels are the same)
-
-
-test <- df %>% mutate(
-  across(
-    .cols = all_of(label_codebook$variable),
-    .fns = ~sjlabelled::set_label(., label_codebook$label)
-  )
-) #Esto hace que todas las variables tengan como label toooodas las etiquetas
-
-test <- df %>% mutate(
-  across(
-    .cols = all_of(label_codebook$variable),
-    .fns = ~{labelled::var_label(.) <- labels_codebook}
-  )
-) #Doesn't work: "value should be a single character string or null
-
-test <- df
-labelled::var_label(test) <- labels_codebook 
-#Error: `value` should be a single character string or NULL
-
-
-str(test)
+labelled::var_label(df) <- labels_codebook
 ```
 
 
