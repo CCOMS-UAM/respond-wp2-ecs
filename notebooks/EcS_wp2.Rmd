@@ -624,7 +624,7 @@ data_2019_test <-
       labels = c(
         "have a job (employed or self-employed)",
         "in education",
-        "care work (familiy) / homeworker/ on parental leave",
+        "care work (family) / homeworker/ on parental leave",
         "on long-term sick leave/disability",
         "unable to work due to reasons not mentioned elsewhere in this list",
         "unemployed or job-seeking",
