@@ -4378,7 +4378,9 @@ df <- df %>% mutate(
               SOLO5B,
               SOLO6,
               SOLO6B,
-              SOLO8A),
+              SOLO8A,
+              q1011_age,
+              SOLO1_999),
     .fns = ~as_factor(.) |>  fct_drop(only = c("DK", "Refusal", 
                                               "No sabe", "No aplicable", 
                                               "Refused", "NS/NC", "NS/NC (no leer)",
@@ -4386,7 +4388,8 @@ df <- df %>% mutate(
                                               "refuse", "Refuse", "DK/ RF", "NS/NC (NO LEER)",
                                               "NS/NC (NO LEER)", "Dk", "RF", "DK/RF", "No lo sabe",
                                               "No lo sabe (insistir en que dé una respuesta)",
-                                              "NS/NC (NO LEER)", "NA", "NS/NC (NO LEER)"
+                                              "NS/NC (NO LEER)", "NA", "NS/NC (NO LEER)", "888",
+                                              "NS / NC (NO LEER)"
                                               ))
   )
 )
@@ -4395,9 +4398,181 @@ df <- df %>% mutate(
 
 ```
 
+# Stablishes "categories" for categorical variables in Opal
+
+```{r}
+df <- df %>% mutate(
+  across(
+    .cols = c(wave,
+              q1504_reason,
+              q1503_work_now,
+              q1058,
+              q1056,
+              q7537,
+              q7538,
+              q7539,
+              q7540,
+              q7541,
+              q7542,
+              SM26_1,
+              SM26_2,
+              SM26_3,
+              SM26_4,
+              SM26_5,
+              SM26_6,
+              q6613_club,
+              q6618_relig,
+              q6619_leave,
+              q6621_assoc,
+              alcohol_consumption,
+              q3007_everalc,
+              q3008_last30,
+              q3008b_last7,
+              q3009a,
+              q3009b,
+              q3009c,
+              q3009d,
+               q3009e,
+               q3009f,
+               q3009g,
+              q3001_used_tobac,
+              q3002_use_tobaco,
+              FUM1B,
+              depression_12m,
+              depression_12treatment,
+              depression_lifetime,
+              q4211,
+              q4222f,
+              q4222g,
+              q4222h,
+              q4222i,
+              q4222j,
+              q4222k,
+              q4222f,
+              q4222h,
+              q4222i,
+              q4222j,
+              q4222k,
+              q4225_causemed23,
+              q4225_causemed24,
+              q4225_causemed25,
+              q4225_causemed30,
+              q4225_causemed31,
+              depression_30d,
+              q7029_worr,
+              q7030_rush,
+              q7031_irrit,
+              q7032_depr,
+              q7033_tense,
+              q7069_worr,
+              q7070_rush,
+              q7071_irrit,
+              q7072_depr,
+              q7073_tense,
+              q7114_worr,
+              q7115_rush,
+              q7116_irrit,
+              q7117_depr,
+              q7118_tense,
+              SM22_1,
+              SM22_2,
+              SM22_3,
+              SM22_4,
+              SM22_5,
+              q7034_calm,
+              q7035_enjoy,
+              q7074_calm,
+              q7075_enjoy,
+              q7119_calm,
+              q7120_enjoy,
+              SM22_6,
+              SM22_7, 
+              q7001_life,
+              q7002_senses,
+              q7003_health,
+              q7004_yourself,
+              q7005_daily,
+              q7006_relation,
+              q7007_home,
+              q7008_time,
+              SM21,
+              q7008d_cantril,
+              q4642_talkative,
+              q4643_lively,
+              q4649_party,
+              q4651_meetings,
+              q4655_quiet,
+              q4657_livelyothers,
+              q4641_mood,
+              q4646_fedup,
+              q4648_nervous,
+              q4650_worried,
+              q4653_nerves,
+              q4656_alone,
+              q6351_companion,
+              q6352_leftout,
+              q6353_isolated,
+              SOLO7_1,
+              SOLO7_2,
+              SOLO7_3,
+              q7008a_control,
+              q7008b_coping,
+              q7518a_quality,
+              q7519_sleep,
+              SUE2,
+              q3045,
+              q3046,
+              material,
+              economy,
+              infected,
+              COVID1,
+              SOLO1_0,
+              SOLO1_1,
+              SOLO1_2,
+              SOLO1_3,
+              SOLO1_4,
+              SOLO1_5,
+              SOLO1_6,
+              SOLO1_7,
+              SOLO1_9,
+              SOLO1_10,
+              SOLO1_11,
+              SOLO1_12,
+              SOLO1_13,
+              SOLO1_999,
+              rel_concerned,
+              COVID4,
+              rel_deceased,
+              COVID5,
+              rel_isolated,
+              COVID3,
+              severity_raw,
+              COVID1B,
+              COVID1C_1,
+              COVID1C_2,
+              unemployment,
+              GAD12m,
+              GAD,
+              q6010a_spouse,
+              q6010b_parents,
+              q6010c_children,
+              q6010g_friends,
+              q6010h_neighbours,
+              q6010i_grand,
+              q6010j_siblings,
+              q6010k_inlaw,
+              suicidal,
+              SOLO4),
+      .fns = ~as_factor(.)
+)
+)
+```
+
+
+
 # Creates Annotations
 ```{r}
-#TODO: PENDING!!!
+#TODO: PENDING!!!; not recognized in Opal
 df %>% select(q1510e_workday)
 
 attr(df$q1510e_workday, "label")
@@ -4405,13 +4580,16 @@ attr(df$q1510e_workday, "label")
 labelled::var_label(df$q1510e_workday)
 
 
-df %>% mutate(
+df <- df %>% mutate(
   across(
-    .cols = everything(),
-    .fns = {~attr(., "Annotations") <- labelled::var_label(.)},
-    return(.)
+    .cols = (function(x) !is.null(attr(x, "label"))),
+    .fns = ~{attr(., "Annotations") <- labelled::var_label(.)
+    return(.)},
   )
 )
+
+pruebas <- attributes(df$q1510e_workday)
+print(pruebas)
 ```
 
 # Creates "Label" for Opal
