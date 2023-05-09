@@ -1614,33 +1614,30 @@ grid.arrange(g1, g2, g3, g4)
 rm(g1, g2, g3, g4)
 ```
 
-We need to make decisions to manage the values of these variables. 
-First we explore the distribution of possible response combinations.
+We need to make decisions to manage the values of these variables. First we
+explore the distribution of possible response combinations.
 
 ```{r}
-# temp %>% filter(if_any(everything(), `==`, "valid"))
-# #View(.Last.value)
+temp %>% filter(if_any(everything(), `==`, "valid"))
+
 ```
 
-
 ```{r}
-# temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n)
+temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n)
 ```
 
 The pattern of NAs (999 and 888) is very similar.
 
-We assume that most of the respondents' income will be in what they answer 
-in item `q0410g_total`. Therefore, if in this variable we find a "valid" 
-response, in the following ones, the don't know or refuse will become 0. 
+We assume that most of the respondents' income will be in what they answer in
+item `q0410g_total`. Therefore, if in this variable we find a "valid" response,
+in the following ones, the don't know or refuse will become 0.
 
-If in this variable the answer is "don't know" or "refuse", a decision will
-be made for the cases depending on which type of answer has been given to a 
-greater extent. Thus, if in "total":
-- we have a response that is a "don't know" and we find that same response in
-another variable, we classify it as "don't know" in the final sum;
-- If we have an answer that is "refuse" and we find that same answer in another
-variable, we classify it as "refuse" in the final sum. 
-
+If in this variable the answer is "don't know" or "refuse", a decision will be
+made for the cases depending on which type of answer has been given to a greater
+extent. Thus, if in "total": - we have a response that is a "don't know" and we
+find that same response in another variable, we classify it as "don't know" in
+the final sum; - If we have an answer that is "refuse" and we find that same
+answer in another variable, we classify it as "refuse" in the final sum.
 
 ### Variable recoding
 
