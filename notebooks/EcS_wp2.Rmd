@@ -73,15 +73,14 @@ library(forcats)
     the participant did not answer for whatever reason).
 
 ```{r constants}
-
 MISSING_DESIGN <- -991
-REFUSED_ANSWER <- -992 #999 
+REFUSED_ANSWER <- -992 #999
 NON_RESPONSE <- -993 #888
 
 BASELINE_FILEPATH <- file.path(read_ecs_folder("DB"),
                                "Ola_3/Cohorte_2019/rawdata_c2019w1.dta")
-COVID_FILEPATH <- file.path(read_ecs_folder("DB"), 
-                        "Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
+COVID_FILEPATH <- file.path(read_ecs_folder("DB"),
+                            "Subestudio_COVID/Edad_con_salud_Fichero_Completo.dta")
 ```
 
 ## Data importation
@@ -148,14 +147,14 @@ remove it. Firstly, we detect it using anti_join():
 
 ```{r}
 id_ecs_subs_notBL <- data_COVID %>%
-                anti_join(data_2019, by = "ID_ECS") %>% 
-                select(ID_ECS) %>% pull()
+  anti_join(data_2019, by = "ID_ECS") %>%
+  select(ID_ECS) %>% pull()
 ```
 
 And then we remove it (is ID_ECS == 6900702)
 
 ```{r}
-data_COVID <- data_COVID %>% 
+data_COVID <- data_COVID %>%
   filter(ID_ECS != id_ecs_subs_notBL)
 ```
 
@@ -181,53 +180,45 @@ In order to know which cases are in both waves, we use semi_join:
 #                pull()
 ```
 
-On the other hand, we need to make sure that each unique ID is represented
-two times in the dataset, regardless of whether they completed one or both
-assessment waves. As we are harmonizing wave by wave, this has to be added on the
-COVID substudy database. 
+On the other hand, we need to make sure that each unique ID is represented two
+times in the dataset, regardless of whether they completed one or both
+assessment waves. As we are harmonizing wave by wave, this has to be added on
+the COVID substudy database.
 
 ```{r}
-unique_ids <- data_2019 |> 
-  select(ID_ECS) |> 
-  group_by(ID_ECS) |> 
+unique_ids <- data_2019 |>
+  select(ID_ECS) |>
+  group_by(ID_ECS) |>
   summarise(n = n()) |> select(ID_ECS)
 ```
 
 ```{r}
 data_COVID_test <- right_join(data_COVID_test,
-                             unique_ids,
-                             by = "ID_ECS")
+                              unique_ids,
+                              by = "ID_ECS")
 ```
 
 ## Identifying waves
 
-<!-- # ```{r} -->
-<!-- # data_2019 <- data_2019 %>% -->
-<!-- #               add_column(wave = 1, .before = "ID_ECS") -->
-<!-- #    -->
-<!-- # ``` -->
-<!-- #  -->
-<!-- # ```{r} -->
-<!-- # data_COVID <- data_COVID %>% -->
-<!-- #               add_column(wave = 2, .before = "ID_ECS") -->
-<!-- #    -->
-<!-- # ``` -->
-
+Wave 1 (baseline):
 
 ```{r}
 data_2019_test <- data_2019_test %>%
-              add_column(wave = 1, .after = "ID_ECS") 
-              
-data_2019_test <- data_2019_test |> select(ID_ECS, wave, everything())  
+  add_column(wave = 1, .after = "ID_ECS")
+
+data_2019_test <-
+  data_2019_test |> select(ID_ECS, wave, everything())  
 ```
+
+Wave 2 (COVID):
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
-              add_column(wave = 2, .after = "ID_ECS")
+  add_column(wave = 2, .after = "ID_ECS")
 
-data_COVID_test <- data_COVID_test |> select(ID_ECS, wave, everything()) 
+data_COVID_test <-
+  data_COVID_test |> select(ID_ECS, wave, everything()) 
 ```
-
 
 ## Adjusting date format
 
@@ -235,17 +226,15 @@ Date format is important because we are using this variables to create some of
 the required variables for RESPOND WP2.
 
 ```{r dates-format}
-data_2019_test <- data_2019_test %>% 
+data_2019_test <- data_2019_test %>%
   mutate(
     q0006_date = lubridate::ymd(q0006_date),
     q1010_birth_date = lubridate::ymd(q1010_birth_date)
   )
 
-data_COVID_test <- data_COVID_test %>% 
-  mutate(
-  FECHAFIN = as_factor(FECHAFIN),
-  FECHAFIN = lubridate::dmy(FECHAFIN)
-) 
+data_COVID_test <- data_COVID_test %>%
+  mutate(FECHAFIN = as_factor(FECHAFIN),
+         FECHAFIN = lubridate::dmy(FECHAFIN)) 
 ```
 
 # Step 2. Wave 1 harmonization
@@ -297,7 +286,7 @@ data_2019 %>%
 
 data_2019 %>%
   select(q1009_sex) %>%
-  summarise_all(~sum(is.na(.)))
+  summarise_all( ~ sum(is.na(.)))
 ```
 
 ### Variable harmonization
@@ -306,15 +295,19 @@ In this case we simply rename this variable and convert it into a factor,
 changing the labels as the values match between the two categorizations.
 
 ```{r}
-data_2019_test <- data_2019_test %>% 
-  mutate(gender = factor(x = q1009_sex,
-                          levels = c("1", "2", "3", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("male", 
-                                    "female",
-                                    "other/diverse",
-                                    MISSING_DESIGN,
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+data_2019_test <- data_2019_test %>%
+  mutate(gender = factor(
+    x = q1009_sex,
+    levels = c("1", "2", "3", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+    labels = c(
+      "male",
+      "female",
+      "other/diverse",
+      MISSING_DESIGN,
+      REFUSED_ANSWER,
+      NON_RESPONSE
+    )
+  ))
 ```
 
 ### Checking new variable
@@ -334,18 +327,18 @@ the NUTS code (see below/later on on this script).
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
-  mutate(
-    coresidence = "ES",
-    coresidence = factor(coresidence,
-                         levels = c("ES", MISSING_DESIGN,
-                                                REFUSED_ANSWER, 
-                                                NON_RESPONSE),
-                          labels = c("ES", 
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE))
-  )
+  data_2019_test %>%
+  mutate(coresidence = "ES",
+         coresidence = factor(
+           coresidence,
+           levels = c("ES", MISSING_DESIGN,
+                      REFUSED_ANSWER,
+                      NON_RESPONSE),
+           labels = c("ES",
+                      MISSING_DESIGN,
+                      REFUSED_ANSWER,
+                      NON_RESPONSE)
+         ))
 ```
 
 ### Checking new variable
@@ -375,9 +368,9 @@ different than Spain are indicators of migration.
 ```{r}
 data_2019 %>%
   select(q1018_country) %>%
-  summarise_all(~sum(is.na(.))) #No NAs
+  summarise_all( ~ sum(is.na(.))) #No NAs
 
-data_2019 %>% 
+data_2019 %>%
   freq_table(q1018_country) # 1 = Spain, !1 = other countries
 ```
 
@@ -385,19 +378,24 @@ data_2019 %>%
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
+  data_2019_test %>%
   mutate(
-    migration = if_else(q1018_country == 1, 2, 1), 
-    migration = factor(x = migration,
-                       levels = c("1", "2", "3", MISSING_DESIGN,
-                                                REFUSED_ANSWER, 
-                                                NON_RESPONSE),
-                          labels = c("yes", 
-                                    "no",
-                                    "no information",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+    migration = if_else(q1018_country == 1, 2, 1),
+    migration = factor(
+      x = migration,
+      levels = c("1", "2", "3", MISSING_DESIGN,
+                 REFUSED_ANSWER,
+                 NON_RESPONSE),
+      labels = c(
+        "yes",
+        "no",
+        "no information",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
 
 ### Checking new variable
@@ -447,20 +445,23 @@ For those cases, we have the correct information on variables `age` and
 `q1010_year` (birthdate - year).
 
 ```{r}
-data_2019 %>%  
-  filter(ID_ECS %in% ID_NAs) %>% 
-  select(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day) #%>%
-  #View()
+data_2019 %>%
+  filter(ID_ECS %in% ID_NAs) %>%
+  select(q1010_birth_date,
+         q1011_age,
+         q1010_year,
+         q1010_month,
+         q1010_day)
 ```
 
 ### Variables' creation
 
 The next steps were followed:
 
-1.   Create the difference in years between birth-date and 2019 interview date
+1.  Create the difference in years between birth-date and 2019 interview date
     (in years).
 
-2.   Create `age_continuous`: if we have the complete information, use the
+2.  Create `age_continuous`: if we have the complete information, use the
     difference between birth-date and interview date (`q0006_date`) just created
     to establish the age of the participants; if this data is missing, use
     `q1011_age`. We use floor() to rounding up to the participant's current
@@ -470,42 +471,50 @@ The next steps were followed:
 
 ```{r}
 #Age at the time the interview was done (in years)
-bl_time <- data_2019_test %>%  
-  mutate(
-    bl_time = q1010_birth_date %--% q0006_date, #año-mes-dia
-    bl_time = bl_time/years()
-  ) %>% select(bl_time) %>% pull()
+bl_time <- data_2019_test %>%
+  mutate(bl_time = q1010_birth_date %--% q0006_date,
+         #año-mes-dia
+         bl_time = bl_time / years()) %>% select(bl_time) %>% pull()
 ```
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
+  data_2019_test %>%
   mutate(
-    age_continuous = if_else(
-                        ID_ECS %in% ID_NAs, q1011_age, 
-                        bl_time
-                        ),
+    age_continuous = if_else(ID_ECS %in% ID_NAs, q1011_age,
+                             bl_time),
     age_continuous = floor(age_continuous),
     age_cat = case_when(
-           age_continuous < 18 ~ 1,
-           age_continuous >= 18 & age_continuous <= 44 ~ 2,
-           age_continuous >= 45 & age_continuous <= 64 ~ 3,
-           age_continuous >= 65 & age_continuous <= 94 ~ 4, 
-           age_continuous >= 95 ~ 5
-         ), 
-         age_cat = factor(x = age_cat,
-                          levels = c("1", "2", "3", "4", "5",
-                                     MISSING_DESIGN,
-                                     REFUSED_ANSWER,
-                                     NON_RESPONSE),
-                          labels = c("below 18 years", 
-                                    "18-44",
-                                    "45-64",
-                                    "65-94",
-                                    "95 years or older",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+      age_continuous < 18 ~ 1,
+      age_continuous >= 18 & age_continuous <= 44 ~ 2,
+      age_continuous >= 45 & age_continuous <= 64 ~ 3,
+      age_continuous >= 65 & age_continuous <= 94 ~ 4,
+      age_continuous >= 95 ~ 5
+    ),
+    age_cat = factor(
+      x = age_cat,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "below 18 years",
+        "18-44",
+        "45-64",
+        "65-94",
+        "95 years or older",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 
 ```
 
@@ -513,16 +522,15 @@ data_2019_test <-
 
 ```{r}
 #Check the "estimated age" matches with q1011_age even in the cases that we don't have q1010_birth_date
-data_2019_test %>% 
+data_2019_test %>%
   freq_table(age_cat)
 
-data_2019_test %>% 
-  select(age_continuous, age_cat, q1011_age, q1010_birth_date) 
-#%>% View()
+data_2019_test %>%
+  select(age_continuous, age_cat, q1011_age, q1010_birth_date)
 
-data_2019_test %>% filter(ID_ECS %in% ID_NAs) %>% 
+
+data_2019_test %>% filter(ID_ECS %in% ID_NAs) %>%
   select(ID_ECS, age_continuous, age_cat, q1011_age, q1010_birth_date)
-#%>% View()
 ```
 
 ## 2.6. Employment status (`q1503_work_now` & `q1504_reason`.)
@@ -536,8 +544,8 @@ data_2019_test %>% filter(ID_ECS %in% ID_NAs) %>%
 -   5 = Unable to work due to reasons not mentioned elsewhere in this list
 -   6 = unemployed or job-seeking
 -   7 = retired
-
--991 = not assessed -993 = missing (default)
+-   -991 = not assessed
+-   -993 = missing (default)
 
 `q1503_work_now` (c2019_w1) *Currently working?*:
 
@@ -639,7 +647,7 @@ data_2019_test <-
 ### Checking new variable
 
 ```{r}
-data_2019_test %>% 
+data_2019_test %>%
   select(employment_st) %>%
   freq_table(employment_st)
 ```
@@ -662,9 +670,9 @@ Changes made after consulting with IPD-Respond team:
 ```{r}
 data_2019 %>%
   select(q1510b_contract_earner) %>%
-  summarise_all(~sum(is.na(.))) #741
+  summarise_all(~ sum(is.na(.))) #741
 
-data_2019 %>% 
+data_2019 %>%
   freq_table(q1510b_contract_earner)
 ```
 
@@ -736,8 +744,8 @@ In EcS (`q1510_workday`):
 
 ```{r}
 data_2019 %>%
-  select(q1510e_workday) %>% 
-  summarise_all(~sum(is.na(.)))
+  select(q1510e_workday) %>%
+  summarise_all( ~ sum(is.na(.)))
 
 data_2019 %>%
   freq_table(q1510e_workday)
@@ -748,30 +756,40 @@ data_2019 %>%
 ```{r}
 data_2019_test <-
   data_2019_test %>%
-  mutate(employment_ty = case_when(
-       q1510e_workday == 1 ~ 2, #part time --> part time
-       q1510e_workday == 2 ~ 1, #continuous morning working day --> full time
-       q1510e_workday == 3  ~ 1, #continuous afternoon working day --> full time
-       q1510e_workday == 4 ~ 1, #continuous night working day --> full time
-       q1510e_workday == 5 ~ 4, #reduced work day --> other
-       q1510e_workday == 6 ~ 4, #shift work --> other
-       q1510e_workday == 7 ~ 4, #other --> other
-       q1510e_workday == 888 ~ REFUSED_ANSWER,
-       is.na(q1510e_workday) ~ NON_RESPONSE
-
-         ),
-          employment_ty = factor(x = employment_ty,
-                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("Full time",
-                                    "Part time",
-                                    "No paid work",
-                                    "Other",
-                                    MISSING_DESIGN,
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE
- )))
-
-
+  mutate(
+    employment_ty = case_when(
+      q1510e_workday == 1 ~ 2,
+      #part time --> part time
+      q1510e_workday == 2 ~ 1,
+      #continuous morning working day --> full time
+      q1510e_workday == 3  ~ 1,
+      #continuous afternoon working day --> full time
+      q1510e_workday == 4 ~ 1,
+      #continuous night working day --> full time
+      q1510e_workday == 5 ~ 4,
+      #reduced work day --> other
+      q1510e_workday == 6 ~ 4,
+      #shift work --> other
+      q1510e_workday == 7 ~ 4,
+      #other --> other
+      q1510e_workday == 888 ~ REFUSED_ANSWER,
+      is.na(q1510e_workday) ~ NON_RESPONSE
+      
+    ),
+    employment_ty = factor(
+      x = employment_ty,
+      levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "Full time",
+        "Part time",
+        "No paid work",
+        "Other",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
 
 ### Checking new variable
@@ -813,8 +831,8 @@ To proceed, we follow the next steps:
 ```{r}
 data_2019 %>%
   select(q1510_occ, q1510_catoccu) %>%
-  summarise_all(~sum(is.na(.))) 
-#Both variables has the same NAs, 
+  summarise_all( ~ sum(is.na(.)))
+#Both variables has the same NAs,
 #only is just that on the free-text variable, NAs looks like "".
 ```
 
@@ -824,17 +842,13 @@ occ_unique <- data_2019 %>%
   distinct()  
 ```
 
-```{r}
-#View(occ_unique)
-```
-
 There are 1824 unique values for this variable and 347 NAs (in both variables;
 in free-text they appear as ""). This would be useful in order to process the
-variable "profession" later on.
+variable"profession" later on.
 
 `q1510_catoccu`indicates the categorization of the 10 main groups, but not the
-subcategories, which are the ones that could be interesting for us to use. 
-We'll try if using it as a filter is useful.
+subcategories, which are the ones that could be interesting for us to use. We'll
+try if using it as a filter is useful.
 
 Barely it does, as the principal category of our interest leaves out interesting
 occupations (e.g., *auxiliar de enfermería*), which are on groups 2, 3, 7, 8. As
@@ -848,14 +862,15 @@ To facilitate pattern detection, we convert to lowercase all the values of
 `stri_trans_general(x, "Latin-ASCII")`.
 
 ```{r}
-data_2019_test %>% 
+data_2019_test %>%
   mutate(
     q1510_occ_utf8 = as_utf8(q1510_occ),
     q1510_occ_utf8 = str_to_lower(q1510_occ_utf8, locale = "spa"),
     q1510_occ_itf8 = stringi::stri_trans_general(q1510_occ_utf8, "Latin-ASCII")
-  ) %>% 
+  ) %>%
   select(q1510_occ, q1510_occ_utf8) 
 
+#As a promising approach that we are not following due to resources limit
 ```
 
 ### Variable creation
@@ -864,33 +879,39 @@ Import the .txt that has all the responses to create HC_workers:
 
 ```{r}
 library(readr)
-occ_unique <- read_delim("./dat/HC-workerCat.txt",
-                         #"C:/Users/Cristina/Downloads/HC-workerCat.txt"
-     delim = "\t", escape_double = FALSE, 
-     col_names = FALSE, trim_ws = TRUE)
+occ_unique <- read_delim(
+  "./dat/HC-workerCat.txt",
+  #"C:/Users/Cristina/Downloads/HC-workerCat.txt"
+  delim = "\t",
+  escape_double = FALSE,
+  col_names = FALSE,
+  trim_ws = TRUE
+)
 ```
 
 ```{r}
-data_2019_test <- data_2019_test %>% 
-  mutate( 
+data_2019_test <- data_2019_test %>%
+  mutate(
     hc_worker = if_else(q1510_occ %in% occ_unique$X1, 1, 2),
-    hc_worker = factor(x = hc_worker,
-                                  levels = c("1", "2",
-                                             MISSING_DESIGN, 
-                                             REFUSED_ANSWER, 
-                                             NON_RESPONSE),
-                                  labels = c("yes",
-                                            "no",
-                                            MISSING_DESIGN,
-                                            REFUSED_ANSWER,
-                                            NON_RESPONSE
-                                            )))
+    hc_worker = factor(
+      x = hc_worker,
+      levels = c("1", "2",
+                 MISSING_DESIGN,
+                 REFUSED_ANSWER,
+                 NON_RESPONSE),
+      labels = c("yes",
+                 "no",
+                 MISSING_DESIGN,
+                 REFUSED_ANSWER,
+                 NON_RESPONSE)
+    )
+  )
 ```
 
 ### Checking new variable
 
 ```{r}
-data_2019_test %>% 
+data_2019_test %>%
   freq_table(hc_worker)
 ```
 
@@ -917,23 +938,24 @@ assumptions to a minimum and when in doubt, code things as other:
 ```{r}
 data_2019 %>%
   select(q1510_catoccu) %>%
-  summarise_all(~sum(is.na(.)))
+  summarise_all( ~ sum(is.na(.)))
 
-data_2019 %>% 
+data_2019 %>%
   freq_table(q1510_catoccu) 
 ```
 
 ### Variable creation
 
 ```{r}
-#Creamos la variable
+#Creating variable
 data_2019_test <-
   data_2019_test %>%
   mutate(
     profession = case_when(
       #service workers --> first responders: paramedic/firefighter/police
-      hc_worker == "yes" ~  4, #hc_worker = healthcare
-      q1510_catoccu ==  5 ~ 5,  
+      hc_worker == "yes" ~  4,
+      #hc_worker = healthcare
+      q1510_catoccu ==  5 ~ 5,
       q1510_catoccu ==  10  ~  6 ,
       #armed forces --> military
       q1510_catoccu ==  1  ~  7 ,
@@ -992,33 +1014,32 @@ data_2019_test <-
       )
     )
   )
-
 ```
 
 ### Checking new variable
 
 ```{r}
-data_2019_test %>% 
+data_2019_test %>%
   freq_table(profession)
 ```
 
-The vast majority is classified as "other" (1897/3002). It is not a very 
-useful variable; it requires to work with free-text variables. 
-
+The vast majority is classified as "other" (1897/3002). It is not a very useful
+variable; it requires to work with free-text variables.
 
 ## 2.11. Education (q1016_highest)
 
 **Highest level of education according to ISCED Classification**:
 
--   1 = primary/basic: (primary education and lower secundary education)
+-   1 = primary/basic: (primary education and lower secondary education)
 -   2 = secondary/intermediate: (upper secondary education, post-secondary
     non-tertiary education)
 -   3 = tertiary/advanced: (short-cicle tertiary education, bachelor's or
     equivalent level, master's or equivalent level, doctoral or equivalent
     level)
 -   4 = no formal education / less than basic (no schooling, early childhood
-    education) -991 = not assessed -993: level not stated - if following yellow
-    box, if not, NON_RESPONSE
+    education)
+-   -991 = not assessed
+-   -993: level not stated - if following yellow box, if not, NON_RESPONSE
 
 Our variable, `q1016_highest`, has as levels (doesn't have *non-tertiary
 education*):
@@ -1030,7 +1051,7 @@ education*):
 -   4 = Upper secondary education completed
 -   5 = University/college completed
 -   6 = Master degree, PhD completed
--    888 = don't know
+-   888 = don't know
 
 As a proposal, I suggest:
 
@@ -1078,7 +1099,6 @@ data_2019_test <-
       )
     )
   )
-
 ```
 
 ### Checking new variable
@@ -1133,26 +1153,43 @@ data_2019 %>%
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
-  mutate(relationship = case_when(
-           q1012_mar_stat == 1 ~ 1,
-           q1012_mar_stat == 2 ~ 2,
-           q1012_mar_stat == 3 ~ 3,
-           q1012_mar_stat == 4 ~ 5, 
-           q1012_mar_stat == 5 ~ 6,
-         ), 
-         relationship = factor(x = relationship,
-                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("single", 
-                                    "married/in a civil union",
-                                    "in a relationship and living together",
-                                    "in a relationship and living apart",
-                                    "divorced/separated",
-                                    "widowed",
-                                    "other",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+  data_2019_test %>%
+  mutate(
+    relationship = case_when(
+      q1012_mar_stat == 1 ~ 1,
+      q1012_mar_stat == 2 ~ 2,
+      q1012_mar_stat == 3 ~ 3,
+      q1012_mar_stat == 4 ~ 5,
+      q1012_mar_stat == 5 ~ 6,
+    ),
+    relationship = factor(
+      x = relationship,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "single",
+        "married/in a civil union",
+        "in a relationship and living together",
+        "in a relationship and living apart",
+        "divorced/separated",
+        "widowed",
+        "other",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
 
 ### Checking new variable
@@ -1178,12 +1215,12 @@ Our variables `q1056` & `q1058` ask about biological and adopted children
 ```{r}
 data_2019 %>%
   select(q1056, q1058) %>%
-  summarise_all(~sum(is.na(.))) #No NAs
+  summarise_all( ~ sum(is.na(.))) #No NAs
 
-data_2019 %>% 
+data_2019 %>%
   freq_table(q1056) #1 = yes (2241); #2 = no (761)
 
-data_2019 %>% 
+data_2019 %>%
   freq_table(q1058) #1 = yes (24); #2 = no (2978)
 ```
 
@@ -1191,18 +1228,20 @@ data_2019 %>%
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
-  mutate(children = case_when(
-           q1056 == 1 | q1058 == 1 ~ 1,
-           q1056 == 2 | q1058 == 2 ~ 2
-         ), 
-         children = factor(x = children,
-                          levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("yes", 
-                                    "no",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+  data_2019_test %>%
+  mutate(
+    children = case_when(q1056 == 1 | q1058 == 1 ~ 1,
+                         q1056 == 2 | q1058 == 2 ~ 2),
+    children = factor(
+      x = children,
+      levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c("yes",
+                 "no",
+                 MISSING_DESIGN,
+                 REFUSED_ANSWER,
+                 NON_RESPONSE)
+    )
+  )
 
 ```
 
@@ -1229,7 +1268,7 @@ ages are in the participants' household.
 ```{r}
 data_2019 %>%
   select(q0407_age_01:q0407_age_10) %>%
-  summarise_all(~sum(is.na(.))) #A lot of NAs
+  summarise_all( ~ sum(is.na(.))) #A lot of NAs
 
 data_2019 %>%
   select(q0407_age_01:q0407_age_10) %>%
@@ -1251,7 +1290,8 @@ data_2019_test <-
           q0407_age_05 < 18 |
           q0407_age_06 < 18 |
           q0407_age_07 < 18 |
-          q0407_age_08 < 18 |  q0407_age_09 < 18 | q0407_age_10 < 18 ~ 1,
+          q0407_age_08 < 18 |
+          q0407_age_09 < 18 | q0407_age_10 < 18 ~ 1,
         
         q0407_age_01 >= 18 |
           q0407_age_02 >= 18 |
@@ -1260,7 +1300,8 @@ data_2019_test <-
           q0407_age_05 >= 18 |
           q0407_age_06 >= 18 |
           q0407_age_07 >= 18 |
-          q0407_age_08 >= 18 |  q0407_age_09 >= 18 | q0407_age_10 >= 18 ~ 2,
+          q0407_age_08 >= 18 |
+          q0407_age_09 >= 18 | q0407_age_10 >= 18 ~ 2,
         
         
         is.na(q0407_age_01) |
@@ -1276,13 +1317,11 @@ data_2019_test <-
     children_hh = factor(
       x = children_hh,
       levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "yes",
-        "no",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      labels = c("yes",
+                 "no",
+                 MISSING_DESIGN,
+                 REFUSED_ANSWER,
+                 NON_RESPONSE)
     )
   )
 ```
@@ -1312,10 +1351,10 @@ DK). Our proposal is to combine both.
 ```{r}
 data_2019 %>%
   select(q1057, q1059) %>%
-  summarise_all(~sum(is.na(.))) #NAs
+  summarise_all( ~ sum(is.na(.))) #NAs
 
 data_2019 %>%
-  freq_table(q1057) 
+  freq_table(q1057)
 
 data_2019 %>%
   freq_table(q1059) 
@@ -1325,33 +1364,41 @@ data_2019 %>%
 
 ```{r}
 data_2019_test <-
-  data_2019_test %>% 
+  data_2019_test %>%
   mutate(
-         
-         q1057_NA = replace_na(q1057, 0),
-         q1057_NA = na_if(q1057_NA, 888),
-         q1059_NA = replace_na(q1059, 0),
-         add_children = q1057_NA + q1059_NA,
-         
-         
-         nofchildren = case_when(
-                                  add_children == 0 ~  1, #no children
-                                  add_children == 1 ~ 2, #one children
-                                  add_children == 2 | add_children == 3 ~ 3, #two or three children
-                                  add_children >= 4 ~ 4, # four or more,
-                                  is.na(add_children) ~ NON_RESPONSE
-                                 
-         ), 
-         nofchildren = factor(x = nofchildren,
-                          levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("no children", 
-                                    "one child",
-                                    "two or three",
-                                    "four or more",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
-
+    q1057_NA = replace_na(q1057, 0),
+    q1057_NA = na_if(q1057_NA, 888),
+    q1059_NA = replace_na(q1059, 0),
+    add_children = q1057_NA + q1059_NA,
+    
+    
+    nofchildren = case_when(
+      add_children == 0 ~  1,
+      #no children
+      add_children == 1 ~ 2,
+      #one children
+      add_children == 2 |
+        add_children == 3 ~ 3,
+      #two or three children
+      add_children >= 4 ~ 4,
+      # four or more,
+      is.na(add_children) ~ NON_RESPONSE
+      
+    ),
+    nofchildren = factor(
+      x = nofchildren,
+      levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "no children",
+        "one child",
+        "two or three",
+        "four or more",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
 
 ### Checking new variable
@@ -1375,7 +1422,7 @@ data_2019 %>%
 
 data_2019 %>%
   select(q0401_hh_total) %>%
-  summarise_all(~sum(is.na(.))) #No NAs
+  summarise_all( ~ sum(is.na(.))) #No NAs
 ```
 
 ### Variable creation
@@ -1396,9 +1443,6 @@ data_2019_test <- data_2019_test %>%
       )
     )
   )
-
-var_label(data_2019_test$living_alone) <- "Living alone"
-
 ```
 
 ### Checking new variable
@@ -1436,43 +1480,55 @@ data_2019 %>%
 ### Variable creation
 
 ```{r}
-data_2019_test <- data_2019_test %>% 
-  mutate(hh_size = case_when(
-                  q0401_hh_total == 1 ~ "1",
-                  q0401_hh_total == 2 ~ "2",
-                  q0401_hh_total == 3 ~ "3",
-                  q0401_hh_total == 4 ~ "3",
-                  q0401_hh_total >= 5 ~ "4"),
-         
-         hh_size = factor(x = hh_size,
-                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("one person", 
-                                    "two persons", 
-                                    "three or four persons", 
-                                    "five or more persons", 
-                                    "live in an institution", 
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE))
+data_2019_test <- data_2019_test %>%
+  mutate(
+    hh_size = case_when(
+      q0401_hh_total == 1 ~ "1",
+      q0401_hh_total == 2 ~ "2",
+      q0401_hh_total == 3 ~ "3",
+      q0401_hh_total == 4 ~ "3",
+      q0401_hh_total >= 5 ~ "4"
+    ),
+    
+    hh_size = factor(
+      x = hh_size,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "one person",
+        "two persons",
+        "three or four persons",
+        "five or more persons",
+        "live in an institution",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
   )
-
-var_label(data_2019_test$hh_size) <- "Household size"
-
 ```
 
 ### Checking new variable
 
 ```{r}
 data_2019_test %>%
-  group_by(hh_size) %>% 
-  pivot_longer(hh_size, names_to = "size", values_to = "value") %>% 
-  select(size, value) %>% 
-  distinct() %>% 
-  arrange(size, value) %>% 
+  group_by(hh_size) %>%
+  pivot_longer(hh_size, names_to = "size", values_to = "value") %>%
+  select(size, value) %>%
+  distinct() %>%
+  arrange(size, value) %>%
   print(n = 150)
 
 
-data_2019_test %>% 
+data_2019_test %>%
   freq_table(hh_size)
 ```
 
