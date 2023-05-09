@@ -1722,79 +1722,103 @@ data_2019_test <- data_2019_test %>%
     q0410i_ss_r_NA = q0410i_ss_r,
     q0410j_government_r_NA = q0410j_government_r,
     q0410k_other_r_NA = q0410k_other_r,
-    across(q0410g_total_r:q0410k_other_r, ~na_if(., NON_RESPONSE)),
-    across(q0410g_total_r:q0410k_other_r, ~na_if(., REFUSED_ANSWER)),
-    across(q0410g_total_r:q0410k_other_r, ~coalesce(., 0)),
+    across(q0410g_total_r:q0410k_other_r, ~ na_if(., NON_RESPONSE)),
+    across(q0410g_total_r:q0410k_other_r, ~ na_if(., REFUSED_ANSWER)),
+    across(q0410g_total_r:q0410k_other_r, ~ coalesce(., 0)),
     hh_income_r = q0410g_total_r + q0410i_ss_r + q0410j_government_r + q0410k_other_r
   )
 ```
 
-
 ### Variable creation
 
 ```{r}
-data_2019_test %>% 
+data_2019_test %>%
   freq_table(hh_income_r) %>% print(n = 168)
 ```
 
 We have 99 NAs, including MISSING_DESIGN and NON_RESPONSE.
 
 ```{r}
-quartiles19 <- c(9816, 15015, 22024) 
+quartiles19 <- c(9816, 15015, 22024)
 quintiles19 <- c(8847, 12997, 17422, 24104)
 ```
 
 ```{r}
-data_2019_test <- data_2019_test %>% 
+data_2019_test <- data_2019_test %>%
   mutate(
-  hhquartile = case_when(hh_income_r >= 0 & is.na(q0410j_government) &
-                                             is.na(q0410k_other) &  
-                                             is.na(q0410i_ss) ~ MISSING_DESIGN,
-                          hh_income_r >= 0 & (q0410i_ss_r_NA == NON_RESPONSE 
-                                              | q0410j_government_r_NA == NON_RESPONSE
-                                              | q0410k_other_r_NA == NON_RESPONSE) 
-                                                ~ NON_RESPONSE,
-                          hh_income_r <= quartiles19[1] ~ 1,
-                          hh_income_r > quartiles19[1] & hh_income_r <= quartiles19[2] ~ 2,
-                          hh_income_r > quartiles19[2] & hh_income_r <= quartiles19[3] ~ 3,
-                          hh_income_r > quartiles19[3] ~ 4
-                          ),
-  
-  hhquartile = factor(x = hhquartile,
-                          levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
-                          labels = c("first quartile", 
-                                    "second quartile", 
-                                    "third quartile", 
-                                    "fourth quartile", 
-                                    MISSING_DESIGN, 
-                                    NON_RESPONSE)),
-  
-  hhquintile = case_when(hh_income_r >= 0 & is.na(q0410j_government) &
-                                             is.na(q0410k_other) &  
-                                             is.na(q0410i_ss) ~ MISSING_DESIGN,
-                          hh_income_r >= 0 & (q0410i_ss_r_NA == NON_RESPONSE 
-                                              | q0410j_government_r_NA == NON_RESPONSE
-                                              | q0410k_other_r_NA == NON_RESPONSE) 
-                                                ~ NON_RESPONSE,
-                          hh_income_r <= quintiles19[1] ~ 1,
-                          hh_income_r > quintiles19[1] & hh_income_r <= quintiles19[2] ~ 2,
-                          hh_income_r > quintiles19[2] & hh_income_r <= quintiles19[3] ~ 3,
-                          hh_income_r > quintiles19[3] & hh_income_r <= quintiles19[4] ~ 4,
-                          hh_income_r > quintiles19[4] ~ 5),
-  
-  
-  hhquintile = factor(x = hhquintile,
-                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
-                          labels = c("first quintile", 
-                                    "second quintile", 
-                                    "third quintile", 
-                                    "fourth quintile",
-                                    "fifth quintile",
-                                    MISSING_DESIGN, 
-                                    NON_RESPONSE))
-  
+    hhquartile = case_when(
+      hh_income_r >= 0 & is.na(q0410j_government) &
+        is.na(q0410k_other) &
+        is.na(q0410i_ss) ~ MISSING_DESIGN,
+      hh_income_r >= 0 &
+        (
+          q0410i_ss_r_NA == NON_RESPONSE
+          |
+            q0410j_government_r_NA == NON_RESPONSE
+          |
+            q0410k_other_r_NA == NON_RESPONSE
+        )
+      ~ NON_RESPONSE,
+      hh_income_r <= quartiles19[1] ~ 1,
+      hh_income_r > quartiles19[1] &
+        hh_income_r <= quartiles19[2] ~ 2,
+      hh_income_r > quartiles19[2] &
+        hh_income_r <= quartiles19[3] ~ 3,
+      hh_income_r > quartiles19[3] ~ 4
+    ),
+    
+    hhquartile = factor(
+      x = hhquartile,
+      levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
+      labels = c(
+        "first quartile",
+        "second quartile",
+        "third quartile",
+        "fourth quartile",
+        MISSING_DESIGN,
+        NON_RESPONSE
+      )
+    ),
+    
+    hhquintile = case_when(
+      hh_income_r >= 0 & is.na(q0410j_government) &
+        is.na(q0410k_other) &
+        is.na(q0410i_ss) ~ MISSING_DESIGN,
+      hh_income_r >= 0 &
+        (
+          q0410i_ss_r_NA == NON_RESPONSE
+          |
+            q0410j_government_r_NA == NON_RESPONSE
+          |
+            q0410k_other_r_NA == NON_RESPONSE
+        )
+      ~ NON_RESPONSE,
+      hh_income_r <= quintiles19[1] ~ 1,
+      hh_income_r > quintiles19[1] &
+        hh_income_r <= quintiles19[2] ~ 2,
+      hh_income_r > quintiles19[2] &
+        hh_income_r <= quintiles19[3] ~ 3,
+      hh_income_r > quintiles19[3] &
+        hh_income_r <= quintiles19[4] ~ 4,
+      hh_income_r > quintiles19[4] ~ 5
+    ),
+    
+    
+    hhquintile = factor(
+      x = hhquintile,
+      levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
+      labels = c(
+        "first quintile",
+        "second quintile",
+        "third quintile",
+        "fourth quintile",
+        "fifth quintile",
+        MISSING_DESIGN,
+        NON_RESPONSE
+      )
+    )
+    
   )
-                          
 ```
 
 ### Checking new variables
@@ -1816,13 +1840,16 @@ rm(quintiles19, quartiles19)
 Finally we got 91 as not assessed (proxy respondants) and 386 missing (default).
 
 ## Province
-It will be useful for joining mobility dataset.
-```{r}
-data_2019_test <- data_2019_test |> mutate(province = case_when(q0101a_psu == 9 ~ "Barcelona",
-                              q0101a_psu == 13 ~ "Community of Madrid")
-)
-```
 
+It will be useful for joining mobility dataset.
+
+```{r}
+data_2019_test <-
+  data_2019_test |> mutate(province = case_when(
+    q0101a_psu == 9 ~ "Barcelona",
+    q0101a_psu == 13 ~ "Community of Madrid"
+  ))
+```
 
 ## From here, variables that do not need harmonization but do need to be in Wave 1.
 
@@ -1831,7 +1858,10 @@ data_2019_test <- data_2019_test |> mutate(province = case_when(q0101a_psu == 9 
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-lte <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_LTE.dta")
+lte <-
+  read_dta(
+    "~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_LTE.dta"
+  )
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -1840,7 +1870,7 @@ that serves as link.
 
 ```{r}
 data_2019_test <- left_join(data_2019_test,
-                            lte %>% select(ID_ECS, LTE), 
+                            lte %>% select(ID_ECS, LTE),
                             by = "ID_ECS")
 ```
 
@@ -1881,7 +1911,6 @@ data_2019_test <- left_join(data_2019_test,
 ```{r}
 data_2019_test %>% freq_table(resilience_scale) %>% print(n = 100)
 ```
-
 
 The rest of stressors variables are already on the dataset:
 
@@ -1938,7 +1967,6 @@ data_2019_test %>%
 ```{r}
 rm(loneliness_ss_si)
 ```
-
 
 ## Social participation
 
@@ -2103,7 +2131,6 @@ data_2019_test %>%
   colnames()
 ```
 
-
 ## Alcohol consumption
 
 We have to import this outcome (already created) from OneDrive.
@@ -2135,11 +2162,9 @@ data_2019_test %>%
   colnames()
 ```
 
-
 ```{r}
 rm(alcohol)
 ```
-
 
 ## Tobacco consumption
 
@@ -2171,11 +2196,9 @@ data_2019_test %>%
   colnames()
 ```
 
-
 ```{r}
 rm(tobacco)
 ```
-
 
 ## Depression
 
@@ -2201,7 +2224,6 @@ data_2019_test %>%
   select(starts_with(c("q422", "q421", "q4223", "q4700"))) %>% 
   colnames()
 ```
-
 
 ```{r}
 rm(depression)
@@ -2230,7 +2252,6 @@ data_2019_test %>%
   select(starts_with(c("q75"))) %>% 
   colnames()
 ```
-
 
 ```{r}
 rm(flourishing)
@@ -2396,7 +2417,6 @@ data_2019_test %>%
 rm(anxiety)
 ```
 
-
 ## Outcome variables related to loneliness and social interaction:
 
 ```{r}
@@ -2409,30 +2429,34 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            socialint %>% select(ID_ECS,
-                                                 size_sn,
-                                                 social_int_ff_pre,
-                                                 social_int_vr_pre,
-                                                 social_int_total_pre), 
-                            by = "ID_ECS")
+data_2019_test <- left_join(
+  data_2019_test,
+  socialint %>% select(
+    ID_ECS,
+    size_sn,
+    social_int_ff_pre,
+    social_int_vr_pre,
+    social_int_total_pre
+  ),
+  by = "ID_ECS"
+)
 ```
 
 ### Network size (size_sn)
+
 Sum of all the affirmative responses to the **social network** items. Range goes
-from 0 to 8. 
+from 0 to 8.
 
 ```{r}
 data_2019_test |> select(q6010a_spouse:q6010k_inlaw)
 ```
 
-
 ### Social interaction face-to-face (pre-lockdown) (social_int_ff_pre)
+
 Sum score of face-to-face social interactions with members of their social
-network.
-Missing values in the face-to-face social interaction items (section q6210)
-were recoded as 1 (“Never”) when the corresponding social network item 
-was 2 (“No”). Then, all responses were summed up.
+network. Missing values in the face-to-face social interaction items (section
+q6210) were recoded as 1 ("Never") when the corresponding social network item
+was 2 ("No"). Then, all responses were summed up.
 
 The variable ranges from 7 - 35.
 
@@ -2440,64 +2464,49 @@ The variable ranges from 7 - 35.
 data_2019_test |> select(q6211_spouse:q6217v_friends)
 ```
 
-
 ### Social interaction virtual (pre-lockdown) (social_int_vr_pre)
+
 Sum score of technology-mediated social interactions with members of their
-social network.
-Missing values in the technology-mediated social interaction items 
-(section q6210v) were recoded as 1 “Never”) when the corresponding social 
-network item was 2 (“No”). Then, all responses to these items, plus 
-additional item q6221v were summed up.
+social network. Missing values in the technology-mediated social interaction
+items (section q6210v) were recoded as 1 "Never") when the corresponding social
+network item was 2 ("No"). Then, all responses to these items, plus additional
+item q6221v were summed up.
 
 ```{r}
 data_2019_test |> select(q6211_spouse:q6221v_unknown)
 ```
 
 ### Social interaction score total (pre-lockdown) (social_int_total_pre)
+
 Sum score of social interactions (face-to-face or technology-mediated)
-interactions with member of their social network.
-Sum of social_int_ff_pre and social_int_vr_pre. Ranges from 15 to 75.
+interactions with member of their social network. Sum of social_int_ff_pre and
+social_int_vr_pre. Ranges from 15 to 75.
 
 ```{r}
 data_2019_test |> select(q6211_spouse:q6221v_unknown)
 ```
 
-
-
 ##2.28. Recoding NAs
 
-I will first get a description of missing values
-100% NAs:
+I will first get a description of missing values 100% NAs:
+
 ```{r eval = FALSE}
-data_2019_test %>% 
-  miss_var_summary() %>% 
-  filter(pct_miss == 100) %>% 
+data_2019_test %>%
+  miss_var_summary() %>%
+  filter(pct_miss == 100) %>%
   data.frame
 ```
 
-<!-- We eliminate variables with 100% of missing values: -->
-
-<!-- ```{r} -->
-<!-- df_2019_100_missing <- data_2019_test %>%  -->
-<!--   miss_var_summary() %>%  -->
-<!--   filter(pct_miss > 90.0) %>%  -->
-<!--   select(variable)  -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- data_2019_test <- data_2019_test %>%  -->
-<!--   select(!all_of(df_2019_100_missing$variable)) -->
-<!-- ``` -->
-
 NAs, in general
+
 ```{r}
 data_2019_test %>% 
   miss_var_summary() %>% 
   data.frame
 ```
 
-
 ### Proxy respondents
+
 ```{r}
 data_2019_test %>% 
   filter(proxy == 1) %>% 
@@ -2505,9 +2514,8 @@ data_2019_test %>%
   data.frame
 ```
 
-
-There are 91 NAs for proxy respondents in some items. We have to recode it
-as -991 (missing by design)
+There are 91 NAs for proxy respondents in some items. We have to recode it as
+-991 (missing by design)
 
 ```{r}
 data_2019_test <- data_2019_test %>%
@@ -2528,20 +2536,15 @@ data_2019_test <- data_2019_test %>%
 data_2019_test %>% select(proxy) %>% freq_table(proxy)
 ```
 
-
 ```{r}
-data_2019_test <- data_2019_test %>% 
-  mutate(
-    across(
-      .cols = where(is.numeric),
-      .fns = ~if_else(proxy == "Yes",
+data_2019_test <- data_2019_test %>%
+  mutate(across(
+    .cols = where(is.numeric),
+    .fns = ~ if_else(proxy == "Yes",
                      replace_na(., MISSING_DESIGN),
                      .)
-    )
-  )
-
+  ))
 ```
-
 
 ```{r}
 data_2019_test %>% 
@@ -2551,13 +2554,15 @@ data_2019_test %>%
 ```
 
 ### Missing (default) & refused answer
+
 ```{r}
 data_2019_test %>% 
   #filter(proxy == 0) %>% 
   miss_var_summary() %>% 
   data.frame #It works
 ```
-Remaining NAs are NON_RESPONSE. 
+
+Remaining NAs are NON_RESPONSE.
 
 ```{r}
 data_2019_test <- data_2019_test %>% 
@@ -2594,7 +2599,6 @@ data_2019_test <- data_2019_test %>%
    
 ```
 
-
 ```{r}
 data_2019_test %>% 
   miss_var_summary() %>% 
@@ -2616,6 +2620,7 @@ data_COVID_test <- data_COVID_test |> arrange(desc(ID_ECS))
 ## 3.1. Gender
 
 We assume that gender is the same as that recorded in Wave 1.
+
 ```{r}
 data_COVID_test <- data_COVID_test %>%
   left_join(data_2019_test %>% 
@@ -2623,10 +2628,10 @@ data_COVID_test <- data_COVID_test %>%
             by = "ID_ECS")
 ```
 
-
 ## 3.2. Country of residence
 
 We assume that country of residence is the same as in Wave 1, "ES".
+
 ```{r}
 data_COVID_test <- data_COVID_test %>%
   left_join(data_2019_test %>% 
@@ -2656,6 +2661,7 @@ data_COVID_test %>%  select(migration) %>% freq_table(migration)
 ## 3.4. & 3.5. Age
 
 ### Variables exploration
+
 As in wave 1, there are IDs that have a corrupted date of birth. We check which
 ones they are.
 
@@ -2691,41 +2697,58 @@ and dates from the baseline database.
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
-  left_join(data_2019_test %>% 
-              select(ID_ECS, q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day, q0006_date),
-            by = "ID_ECS")
+  left_join(
+    data_2019_test %>%
+      select(
+        ID_ECS,
+        q1010_birth_date,
+        q1011_age,
+        q1010_year,
+        q1010_month,
+        q1010_day,
+        q0006_date
+      ),
+    by = "ID_ECS"
+  )
 ```
 
 ```{r}
-data_COVID_test %>% 
-  filter(ID_ECS %in% ID_NAs_sub) %>% 
-  select(ID_ECS, q1010_birth_date, q0006_date, FECHAFIN, q1011_age, q1010_year)
+data_COVID_test %>%
+  filter(ID_ECS %in% ID_NAs_sub) %>%
+  select(ID_ECS,
+         q1010_birth_date,
+         q0006_date,
+         FECHAFIN,
+         q1011_age,
+         q1010_year)
 ```
 
 ```{r}
-data_COVID_test %>% 
-  filter(!ID_ECS %in% ID_NAs_sub) %>% 
-  select(ID_ECS, q1010_birth_date, q0006_date, FECHAFIN, q1011_age, q1010_year)
-#%>%  View()
-
+data_COVID_test %>%
+  filter(!ID_ECS %in% ID_NAs_sub) %>%
+  select(ID_ECS,
+         q1010_birth_date,
+         q0006_date,
+         FECHAFIN,
+         q1011_age,
+         q1010_year)
 ```
-
 
 ### Variable creation
 
 ```{r}
-covid_time <- data_COVID_test %>%  
-  mutate(
-    covid_time = q1010_birth_date %--% FECHAFIN, #año-mes-dia
-    covid_time = covid_time/years(),
-  ) %>% select(covid_time) %>%  pull()
+covid_time <- data_COVID_test %>%
+  mutate(covid_time = q1010_birth_date %--% FECHAFIN,
+         #año-mes-dia
+         covid_time = covid_time / years(),) %>% select(covid_time) %>%  pull()
 ```
 
 ```{r}
-time_between_BL_covid <- data_COVID_test %>%  
+time_between_BL_covid <- data_COVID_test %>%
   mutate(
-    time_between_BL_covid = q0006_date %--% FECHAFIN, #año-mes-dia
-    time_between_BL_covid = time_between_BL_covid/years()
+    time_between_BL_covid = q0006_date %--% FECHAFIN,
+    #año-mes-dia
+    time_between_BL_covid = time_between_BL_covid / years()
   ) %>% select(time_between_BL_covid) %>% pull()
 ```
 
@@ -2737,96 +2760,115 @@ data_COVID_test %>% freq_table(FECHAFIN) %>% print(n = 100) #There are 102 NAs
 data_COVID_test %>% freq_table(q0006_date) %>% print(n = 100) #No NAs
 ```
 
-We have three situations:
-1. We have complete data to have an accurate estimate of the age: date of birth,
-date of baseline interview and covid interview. We calculate the age by doing
-covid_date - date_of_birth.
+We have three situations: 1. We have complete data to have an accurate estimate
+of the age: date of birth, date of baseline interview and covid interview. We
+calculate the age by doing covid_date - date_of_birth.
 
-2. We don't have date of birth, but covid_date and baseline_date. We calculate 
-the age by doing age on baseline + period between covid_date and baseline_date.
+2.  We don't have date of birth, but covid_date and baseline_date. We calculate
+    the age by doing age on baseline + period between covid_date and
+    baseline_date.
 
-3. We don't have date of birth nor covid_date. We estimate the age by exploring
-if the dates of baseline interview and covid_date are sequential, to extract 
-an approximation of time between the two periods.
+3.  We don't have date of birth nor covid_date. We estimate the age by exploring
+    if the dates of baseline interview and covid_date are sequential, to extract
+    an approximation of time between the two periods.
 
 ```{r}
-data_COVID_test %>% 
-  group_by(origin) %>%  
+data_COVID_test %>%
+  group_by(origin) %>%
   mutate(
-  tiempo_base = lag(q0006_date) - lead(q0006_date),
-  tiempo_covid = lag(FECHAFIN) - lead(FECHAFIN)
-) %>% 
+    tiempo_base = lag(q0006_date) - lead(q0006_date),
+    tiempo_covid = lag(FECHAFIN) - lead(FECHAFIN)
+  ) %>%
   select(tiempo_base, tiempo_covid)
 ```
 
-
 ```{r}
 data_COVID_test <-
-  data_COVID_test %>% 
+  data_COVID_test %>%
   mutate(
     # qq1011_age = dyears(q1011_age),
     # qq1011_age = as.period(qq1011_age),
     age_act = q1011_age + time_between_BL_covid,
     #age_act = year(age_act),
-    age_continuous = case_when(
-      ID_ECS %in% ID_NAs_sub ~ age_act,
-      TRUE ~ covid_time
-    ),
+    age_continuous = case_when(ID_ECS %in% ID_NAs_sub ~ age_act,
+                               TRUE ~ covid_time),
     #
     # age_continuous = if_else(
-    #                     ID_ECS %in% ID_NAs_sub, age_act, 
+    #                     ID_ECS %in% ID_NAs_sub, age_act,
     #                     covid_time
     #                     ),
-    age_continuous = floor(age_continuous), #we round up to the integer age of
-    #the person (when there is one month left until a birthday, it's not said 
+    age_continuous = floor(age_continuous),
+    #we round up to the integer age of
+    #the person (when there is one month left until a birthday, it's not said
     #how old we will be, but how old I am)
     age_cat = case_when(
-           age_continuous < 18 ~ 1,
-           age_continuous >= 18 & age_continuous <= 44 ~ 2,
-           age_continuous >= 45 & age_continuous <= 64 ~ 3,
-           age_continuous >= 65 & age_continuous <= 94 ~ 4, 
-           age_continuous >= 95 ~ 5
-         ), 
-         age_cat = factor(x = age_cat,
-                          levels = c("1", "2", "3", "4", "5",
-                                     MISSING_DESIGN,
-                                     REFUSED_ANSWER,
-                                     NON_RESPONSE),
-                          labels = c("below 18 years", 
-                                    "18-44",
-                                    "45-64",
-                                    "65-94",
-                                    "95 years or older",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
-
+      age_continuous < 18 ~ 1,
+      age_continuous >= 18 & age_continuous <= 44 ~ 2,
+      age_continuous >= 45 & age_continuous <= 64 ~ 3,
+      age_continuous >= 65 & age_continuous <= 94 ~ 4,
+      age_continuous >= 95 ~ 5
+    ),
+    age_cat = factor(
+      x = age_cat,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "below 18 years",
+        "18-44",
+        "45-64",
+        "65-94",
+        "95 years or older",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
 
 ### Checking new variable
 
 ```{r}
-data_COVID_test %>% 
+data_COVID_test %>%
   freq_table(age_cat)
 
-data_COVID_test %>% 
-  select(age_continuous, age_cat, q1011_age, q1010_birth_date) 
+data_COVID_test %>%
+  select(age_continuous, age_cat, q1011_age, q1010_birth_date)
 #%>% View()
 
-data_COVID_test %>% 
-  filter(ID_ECS %in% ID_NAs_sub) %>% 
-  select(ID_ECS, q1010_birth_date, q0006_date, FECHAFIN, q1011_age, q1010_year, age_continuous, age_cat)
-
-#FIXME: NAs issue
+data_COVID_test %>%
+  filter(ID_ECS %in% ID_NAs_sub) %>%
+  select(
+    ID_ECS,
+    q1010_birth_date,
+    q0006_date,
+    FECHAFIN,
+    q1011_age,
+    q1010_year,
+    age_continuous,
+    age_cat
+  )
 ```
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
-              select(!c(q1010_birth_date, q1011_age, q1010_year, q1010_month, q1010_day, q0006_date))
+  select(!c(
+    q1010_birth_date,
+    q1011_age,
+    q1010_year,
+    q1010_month,
+    q1010_day,
+    q0006_date
+  ))
 ```
-
-
-
 
 ## 3.6. Employment status
 
@@ -2869,16 +2911,40 @@ data_COVID_test <-
 data_COVID_test |> freq_table(employment_st)
 ```
 
-
 ## 3.7. Contract
 
 ```{r}
 data_COVID_test <-
-  data_COVID_test %>% 
+  data_COVID_test %>%
+  mutate(contract = MISSING_DESIGN,
+         contract = factor(
+           x = contract,
+           levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+           labels = c(
+             "permanent",
+             "temporary",
+             "self-employed",
+             "other",
+             MISSING_DESIGN,
+             REFUSED_ANSWER,
+             NON_RESPONSE
+           )
+         ))
+```
+
+```{r}
+data_COVID_test |> freq_table(contract)
+```
+
+## 3.8. Employment type
+
+```{r}
+data_COVID_test <-
+  data_COVID_test %>%
   mutate(
-    contract = MISSING_DESIGN,
-    contract = factor(
-      x = contract,
+    employment_ty = MISSING_DESIGN,
+    employment_ty = factor(
+      x = employment_ty,
       levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
       labels = c(
         "permanent",
@@ -2888,46 +2954,20 @@ data_COVID_test <-
         MISSING_DESIGN,
         REFUSED_ANSWER,
         NON_RESPONSE
-  )
+      )
     )
   )
-```
-
-```{r}
-data_COVID_test |> freq_table(contract)
-```
-
-
-## 3.8. Employment type
-
-```{r}
-data_COVID_test <-
-  data_COVID_test %>% 
-  mutate(
-    employment_ty = MISSING_DESIGN,
-    employment_ty = factor(x = employment_ty,
-                          levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("permanent",
-                                    "temporary",
-                                    "self-employed",
-                                    "other",
-                                    MISSING_DESIGN,
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE
- )))
-    
 ```
 
 ```{r}
 data_COVID_test |> freq_table(employment_ty)
 ```
 
-
 ## 3.9. HC worker
 
 Same values as Wave 1.
-```{r}
 
+```{r}
 data_COVID_test <- data_COVID_test %>%
   left_join(data_2019_test %>% 
               select(ID_ECS, hc_worker),
@@ -2940,7 +2980,7 @@ data_COVID_test |> freq_table(hc_worker)
 
 ## 3.10. Profession
 
-Same values as Wave 1 (as it is something thar is stable in time).
+Same values as Wave 1 (as it is something that is stable in time).
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
@@ -2959,7 +2999,7 @@ Same values as Wave 1.
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
-  left_join(data_2019_test %>% 
+  left_join(data_2019_test %>%
               select(ID_ECS, education),
             by = "ID_ECS")
 ```
@@ -2968,47 +3008,62 @@ data_COVID_test <- data_COVID_test %>%
 data_COVID_test |> freq_table(education)
 ```
 
-
 ## 3.12. Relationship status
 
 ```{r}
 data_COVID_test <-
-  data_COVID_test %>% 
+  data_COVID_test %>%
   mutate(
     relationship = MISSING_DESIGN,
-     relationship = factor(x = relationship,
-                          levels = c("1", "2", "3", "4", "5", "6", "7", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("single", 
-                                    "married/in a civil union",
-                                    "in a relationship and living together",
-                                    "in a relationship and living apart",
-                                    "divorced/separated",
-                                    "widowed",
-                                    "other",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+    relationship = factor(
+      x = relationship,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "single",
+        "married/in a civil union",
+        "in a relationship and living together",
+        "in a relationship and living apart",
+        "divorced/separated",
+        "widowed",
+        "other",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
 
 ```{r}
 data_COVID_test |> freq_table(relationship)
 ```
 
-
 ## 3.13. Children
 
 ```{r}
 data_COVID_test <-
-  data_COVID_test %>% 
-  mutate(
-    children = MISSING_DESIGN,
-    children = factor(x = children,
-                          levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("yes", 
-                                    "no",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+  data_COVID_test %>%
+  mutate(children = MISSING_DESIGN,
+         children = factor(
+           x = children,
+           levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+           labels = c("yes",
+                      "no",
+                      MISSING_DESIGN,
+                      REFUSED_ANSWER,
+                      NON_RESPONSE)
+         ))
 ```
 
 ```{r}
@@ -3018,22 +3073,18 @@ data_COVID_test |> freq_table(children)
 ## 3.14. Children household
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
-
 data_COVID_test <-
-  data_COVID_test %>% 
+  data_COVID_test %>%
   mutate(
     children_hh = MISSING_DESIGN,
     children_hh = factor(
       x = children_hh,
       levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "yes",
-        "no",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      labels = c("yes",
+                 "no",
+                 MISSING_DESIGN,
+                 REFUSED_ANSWER,
+                 NON_RESPONSE)
     )
   )
 ```
@@ -3045,28 +3096,29 @@ data_COVID_test |> freq_table(children_hh)
 ## 3.15. Number of children
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
-
 data_COVID_test <-
-  data_COVID_test %>% 
+  data_COVID_test %>%
   mutate(
     nofchildren = MISSING_DESIGN,
-    nofchildren = factor(x = nofchildren,
-                          levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("no children", 
-                                    "one child",
-                                    "two or three",
-                                    "four or more",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)))
+    nofchildren = factor(
+      x = nofchildren,
+      levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "no children",
+        "one child",
+        "two or three",
+        "four or more",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+  )
 ```
-
 
 ```{r}
 data_COVID_test |> freq_table(nofchildren)
 ```
-
 
 ## 3.16. Living alone
 
@@ -3082,18 +3134,17 @@ that serves as link.
 
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
-                            livingalone %>% select(ID_ECS, living_alone), 
-                            by = "ID_ECS")
+                             livingalone %>% select(ID_ECS, living_alone),
+                             by = "ID_ECS")
 ```
 
 ```{r}
-data_COVID_test <- data_COVID_test %>% 
+data_COVID_test <- data_COVID_test %>%
   mutate(
     living_alone = as.character(living_alone),
     living_alone = recode(living_alone,
-      "0" = "2",
-      "1" = "1"
-    ),
+                          "0" = "2",
+                          "1" = "1"),
     living_alone = as.integer(living_alone),
     living_alone = coalesce(living_alone, NON_RESPONSE),
     
@@ -3124,67 +3175,89 @@ data_COVID_test %>%
 data_COVID_test |> freq_table(living_alone)
 ```
 
-
-
 ## 3.17. Household size
 
 ```{r}
 data_COVID_test <-
-  data_COVID_test %>% 
-  mutate(
-    hh_size = MISSING_DESIGN,
-  hh_size = factor(x = hh_size,
-                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("one person", 
-                                    "two persons", 
-                                    "three or four persons", 
-                                    "five or more persons", 
-                                    "live in an institution", 
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE))
-  )
-
+  data_COVID_test %>%
+  mutate(hh_size = MISSING_DESIGN,
+         hh_size = factor(
+           x = hh_size,
+           levels = c(
+             "1",
+             "2",
+             "3",
+             "4",
+             "5",
+             MISSING_DESIGN,
+             REFUSED_ANSWER,
+             NON_RESPONSE
+           ),
+           labels = c(
+             "one person",
+             "two persons",
+             "three or four persons",
+             "five or more persons",
+             "live in an institution",
+             MISSING_DESIGN,
+             REFUSED_ANSWER,
+             NON_RESPONSE
+           )
+         ))
 ```
 
 ```{r}
 data_COVID_test |> freq_table(hh_size)
 ```
 
-
-
 ## 3.18. Quartiles & quintiles
 
 ```{r}
-#TODO: Establish the same value or that was not evaluated in Wave 2.
 data_COVID_test <-
-  data_COVID_test %>% 
+  data_COVID_test %>%
   mutate(
     hhquartile = MISSING_DESIGN,
     hhquintile = MISSING_DESIGN,
     
     
-    hhquartile = factor(x = hhquartile,
-                          levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("first quartile", 
-                                    "second quartile", 
-                                    "third quartile", 
-                                    "fourth quartile", 
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE)),
-  
-  hhquintile = factor(x = hhquintile,
-                          levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-                          labels = c("first quintile", 
-                                    "second quintile", 
-                                    "third quintile", 
-                                    "fourth quintile",
-                                    "fifth quintile",
-                                    MISSING_DESIGN, 
-                                    REFUSED_ANSWER,
-                                    NON_RESPONSE))
-  
+    hhquartile = factor(
+      x = hhquartile,
+      levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
+      labels = c(
+        "first quartile",
+        "second quartile",
+        "third quartile",
+        "fourth quartile",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    ),
+    
+    hhquintile = factor(
+      x = hhquintile,
+      levels = c(
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      ),
+      labels = c(
+        "first quintile",
+        "second quintile",
+        "third quintile",
+        "fourth quintile",
+        "fifth quintile",
+        MISSING_DESIGN,
+        REFUSED_ANSWER,
+        NON_RESPONSE
+      )
+    )
+    
   )
 ```
 
@@ -3193,12 +3266,12 @@ data_COVID_test |> freq_table(hhquartile)
 data_COVID_test |> freq_table(hhquintile)
 ```
 
-
 ## Stressors
 
-(Separated raw items) 
+(Separated raw items)
 
 ### Sleep problems
+
 ```{r}
 data_COVID_test %>%  
   select(num_range("SUE", 2:3)) %>% 
@@ -3243,7 +3316,6 @@ data_COVID_test %>%
 rm(economic, livingalone, occ_unique)
 ```
 
-
 ### COVID
 
 Five variables: `infected`, `severity_raw`, `rel_isolated`, `rel_deceased`,
@@ -3260,11 +3332,18 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            covidcc %>% select(ID_ECS, infected,
-                                               severity_raw, rel_isolated,
-                                               rel_deceased, rel_concerned), 
-                            by = "ID_ECS")
+data_COVID_test <- left_join(
+  data_COVID_test,
+  covidcc %>% select(
+    ID_ECS,
+    infected,
+    severity_raw,
+    rel_isolated,
+    rel_deceased,
+    rel_concerned
+  ),
+  by = "ID_ECS"
+)
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3279,7 +3358,6 @@ data_COVID_test %>%
 rm(covidcc)
 ```
 
-
 ### Noise
 
 ```{r}
@@ -3288,7 +3366,7 @@ data_COVID_test %>%
   colnames()
 ```
 
-## BRS (resilience scale) 
+## BRS (resilience scale)
 
 We have to import this outcome (already created) from OneDrive.
 
@@ -3317,7 +3395,6 @@ data_COVID_test %>%
 ```{r}
 rm(brsw2)
 ```
-
 
 ## Social support (OSLO-3) & loneliness
 
@@ -3366,27 +3443,27 @@ data_COVID_test <- left_join(data_COVID_test,
 ```
 
 ### Change in personal relationships (post-lockdown)
-Whether the participant declares their personal relationships have been
-affected by the lockdown.
-SOLO3 recoded as -1, 0, or 1, to indicate whether personal relationships are 
-perceived to heve worsened, stayed unchanged, or improved, respectively.
+
+Whether the participant declares their personal relationships have been affected
+by the lockdown. SOLO3 recoded as -1, 0, or 1, to indicate whether personal
+relationships are perceived to heve worsened, stayed unchanged, or improved,
+respectively.
 
 ```{r}
-data_COVID_test$SOLO3
-#data_COVID_test |> select(ID_ECS, SOLO3)
+data_COVID_test |> select(ID_ECS, SOLO3)
 ```
 
 ### Time alone
+
 No further processing from variable SOLO4.
 
 ```{r}
-#data_COVID_test |> select(SOLO4)
+data_COVID_test |> select(ID_ECS, SOLO4)
 ```
 
 ```{r}
 rm(socialint)
 ```
-
 
 ## Social participation
 
