@@ -57,8 +57,6 @@ library(ecs.data)
 library(utf8)
 library(digest)
 library(forcats)
-
-#TODO: Add labels to all variables
 ```
 
 ## Constants on variable harmonization
