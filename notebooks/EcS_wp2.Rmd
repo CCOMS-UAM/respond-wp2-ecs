@@ -3521,7 +3521,6 @@ data_COVID_test %>%
 rm(depression)
 ```
 
-
 ## Suicidality
 
 We have to import this outcome (already created) from OneDrive.
@@ -3596,17 +3595,19 @@ data_COVID_test %>%
   colnames()
 ```
 
-##3.28. Recoding NAs
+## 3.28. Recoding NAs
 
-I will first get a description of missing values
-100% NAs:
+I will first get a description of missing values 100% NAs:
+
 ```{r eval = FALSE}
 data_COVID_test %>% 
   miss_var_summary() %>% 
   filter(pct_miss == 100) %>% 
   data.frame
 ```
+
 NAs, in general
+
 ```{r}
 data_COVID_test %>% 
   miss_var_summary() %>% 
@@ -3626,73 +3627,62 @@ data_COVID_test %>%
 
 ```
 
-There are 54 NAs for proxy respondents in some items. We have to recode it
-as -991 (missing by design)
+There are 54 NAs for proxy respondents in some items. We have to recode it as
+-991 (missing by design)
 
 ```{r}
-data_COVID_test <- data_COVID_test %>% 
-  mutate(
-    across(
-      .cols = where(is.numeric),
-      .fns = ~if_else(TIPO_ENT == 2 | is.na(TIPO_ENT), #Alternativa == 2,
+data_COVID_test <- data_COVID_test %>%
+  mutate(across(
+    .cols = where(is.numeric),
+    .fns = ~ if_else(TIPO_ENT == 2 |
+                       is.na(TIPO_ENT), #Alternativa == 2,
                      replace_na(., MISSING_DESIGN),
                      .)
-    ) 
-  )
-
+  ))
 ```
 
 ```{r}
-data_COVID_test <- data_COVID_test %>% 
-  mutate(
-    age_cat = if_else(
-      (TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN),
-      forcats::fct_na_value_to_level(age_cat, level = "-991"),
-      age_cat
-      )
-  )
+data_COVID_test <- data_COVID_test %>%
+  mutate(age_cat = if_else(
+    (TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN),
+    forcats::fct_na_value_to_level(age_cat, level = "-991"),
+    age_cat
+  ))
 ```
 
-
 ```{r}
-data_COVID_test %>% 
-  filter(TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN) %>% 
-  miss_var_summary() %>% 
+data_COVID_test %>%
+  filter(TIPO_ENT == 2 | TIPO_ENT == MISSING_DESIGN) %>%
+  miss_var_summary() %>%
   data.frame #variables that have 95% of missing with this filter are character variables that we don't use here
 ```
 
-Remaining NAs are NON_RESPONSE. 
+Remaining NAs are NON_RESPONSE.
 
 ```{r}
-data_COVID_test <- data_COVID_test %>% 
-  mutate(
-    across(
-      where(is.numeric),
-      coalesce,
-      NON_RESPONSE
-    )
-  )
+data_COVID_test <- data_COVID_test %>%
+  mutate(across(where(is.numeric),
+                coalesce,
+                NON_RESPONSE))
 ```
 
 ```{r}
-data_COVID_test %>% 
-  miss_var_summary() %>% 
+data_COVID_test %>%
+  miss_var_summary() %>%
   data.frame #It works
 ```
 
 We'll recategorize '888' (don't know) as missing (default)
 
 ```{r}
-data_COVID_test <- data_COVID_test %>% 
-  mutate(
-    across(
-      where(is.numeric),
-      recode,
-      `9` = NON_RESPONSE,
-      `888` = NON_RESPONSE,
-      `999` = REFUSED_ANSWER
-    )
-  )
+data_COVID_test <- data_COVID_test %>%
+  mutate(across(
+    where(is.numeric),
+    recode,
+    `9` = NON_RESPONSE,
+    `888` = NON_RESPONSE,
+    `999` = REFUSED_ANSWER
+  ))
 ```
 
 ```{r}
@@ -3702,9 +3692,8 @@ data_COVID_test %>%
   data.frame #It works
 ```
 
-
-
 # Step 4. Combination of both datasets
+
 ```{r}
 data_COVID_test <- left_join(data_COVID_test,
           data_2019_test |> select(ID_ECS, province),
@@ -3719,30 +3708,34 @@ df <- bind_rows(data_2019_test, data_COVID_test)
 df <- df %>% select(ID_ECS, wave, everything()) %>% arrange(ID_ECS)
 ```
 
-Now a bunch of NAs appear for all the baseline variables that were not measured 
-in wave 2. This will have to be changed later with the full database (they 
-have to be "MISSING_DESIGN").
-
+Now a bunch of NAs appear for all the baseline variables that were not measured
+in wave 2. This will have to be changed later with the full database (they have
+to be "MISSING_DESIGN").
 
 # Step 5. Adding new variables
 
 ## Lockdown stringency index
 
-The file has got data from several countries. I only want to import the Spanish data.
+The file has got data from several countries. I only want to import the Spanish
+data.
 
 ```{r}
 stringency_index <- 
   readr::read_csv("https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker/master/data/OxCGRT_nat_latest.csv") %>% 
   filter(CountryCode == "ESP")
 ```
+
 There is only NAs on this dataset?
+
 ```{r}
 stringency_index <- 
   stringency_index %>% 
   mutate(date = ymd(Date)) %>%  
   select(!Date)
 ```
+
 we use 'date' as key for joining both datasets:
+
 ```{r}
 df <- df %>% mutate(
   date = FECHAFIN)
@@ -3752,13 +3745,12 @@ df <- df %>% mutate(
 df <- left_join(df,
                 stringency_index,
                 by = "date")
-#rm(stringency_index)
 ```
 
-Now that these values are included in the complete dataset, it is necessary to 
-modify the missing values. If we are at wave == 1, the missing values are 
-MISSING_DESIGN (since these are policy indicators that were taken with respect 
-to the COVID-19 pandemic). If we are in wave == 2, the missing values are 
+Now that these values are included in the complete dataset, it is necessary to
+modify the missing values. If we are at wave == 1, the missing values are
+MISSING_DESIGN (since these are policy indicators that were taken with respect
+to the COVID-19 pandemic). If we are in wave == 2, the missing values are
 NON_RESPONSE.
 
 ```{r}
@@ -3829,44 +3821,45 @@ df <- df %>% mutate(
   
 )
 #Logical to integer variables
-df <- df %>% mutate(
-  across(
-    .cols = where(is.logical),
-    .fns = ~as.integer(.)
-  )
-)
+df <- df %>% mutate(across(.cols = where(is.logical),
+                           .fns = ~ as.integer(.)))
 
 
-df <- df %>% mutate(
-  across(
-    .cols = c(RegionName, RegionCode, `C1M_School closing`:`V2A_Vaccine Availability (summary)`, `V2D_Medically/ clinically vulnerable (Non-elderly)`:`ConfirmedDeaths`, `PopulationVaccinated`:EconomicSupportIndex_ForDisplay),
-    .fns = ~if_else(wave == 1,
-                     replace_na(., MISSING_DESIGN),
-                     .)
-  )
-)
+df <- df %>% mutate(across(
+  .cols = c(
+    RegionName,
+    RegionCode,
+    `C1M_School closing`:`V2A_Vaccine Availability (summary)`,
+    `V2D_Medically/ clinically vulnerable (Non-elderly)`:`ConfirmedDeaths`,
+    `PopulationVaccinated`:EconomicSupportIndex_ForDisplay
+  ),
+  .fns = ~ if_else(wave == 1,
+                   replace_na(., MISSING_DESIGN),
+                   .)
+))
 
-df <- df %>% mutate(
-  across(
-    .cols = c(RegionName, RegionCode, `C1M_School closing`:`V2A_Vaccine Availability (summary)`, `V2D_Medically/ clinically vulnerable (Non-elderly)`:`ConfirmedDeaths`, `PopulationVaccinated`:EconomicSupportIndex_ForDisplay),
-    .fns = ~if_else(wave == 2,
-                     replace_na(., NON_RESPONSE),
-                     .)
-  )
-)
+df <- df %>% mutate(across(
+  .cols = c(
+    RegionName,
+    RegionCode,
+    `C1M_School closing`:`V2A_Vaccine Availability (summary)`,
+    `V2D_Medically/ clinically vulnerable (Non-elderly)`:`ConfirmedDeaths`,
+    `PopulationVaccinated`:EconomicSupportIndex_ForDisplay
+  ),
+  .fns = ~ if_else(wave == 2,
+                   replace_na(., NON_RESPONSE),
+                   .)
+))
 
 df %>% select(ID_ECS, wave, CountryName:EconomicSupportIndex_ForDisplay)
 ```
 
+## Google Mobility
 
-
-## Google  Mobility
-
-We download the .zip file of the Google regional reports 
-(https://www.google.com/covid19/mobility/). Our waves are from the year 
-2019 and 2020, so we have to save the datasets for Spain in those two cycles.
-As it is the change of mobility by COVID, there is only
-information relative to 2020.
+We download the .zip file of the Google regional reports
+(<https://www.google.com/covid19/mobility/>). Our waves are from the year 2019
+and 2020, so we have to save the datasets for Spain in those two cycles. As it
+is the change of mobility by COVID, there is only information relative to 2020.
 
 ```{r}
 mobility <- read.csv("./dat/2020_ES_Region_Mobility_Report.csv", stringsAsFactors = TRUE)
@@ -3881,15 +3874,17 @@ mobility %>%
   table() # Province
 ```
 
-In EcS we only have data from Madrid and Barcelona. This city value is coded in the original datasets as "origin".
+In EcS we only have data from Madrid and Barcelona. This city value is coded in
+the original datasets as "origin".
 
 ```{r}
 mobility <- mobility %>% 
   filter(sub_region_2 %in% c("Barcelona") | sub_region_1 %in% c("Community of Madrid") )
 ```
 
-
-In addition, the values of origin and the identifiers of the CCAA and provinces do not match, so we are going to create a new variable in the final dataset and in the object 'mobility' to link these two tables.
+In addition, the values of origin and the identifiers of the CCAA and provinces
+do not match, so we are going to create a new variable in the final dataset and
+in the object 'mobility' to link these two tables.
 
 ```{r}
 mobility <- mobility %>% 
@@ -3911,12 +3906,10 @@ mobility %>%
   data.frame
 ```
 
-
 ```{r}
 mobility <- mobility %>%  
   mutate(date = as.Date(date))
 ```
-
 
 ```{r}
 df <- left_join(df,
@@ -3925,89 +3918,88 @@ df <- left_join(df,
 ```
 
 Checking everything works just fine:
+
 ```{r}
 df |> select(ID_ECS, wave, date, province, country_region_code:residential_percent_change_from_baseline)
 ```
 
-We have to correct missing values. There are two types of missing values. 
-For cases on wave == 1, they must be "MISSING_DESIGN" (as they not apply on 
-baseline cases)
-For cases on wave == 2, they must be "NON_RESPONSE" (as they apply in wCOVID,
-but there is no response for them).
+We have to correct missing values. There are two types of missing values. For
+cases on wave == 1, they must be "MISSING_DESIGN" (as they not apply on baseline
+cases) For cases on wave == 2, they must be "NON_RESPONSE" (as they apply in
+wCOVID, but there is no response for them).
 
-Also, we have to keep in mind that variables from mobility dataset have different
-structure. Variables `country_region_code:sub_region_2` and `iso_3166_2_code` and
-`place_id` are factors, while 
+Also, we have to keep in mind that variables from mobility dataset have
+different structure. Variables `country_region_code:sub_region_2` and
+`iso_3166_2_code` and `place_id` are factors, while
 `retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline`
-are integers. `metro_area` and `census_fips_code` are LOGI variables. We must apply
-different strategies to treat NAs values. 
+are integers. `metro_area` and `census_fips_code` are LOGI variables. We must
+apply different strategies to treat NAs values.
 
 ```{r}
 #Integer variables
-
 df <- df %>%
   mutate(
     census_fips_code = as.integer(census_fips_code),
     metro_area = as.integer(metro_area)
   )
 
-df <- df %>% 
-  mutate(
-    across(
-      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline, census_fips_code, metro_area),
-      .fns = ~if_else(wave == 1,
+df <- df %>%
+  mutate(across(
+    .cols = c(
+      retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline,
+      census_fips_code,
+      metro_area
+    ),
+    .fns = ~ if_else(wave == 1,
                      replace_na(., MISSING_DESIGN),
                      .)
-    ) 
-  )
+  ))
 
-df <- df %>% 
-  mutate(
-    across(
-      .cols = c(retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline, census_fips_code, metro_area),
-      .fns = ~if_else(wave == 2,
+df <- df %>%
+  mutate(across(
+    .cols = c(
+      retail_and_recreation_percent_change_from_baseline:residential_percent_change_from_baseline,
+      census_fips_code,
+      metro_area
+    ),
+    .fns = ~ if_else(wave == 2,
                      replace_na(., NON_RESPONSE),
                      .)
-    )
-    ) 
-
-
-
+  )) 
 ```
 
 ```{r}
 #Factor variables 
-#
-df <- df %>% 
-  mutate(
-    across(
-      .cols = c(country_region_code:sub_region_2, iso_3166_2_code, place_id),
-      .fns = ~if_else(wave == 1,
-                      forcats::fct_na_value_to_level(., level = "-991"),
-                      .) #missing design
-    )
-  )
 
-df <- df %>% 
-  mutate(
-    across(
-      .cols = c(country_region_code:sub_region_2, iso_3166_2_code, place_id),
-      .fns = ~if_else(wave == 2,
-                      forcats::fct_na_value_to_level(., level = "-993"),
-                      .) #non response
-    )
-  )
+df <- df %>%
+  mutate(across(
+    .cols = c(country_region_code:sub_region_2, iso_3166_2_code, place_id),
+    .fns = ~ if_else(wave == 1,
+                     forcats::fct_na_value_to_level(., level = "-991"),
+                     .) #missing design
+  ))
 
+df <- df %>%
+  mutate(across(
+    .cols = c(country_region_code:sub_region_2, iso_3166_2_code, place_id),
+    .fns = ~ if_else(wave == 2,
+                     forcats::fct_na_value_to_level(., level = "-993"),
+                     .) #non response
+  ))
 ```
 
 ## NUTS
-We import the datase obtained in OBIBA/ NUTS2021_nomenclature of territorial units
-for statistics.
+
+We import the dataset obtained in OBIBA/ NUTS2021_nomenclature of territorial
+units for statistics.
 
 We have to import separately:
-- NUTS provinces (NUTS 1 to 3).
-- NUTS Urban - Rural
-- NUTS Urban-rural remoteness
+
+-   \- NUTS provinces (NUTS 1 to 3).
+
+-   \- NUTS Urban - Rural
+
+-   \- NUTS Urban-rural remoteness
 
 ```{r}
 nuts_provinces <- read_excel(
@@ -4057,15 +4049,14 @@ nuts_urbanruralremoteness <- read_excel(
 ```
 
 ```{r}
-nuts_provinces <- 
-  nuts_provinces %>% 
+nuts_provinces <-
+  nuts_provinces %>%
   mutate(NUTS3 = str_replace_all("NUTS level 3",
-                                   "'",
-                                   ""),
+                                 "'",
+                                 ""),
          CODE  = str_replace_all("CODE 2021",
-                                   "'",
-                                   "")
-  )
+                                 "'",
+                                 ""))
 ```
 
 ```{r collapse=TRUE}
@@ -4075,36 +4066,39 @@ str(nuts_urbanruralremoteness)
 ```
 
 ```{r}
-nuts_provinces  <- 
-  nuts_provinces %>% 
-      rename(nuts_id = `Code 2021` ,
-             province = `NUTS level 3`)
+nuts_provinces  <-
+  nuts_provinces %>%
+  rename(nuts_id = `Code 2021` ,
+         province = `NUTS level 3`)
 
-nuts_urbanrural <- 
-  nuts_urbanrural %>% 
-  rename(nuts_id = NUTS_ID,
-         nuts_urbanrural_category = `URBAN-RURAL CATEGORY`,
-         nuts_urbanrural_label = `URBAN-RURAL LABEL`)
+nuts_urbanrural <-
+  nuts_urbanrural %>%
+  rename(
+    nuts_id = NUTS_ID,
+    nuts_urbanrural_category = `URBAN-RURAL CATEGORY`,
+    nuts_urbanrural_label = `URBAN-RURAL LABEL`
+  )
 
-nuts_urbanruralremoteness <- 
-  nuts_urbanruralremoteness %>% 
-  rename(nuts_id = `NUTS ID`,
-         nuts_remoteness_category = `CATEGORY CODE`,
-         nuts_remoteness_label = `CATEGORY LABEL`)
+nuts_urbanruralremoteness <-
+  nuts_urbanruralremoteness %>%
+  rename(
+    nuts_id = `NUTS ID`,
+    nuts_remoteness_category = `CATEGORY CODE`,
+    nuts_remoteness_label = `CATEGORY LABEL`
+  )
 ```
 
 Succesive merging
 
 ```{r}
-nuts_ds <- 
+nuts_ds <-
   left_join(nuts_provinces,
-          nuts_urbanrural,
-          by = "nuts_id") %>% 
+            nuts_urbanrural,
+            by = "nuts_id") %>%
   left_join(.,
             nuts_urbanruralremoteness,
             by = "nuts_id")
 ```
-
 
 ```{r}
 rm(nuts_provinces,
@@ -4112,41 +4106,39 @@ rm(nuts_provinces,
    nuts_urbanruralremoteness)
 ```
 
-
 ```{r}
-nuts_ds <- nuts_ds %>% 
+nuts_ds <- nuts_ds %>%
   filter(province == "Madrid" | province == "Barcelona")
 
 nuts_ds <-
-  nuts_ds %>% 
+  nuts_ds %>%
   mutate(province = case_when(province == "Madrid" ~ "Community of Madrid",
                               TRUE ~ province))
-nuts_ds %>% 
+nuts_ds %>%
   filter(province == "Community of Madrid")
   
 ```
 
 ```{r}
-df <- 
+df <-
   left_join(df,
             nuts_ds,
             by = "province")
 
 df %>% select(colnames(nuts_ds))
 
-df <- df %>% 
+df <- df %>%
   mutate(
     Country = "Spain",
     `NUTS level 1` = coalesce(`NUTS level 1`, "-991",
-    `NUTS level 2` = coalesce(`NUTS level 2`, "-991")
-  )
+                              `NUTS level 2` = coalesce(`NUTS level 2`, "-991"))
   )
 
-rm(nuts_ds) 
+rm(nuts_ds)
 rm(mobility)
 ```
 
-##UNSD Methodology
+## UNSD Methodology
 
 ```{r}
 UNSDcodes <- read_excel("./dat/UNSD — Methodology.xlsx")
@@ -4163,7 +4155,6 @@ df <- df |>
 )
 ```
 
-
 ```{r}
 df <- left_join(df,
                 UNSDcodes,
@@ -4173,58 +4164,55 @@ df <- left_join(df,
 ```{r}
 df %>% select(colnames(UNSDcodes))
 
-df <- df %>% mutate(
-  across(
-    .cols = c(Intermediate_Region_Name, LDC, LLDC, SIDS, `NUTS level 2`),
-    .fns = ~as.integer(.)
-  )
-)
+df <- df %>% mutate(across(
+  .cols = c(Intermediate_Region_Name, LDC, LLDC, SIDS, `NUTS level 2`),
+  .fns = ~ as.integer(.)
+))
 
-df <- df %>% mutate(
-  across(
-    .cols = c(Intermediate_Region_Code, Intermediate_Region_Name, LDC:SIDS, `NUTS level 2`),
-    .fns = ~coalesce(., MISSING_DESIGN)
-  ))
-
+df <- df %>% mutate(across(
+  .cols = c(
+    Intermediate_Region_Code,
+    Intermediate_Region_Name,
+    LDC:SIDS,
+    `NUTS level 2`
+  ),
+  .fns = ~ coalesce(., MISSING_DESIGN)
+))
 ```
-
 
 ```{r}
 rm(stringency_index, UNSDcodes, unique_ids, bl_time, covid_time, ID_NAs, ID_NAs_sub, time_between_BL_covid)
 ```
 
-
 # Step 6. Hashed IDs
+
 The WP2 handbook for harmonisation reads that a unique identifier (random
-integer) shoudl be assigned to each participant. We'll use `digest` function
-and package.
+integer) should be assigned to each participant. We'll use `digest` function and
+package.
 
 ```{r}
-df <- df %>% group_by(ID_ECS) |> 
-  mutate( 
-    hashed_id = digest(ID_ECS, algo = "md5")) %>% 
+df <- df %>% group_by(ID_ECS) |>
+  mutate(hashed_id = digest(ID_ECS, algo = "md5")) %>%
   select(hashed_id, everything())
-
-
-#ungroup() |> rowwise() %>% 
 ```
-
 
 # Step 7. Selecting necessary variables
 
 Firstly, we import the Edad con Salud variable list for RESPOND.
-```{r}
-ecs_variablelist <- read_excel("./dat/variable_list-EcS_v3.xlsx", 
-    sheet = "EcS-table format", col_types = c("text", 
-       "skip", "numeric", "text", "skip", 
-       "skip", "skip"))
-```
 
+```{r}
+ecs_variablelist <- read_excel(
+  "./dat/variable_list-EcS_v3.xlsx",
+  sheet = "EcS-table format",
+  col_types = c("text",
+                "skip", "numeric", "text", "skip",
+                "skip", "skip")
+)
+```
 
 ```{r}
 ecs_varlist <- ecs_variablelist %>% select(variable) %>% pull()
 ```
-
 
 ```{r}
 df <- df %>% ungroup() |> select(hashed_id,
@@ -4252,97 +4240,73 @@ df <- df %>% ungroup() |> select(hashed_id,
                     CountryCode:nuts_remoteness_label)
 ```
 
-
-#Step 8. Setting variable labels
-
-#Step 9. Checking that there are no more NAs
+# Step 8. Checking that there are no more NAs
 
 ```{r}
 #"true" NAs
-df <- df %>% mutate(
-  across(
-    .cols = where(is.numeric) & any_of(colnames(data_2019_test)), 
-    .fns = ~if_else(wave == 2, 
+df <- df %>% mutate(across(
+  .cols = where(is.numeric) & any_of(colnames(data_2019_test)),
+  .fns = ~ if_else(wave == 2,
                    coalesce(., MISSING_DESIGN),
                    .)
-  )
-)
+))
 
-df <- df %>% mutate(
-  across(
-    .cols = where(is.numeric) & any_of(colnames(data_2019_test)), 
-    .fns = ~if_else(wave == 1, 
+df <- df %>% mutate(across(
+  .cols = where(is.numeric) & any_of(colnames(data_2019_test)),
+  .fns = ~ if_else(wave == 1,
                    coalesce(., NON_RESPONSE),
                    .)
-  )
-)
+))
 
-df <- df %>% mutate(
-  across(
-    .cols = where(is.numeric) & any_of(colnames(data_COVID_test)), 
-    .fns = ~if_else(wave == 1, 
+df <- df %>% mutate(across(
+  .cols = where(is.numeric) & any_of(colnames(data_COVID_test)),
+  .fns = ~ if_else(wave == 1,
                    coalesce(., MISSING_DESIGN),
                    .)
-  )
-)
+))
 
-df <- df %>% mutate(
-  across(
-    .cols = where(is.numeric) & any_of(colnames(data_COVID_test)), 
-    .fns = ~if_else(wave == 2, 
+df <- df %>% mutate(across(
+  .cols = where(is.numeric) & any_of(colnames(data_COVID_test)),
+  .fns = ~ if_else(wave == 2,
                    coalesce(., NON_RESPONSE),
                    .)
-  )
-)
+))
 ```
 
 ```{r}
 #Recoding 888 & 999
 
-df <- df %>% ungroup() %>% 
-  mutate(
-    across(
-      .cols = where(is.numeric),
-      .fns = ~na_if(., 888) #non_response
-    )
-  )
+df <- df %>% ungroup() %>%
+  mutate(across(.cols = where(is.numeric),
+                .fns = ~ na_if(., 888))) #non_response
 
-df <- df %>% ungroup() %>% 
-  mutate(
-    across(
-      .cols = where(is.numeric),
-      .fns = ~coalesce(., NON_RESPONSE)
-    )
-  )
+df <- df %>% ungroup() %>%
+  mutate(across(
+    .cols = where(is.numeric),
+    .fns = ~ coalesce(., NON_RESPONSE)
+  ))
 
-df <- df %>% ungroup() %>% 
-  mutate(
-    across(
-      .cols = where(is.numeric),
-      .fns = ~na_if(., 999) #refused_answer
-    )
-  )
+df <- df %>% ungroup() %>%
+  mutate(across(.cols = where(is.numeric),
+                .fns = ~ na_if(., 999))) #refused_answer
 
-df <- df %>% ungroup() %>% 
-  mutate(
-    across(
-      .cols = where(is.numeric),
-      .fns = ~coalesce(., REFUSED_ANSWER)
-    )
-  )
+df <- df %>% ungroup() %>%
+  mutate(across(
+    .cols = where(is.numeric),
+    .fns = ~ coalesce(., REFUSED_ANSWER)
+  ))
 ```
 
 ```{r}
-df %>% 
-  miss_var_summary() %>% 
+df %>%
+  miss_var_summary() %>%
   data.frame
 ```
 
-Eliminamos las labels de los valores perdidos originales, que han sido sustituidos
-por la familia de -991, -993
-```{r}
-#df %>% as_factor() %>% pull(q1510e_workday) %>% fct_drop(only = c("DK", "Refusal")) %>% levels()
+We remove the labels of the original missing values, which have been replaced by
+the family of -991, -993...:
 
+```{r}
 df <- df %>% mutate(
   across(
     .cols = c(q1510e_workday, 
@@ -4521,12 +4485,9 @@ df <- df %>% mutate(
                                               ))
   )
 )
-
-#as_factor() %>% pull(q1510e_workday) %>% fct_drop(only = c("DK", "Refusal"))
-
 ```
 
-# Stablishes "categories" for categorical variables in Opal
+# Step 9. Stablishes "categories" for categorical variables in Opal
 
 ```{r}
 df <- df %>% mutate(
@@ -4696,17 +4657,10 @@ df <- df %>% mutate(
 )
 ```
 
+# Step 10. Creates Annotations attribute for Opal
 
-
-# Creates Annotations
 ```{r}
-#TODO: PENDING!!!; not recognized in Opal
-df %>% select(q1510e_workday)
-
-attr(df$q1510e_workday, "label")
-
-labelled::var_label(df$q1510e_workday)
-
+#TODO: Not recognized in Opal
 
 df <- df %>% mutate(
   across(
@@ -4720,10 +4674,11 @@ pruebas <- attributes(df$q1510e_workday)
 print(pruebas)
 ```
 
-# Creates "Label" for Opal
+# Step 11. Creates "Label" attribute for Opal
 
 We extract the labels from Variable List RESPOND file. These are the ones that
-we want to appear in "label" section on Opal. 
+we want to appear in "label" section on Opal.
+
 ```{r}
 labels_codebook <- ecs_variablelist %>% 
   select(label, variable) %>%
@@ -4736,25 +4691,19 @@ labels_codebook <- ecs_variablelist %>%
 labelled::var_label(df) <- labels_codebook
 ```
 
-
 # Step 10. Save .RDS
 
 ```{r}
-saveRDS(df, "./dat/df_test.rds")
+saveRDS(df, "./dat/EcS_df.rds")
 
-test <- readRDS("./dat/df_test.rds")
+data_ECS <- readRDS("./dat/EcS_df.rds")
 ```
 
 ```{r}
 #Wave 1
 w2019 <- df |> filter(wave == 1)
-saveRDS(w2019, "./dat/c2019_test.rds")
+saveRDS(w2019, "./dat/EcS_w2019.rds")
 
 wCOVID <- df |> filter(wave == 2)
-saveRDS(wCOVID, "./dat/wCOVID_test.rds")
+saveRDS(wCOVID, "./dat/EcS_wCOVID.rds")
 ```
-
-```{r}
-freq_table(w2019, q1510e_workday)
-```
-
