@@ -1617,14 +1617,14 @@ rm(g1, g2, g3, g4)
 We need to make decisions to manage the values of these variables. First we
 explore the distribution of possible response combinations.
 
-```{r}
-temp %>% filter(if_any(everything(), `==`, "valid"))
-
-```
-
-```{r}
-temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n)
-```
+<!-- # ```{r} -->
+<!-- # temp %>% filter(if_any(everything(), `==`, "valid")) -->
+<!-- #  -->
+<!-- # ``` -->
+<!-- #  -->
+<!-- # ```{r} -->
+<!-- # temp %>% filter(q0410g_total_rec == "valid") %>% count(wt = n) -->
+<!-- # ``` -->
 
 The pattern of NAs (999 and 888) is very similar.
 
