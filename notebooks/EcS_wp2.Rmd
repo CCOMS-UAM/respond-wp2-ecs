@@ -4702,10 +4702,10 @@ data_ECS <- readRDS("./dat/EcS_df.rds")
 ```{r}
 #Wave 1
 w2019 <- df |> filter(wave == 1)
-saveRDS(w2019, "./dat/EcS_w2019.rds")
+saveRDS(w2019, "./dat/EcS_w1.rds")
 
 wCOVID <- df |> filter(wave == 2)
-saveRDS(wCOVID, "./dat/EcS_wCOVID.rds")
+saveRDS(wCOVID, "./dat/EcS_w2.rds")
 ```
 
 # Final. Session info
