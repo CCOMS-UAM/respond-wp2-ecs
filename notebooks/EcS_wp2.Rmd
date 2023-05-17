@@ -4238,6 +4238,30 @@ df <- df %>% ungroup() |> select(hashed_id,
                     hhquintile,
                     any_of(ecs_varlist),
                     CountryCode:nuts_remoteness_label)
+
+df <- df %>% select(everything(),
+                    -c(
+                    q1009_sex
+                    #gender,
+                    #coresidence,
+                    #migration,
+                    #age_cat,
+                    #age_continuous,
+                    #employment_st,
+                    #contract,
+                    #employment_ty,
+                    #hc_worker,
+                    #profession,
+                    #education,
+                    #relationship,
+                    #children,
+                    #children_hh,
+                    #nofchildren,
+                    #living_alone,
+                    #hh_size,
+                    #hhquartile,
+                    #hhquintile
+                    ))
 ```
 
 # Step 8. Checking that there are no more NAs
@@ -4670,8 +4694,8 @@ df <- df %>% mutate(
   )
 )
 
-pruebas <- attributes(df$q1510e_workday)
-print(pruebas)
+# pruebas <- attributes(df$q1510e_workday)
+# print(pruebas)
 ```
 
 # Step 11. Creates "Label" attribute for Opal
@@ -4694,18 +4718,18 @@ labelled::var_label(df) <- labels_codebook
 # Step 10. Save .RDS
 
 ```{r}
-saveRDS(df, "./dat/EcS_df.rds")
+saveRDS(df, "./dat/EcS_df_anonymised.rds")
 
-data_ECS <- readRDS("./dat/EcS_df.rds")
+data_ECS <- readRDS("./dat/EcS_df_anonymised.rds")
 ```
 
 ```{r}
 #Wave 1
 w2019 <- df |> filter(wave == 1)
-saveRDS(w2019, "./dat/EcS_w1.rds")
+saveRDS(w2019, "./dat/EcS_w1_anonymised.rds")
 
 wCOVID <- df |> filter(wave == 2)
-saveRDS(wCOVID, "./dat/EcS_w2.rds")
+saveRDS(wCOVID, "./dat/EcS_w2_anonymised.rds")
 ```
 
 # Final. Session info
