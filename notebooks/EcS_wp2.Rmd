@@ -319,14 +319,14 @@ data_2019_test <- data_2019_test %>%
   mutate(gender = factor(
     x = q1009_sex,
     levels = c("1", "2", "3", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-    labels = c(
-      "male",
-      "female",
-      "other/diverse",
-      MISSING_DESIGN,
-      REFUSED_ANSWER,
-      NON_RESPONSE
-    )
+    # labels = c(
+    #   "male",
+    #   "female",
+    #   "other/diverse",
+    #   MISSING_DESIGN,
+    #   REFUSED_ANSWER,
+    #   NON_RESPONSE
+    #)
   ))
 ```
 
@@ -354,10 +354,10 @@ data_2019_test <-
            levels = c("ES", MISSING_DESIGN,
                       REFUSED_ANSWER,
                       NON_RESPONSE),
-           labels = c("ES",
-                      MISSING_DESIGN,
-                      REFUSED_ANSWER,
-                      NON_RESPONSE)
+           # labels = c("ES",
+           #            MISSING_DESIGN,
+           #            REFUSED_ANSWER,
+           #            NON_RESPONSE)
          ))
 ```
 
@@ -406,14 +406,14 @@ data_2019_test <-
       levels = c("1", "2", "3", MISSING_DESIGN,
                  REFUSED_ANSWER,
                  NON_RESPONSE),
-      labels = c(
-        "yes",
-        "no",
-        "no information",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "yes",
+      #   "no",
+      #   "no information",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -523,16 +523,16 @@ data_2019_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "below 18 years",
-        "18-44",
-        "45-64",
-        "65-94",
-        "95 years or older",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "below 18 years",
+      #   "18-44",
+      #   "45-64",
+      #   "65-94",
+      #   "95 years or older",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 
@@ -647,18 +647,18 @@ data_2019_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "have a job (employed or self-employed)",
-        "in education",
-        "care work (family) / homeworker/ on parental leave",
-        "on long-term sick leave/disability",
-        "unable to work due to reasons not mentioned elsewhere in this list",
-        "unemployed or job-seeking",
-        "retired",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "have a job (employed or self-employed)",
+      #   "in education",
+      #   "care work (family) / homeworker/ on parental leave",
+      #   "on long-term sick leave/disability",
+      #   "unable to work due to reasons not mentioned elsewhere in this list",
+      #   "unemployed or job-seeking",
+      #   "retired",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 
@@ -718,15 +718,15 @@ data_2019_test <-
     contract = factor(
       x = contract,
       levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "permanent",
-        "temporary",
-        "self-employed",
-        "other",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "permanent",
+      #   "temporary",
+      #   "self-employed",
+      #   "other",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 
@@ -799,15 +799,15 @@ data_2019_test <-
     employment_ty = factor(
       x = employment_ty,
       levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "Full time",
-        "Part time",
-        "No paid work",
-        "Other",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "Full time",
+      #   "Part time",
+      #   "No paid work",
+      #   "Other",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -919,11 +919,11 @@ data_2019_test <- data_2019_test %>%
                  MISSING_DESIGN,
                  REFUSED_ANSWER,
                  NON_RESPONSE),
-      labels = c("yes",
-                 "no",
-                 MISSING_DESIGN,
-                 REFUSED_ANSWER,
-                 NON_RESPONSE)
+      # labels = c("yes",
+      #            "no",
+      #            MISSING_DESIGN,
+      #            REFUSED_ANSWER,
+      #            NON_RESPONSE)
     )
   )
 ```
@@ -1013,25 +1013,25 @@ data_2019_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "undergoing education",
-        "education and research",
-        "arts, entertainment, sports and media",
-        "healthcare",
-        "first responder (paramedic/firefighter/police)",
-        "military",
-        "civil services, politics",
-        "finance and economy",
-        "industry",
-        "sales and services (incl. restaurants and bars)",
-        "transport (goods and people)",
-        "installation, maintenance, cleaning, and repairs",
-        "currently not working",
-        "other",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "undergoing education",
+      #   "education and research",
+      #   "arts, entertainment, sports and media",
+      #   "healthcare",
+      #   "first responder (paramedic/firefighter/police)",
+      #   "military",
+      #   "civil services, politics",
+      #   "finance and economy",
+      #   "industry",
+      #   "sales and services (incl. restaurants and bars)",
+      #   "transport (goods and people)",
+      #   "installation, maintenance, cleaning, and repairs",
+      #   "currently not working",
+      #   "other",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -1108,15 +1108,15 @@ data_2019_test <-
     education = factor(
       x = education,
       levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "primary/basic",
-        "secondary/intermediate",
-        "tertiary/advanced",
-        "no formal education",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "primary/basic",
+      #   "secondary/intermediate",
+      #   "tertiary/advanced",
+      #   "no formal education",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -1196,18 +1196,18 @@ data_2019_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "single",
-        "married/in a civil union",
-        "in a relationship and living together",
-        "in a relationship and living apart",
-        "divorced/separated",
-        "widowed",
-        "other",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "single",
+      #   "married/in a civil union",
+      #   "in a relationship and living together",
+      #   "in a relationship and living apart",
+      #   "divorced/separated",
+      #   "widowed",
+      #   "other",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -1255,11 +1255,11 @@ data_2019_test <-
     children = factor(
       x = children,
       levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c("yes",
-                 "no",
-                 MISSING_DESIGN,
-                 REFUSED_ANSWER,
-                 NON_RESPONSE)
+      # labels = c("yes",
+      #            "no",
+      #            MISSING_DESIGN,
+      #            REFUSED_ANSWER,
+      #            NON_RESPONSE)
     )
   )
 
@@ -1337,11 +1337,11 @@ data_2019_test <-
     children_hh = factor(
       x = children_hh,
       levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c("yes",
-                 "no",
-                 MISSING_DESIGN,
-                 REFUSED_ANSWER,
-                 NON_RESPONSE)
+      # labels = c("yes",
+      #            "no",
+      #            MISSING_DESIGN,
+      #            REFUSED_ANSWER,
+      #            NON_RESPONSE)
     )
   )
 ```
@@ -1408,15 +1408,15 @@ data_2019_test <-
     nofchildren = factor(
       x = nofchildren,
       levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "no children",
-        "one child",
-        "two or three",
-        "four or more",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "no children",
+      #   "one child",
+      #   "two or three",
+      #   "four or more",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -1454,13 +1454,13 @@ data_2019_test <- data_2019_test %>%
     living_alone = factor(
       x = living_alone,
       levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "alone",
-        "not alone",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "alone",
+      #   "not alone",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -1522,16 +1522,16 @@ data_2019_test <- data_2019_test %>%
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "one person",
-        "two persons",
-        "three or four persons",
-        "five or more persons",
-        "live in an institution",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "one person",
+      #   "two persons",
+      #   "three or four persons",
+      #   "five or more persons",
+      #   "live in an institution",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -1790,14 +1790,14 @@ data_2019_test <- data_2019_test %>%
     hhquartile = factor(
       x = hhquartile,
       levels = c("1", "2", "3", "4", MISSING_DESIGN, NON_RESPONSE),
-      labels = c(
-        "first quartile",
-        "second quartile",
-        "third quartile",
-        "fourth quartile",
-        MISSING_DESIGN,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "first quartile",
+      #   "second quartile",
+      #   "third quartile",
+      #   "fourth quartile",
+      #   MISSING_DESIGN,
+      #   NON_RESPONSE
+      # )
     ),
     
     hhquintile = case_when(
@@ -1827,15 +1827,15 @@ data_2019_test <- data_2019_test %>%
     hhquintile = factor(
       x = hhquintile,
       levels = c("1", "2", "3", "4", "5", MISSING_DESIGN, NON_RESPONSE),
-      labels = c(
-        "first quintile",
-        "second quintile",
-        "third quintile",
-        "fourth quintile",
-        "fifth quintile",
-        MISSING_DESIGN,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "first quintile",
+      #   "second quintile",
+      #   "third quintile",
+      #   "fourth quintile",
+      #   "fifth quintile",
+      #   MISSING_DESIGN,
+      #   NON_RESPONSE
+      # )
     )
     
   )
@@ -1889,13 +1889,13 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            lte %>% select(ID_ECS, LTE),
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             lte %>% select(ID_ECS, LTE),
+#                             by = "ID_ECS")
 ```
 
 ```{r}
-data_2019_test %>% freq_table(LTE)
+# data_2019_test %>% freq_table(LTE)
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -1915,7 +1915,7 @@ rm(lte)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-brs <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_briefresiliencescale.dta")
+# brs <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_briefresiliencescale.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -1923,16 +1923,16 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            brs %>% select(ID_ECS, resilience_scale), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             brs %>% select(ID_ECS, resilience_scale), 
+#                             by = "ID_ECS")
 ```
 
 ```{r}
-data_2019_test %>% freq_table(resilience_scale) %>% print(n = 100)
+# data_2019_test %>% freq_table(resilience_scale) %>% print(n = 100)
 ```
 
-The rest of stressors variables are already on the dataset:
+The rest of individual variables are already on the dataset:
 
 ```{r}
 data_2019_test %>% 
@@ -1941,7 +1941,7 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(brs)
+#rm(brs)
 ```
 
 ## Social support & Loneliness
@@ -1949,7 +1949,7 @@ rm(brs)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-loneliness_ss_si <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Loneliness, social support and social isolation.dta")
+# loneliness_ss_si <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Loneliness, social support and social isolation.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -1957,22 +1957,22 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            loneliness_ss_si %>% select(
-                              ID_ECS,
-                              social_support,
-                              loneliness,
-                              isolation
-                            ), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             loneliness_ss_si %>% select(
+#                               ID_ECS,
+#                               social_support,
+#                               loneliness,
+#                               isolation
+#                             ), 
+#                             by = "ID_ECS")
 ```
 
 ```{r}
-data_2019_test %>% freq_table(social_support)
-
-data_2019_test %>% freq_table(loneliness)
-
-data_2019_test %>% freq_table(isolation)
+# data_2019_test %>% freq_table(social_support)
+# 
+# data_2019_test %>% freq_table(loneliness)
+# 
+# data_2019_test %>% freq_table(isolation)
 
 ```
 
@@ -1985,7 +1985,7 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(loneliness_ss_si)
+# rm(loneliness_ss_si)
 ```
 
 ## Social participation
@@ -2059,87 +2059,87 @@ greater social isolation.
 We can reverse the score to indicate social participation.
 
 ```{r}
-data_2019_test <-
-  data_2019_test %>%
-  mutate(
-          q6613_club = as.factor(q6613_club),
-          q6619_leave = as.factor(q6619_leave),
-          q6618_relig = as.factor(q6618_relig),
-          q6621_assoc = as.factor(q6621_assoc),
-          
-          q6613_club_r = recode_factor(
-              q6613_club,
-              `1` = 0, 
-              `2` = 0,
-              `3` = 1,
-              `4` = 1,
-              `5` = 1,
-              .default = NA_real_),
-          
-           q6619_leave_r = recode_factor(
-              q6619_leave,
-              `1` = 0, 
-              `2` = 0,
-              `3` = 1,
-              `4` = 1,
-              `5` = 1,
-              .default = NA_real_),
-          
-           q6618_relig_r = recode_factor(
-              q6618_relig,
-              `1` = 0, 
-              `2` = 0,
-              `3` = 1,
-              `4` = 1,
-              `5` = 1,
-              .default = NA_real_),
-          
-           q6621_assoc_r = recode_factor(
-             q6621_assoc,
-              `1` = 0, 
-              `2` = 0,
-              `3` = 1,
-              `4` = 1,
-              `5` = 1,
-              `999` = NON_RESPONSE,
-              .default = NA_real_),
-          
-          q6613_club_r = as.character(q6613_club_r),
-          q6619_leave_r = as.character(q6619_leave_r),
-          q6618_relig_r = as.character(q6618_relig_r),
-          q6621_assoc_r = as.character(q6621_assoc_r),
-         
-         q6613_club_r = as.numeric(q6613_club_r),
-          q6619_leave_r = as.numeric(q6619_leave_r),
-          q6618_relig_r = as.numeric(q6618_relig_r),
-          q6621_assoc_r = as.numeric(q6621_assoc_r),
-         
-         social_participation = q6613_club_r + 
-                                q6618_relig_r + 
-                                q6619_leave_r +
-                                q6621_assoc_r,
-         
-         social_participation =
-           case_when(
-             (social_participation < 0) ~ NON_RESPONSE,
-             is.na(social_participation) & is.na(q6613_club) & 
-                                           is.na(q6618_relig) &
-                                           is.na(q6619_leave) &
-                                           is.na(q6621_assoc) ~ MISSING_DESIGN,
-             TRUE ~ social_participation
-           ),
-         q6613_club = as.numeric(q6613_club), #for treating NAs later
-          q6619_leave = as.numeric(q6619_leave),
-          q6618_relig = as.numeric(q6618_relig),
-          q6621_assoc = as.numeric(q6621_assoc)
-             )
+# data_2019_test <-
+#   data_2019_test %>%
+#   mutate(
+#           q6613_club = as.factor(q6613_club),
+#           q6619_leave = as.factor(q6619_leave),
+#           q6618_relig = as.factor(q6618_relig),
+#           q6621_assoc = as.factor(q6621_assoc),
+#           
+#           q6613_club_r = recode_factor(
+#               q6613_club,
+#               `1` = 0, 
+#               `2` = 0,
+#               `3` = 1,
+#               `4` = 1,
+#               `5` = 1,
+#               .default = NA_real_),
+#           
+#            q6619_leave_r = recode_factor(
+#               q6619_leave,
+#               `1` = 0, 
+#               `2` = 0,
+#               `3` = 1,
+#               `4` = 1,
+#               `5` = 1,
+#               .default = NA_real_),
+#           
+#            q6618_relig_r = recode_factor(
+#               q6618_relig,
+#               `1` = 0, 
+#               `2` = 0,
+#               `3` = 1,
+#               `4` = 1,
+#               `5` = 1,
+#               .default = NA_real_),
+#           
+#            q6621_assoc_r = recode_factor(
+#              q6621_assoc,
+#               `1` = 0, 
+#               `2` = 0,
+#               `3` = 1,
+#               `4` = 1,
+#               `5` = 1,
+#               `999` = NON_RESPONSE,
+#               .default = NA_real_),
+#           
+#           q6613_club_r = as.character(q6613_club_r),
+#           q6619_leave_r = as.character(q6619_leave_r),
+#           q6618_relig_r = as.character(q6618_relig_r),
+#           q6621_assoc_r = as.character(q6621_assoc_r),
+#          
+#          q6613_club_r = as.numeric(q6613_club_r),
+#           q6619_leave_r = as.numeric(q6619_leave_r),
+#           q6618_relig_r = as.numeric(q6618_relig_r),
+#           q6621_assoc_r = as.numeric(q6621_assoc_r),
+#          
+#          social_participation = q6613_club_r + 
+#                                 q6618_relig_r + 
+#                                 q6619_leave_r +
+#                                 q6621_assoc_r,
+#          
+#          social_participation =
+#            case_when(
+#              (social_participation < 0) ~ NON_RESPONSE,
+#              is.na(social_participation) & is.na(q6613_club) & 
+#                                            is.na(q6618_relig) &
+#                                            is.na(q6619_leave) &
+#                                            is.na(q6621_assoc) ~ MISSING_DESIGN,
+#              TRUE ~ social_participation
+#            ),
+#          q6613_club = as.numeric(q6613_club), #for treating NAs later
+#           q6619_leave = as.numeric(q6619_leave),
+#           q6618_relig = as.numeric(q6618_relig),
+#           q6621_assoc = as.numeric(q6621_assoc)
+#              )
 ```
 
 ### Checking new variable
 
 ```{r}
-data_2019_test %>%
-  freq_table(social_participation)
+# data_2019_test %>%
+#   freq_table(social_participation)
 #higher scores have greater social participation.
 ```
 
@@ -2156,7 +2156,7 @@ data_2019_test %>%
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-alcohol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Alchool Consumption.dta")
+# alcohol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Alchool Consumption.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2164,14 +2164,14 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            alcohol %>%  select(ID_ECS, alcohol_consumption), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             alcohol %>%  select(ID_ECS, alcohol_consumption), 
+#                             by = "ID_ECS")
 ```
 
 ```{r}
-data_2019_test %>%
-  freq_table(alcohol_consumption)
+# data_2019_test %>%
+#   freq_table(alcohol_consumption)
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2183,7 +2183,7 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(alcohol)
+# rm(alcohol)
 ```
 
 ## Tobacco consumption
@@ -2191,7 +2191,7 @@ rm(alcohol)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-tobacco <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_tobaccoconsumption.dta")
+# tobacco <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_tobaccoconsumption.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2199,13 +2199,13 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            tobacco %>% select(ID_ECS, tobacco), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             tobacco %>% select(ID_ECS, tobacco), 
+#                             by = "ID_ECS")
 ```
 
 ```{r}
-data_2019_test %>% freq_table(tobacco)
+# data_2019_test %>% freq_table(tobacco)
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2217,7 +2217,7 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(tobacco)
+# rm(tobacco)
 ```
 
 ## Depression
@@ -2231,28 +2231,28 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            depression %>% select(ID_ECS, depression_lifetime,
-                                                  depression_12m, depression_12treatment), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             depression %>% select(ID_ECS, depression_lifetime,
+#                                                   depression_12m, depression_12treatment), 
+#                             by = "ID_ECS")
 ```
 
 The rest of variables are already on the dataset:
 
 ```{r}
-data_2019_test %>% 
-  select(starts_with(c("q422", "q421", "q4223", "q4700"))) %>% 
+data_2019_test %>%
+  select(starts_with(c("q422", "q421", "q4223", "q4700"))) %>%
   colnames()
 ```
 
 ```{r}
-rm(depression)
+# rm(depression)
 ```
 
 ## Flourishing scale (eudaimonic wellbeing)
 
 ```{r}
-flourishing <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Flourishing Scale.dta")
+# flourishing <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Flourishing Scale.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2260,9 +2260,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            flourishing %>% select(ID_ECS, flourishing_scale), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             flourishing %>% select(ID_ECS, flourishing_scale), 
+#                             by = "ID_ECS")
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2274,7 +2274,7 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(flourishing)
+# rm(flourishing)
 ```
 
 ## Negative and positive affect
@@ -2288,28 +2288,28 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            negposaf %>% select(ID_ECS, negativeaffect,
-                                                positiveaffect, netaffect), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             negposaf %>% select(ID_ECS, negativeaffect,
+#                                                 positiveaffect, netaffect), 
+#                             by = "ID_ECS")
 ```
 
 The rest of stressors variables are already on the dataset:
 
 ```{r}
-data_2019_test %>% 
-  select(starts_with(c("q702", "q703", "q711", "q7069", "q707", "q706"))) %>% 
+data_2019_test %>%
+  select(starts_with(c("q702", "q703", "q711", "q7069", "q707", "q706"))) %>%
   colnames()
 ```
 
 ```{r}
-rm(negposaf)
+# rm(negposaf)
 ```
 
 ## Quality of life
 
 ```{r}
-qol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Quality of Life.dta")
+# qol <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_Quality of Life.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2317,12 +2317,12 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            qol %>% select(ID_ECS, WHOQOL_AGE), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             qol %>% select(ID_ECS, WHOQOL_AGE), 
+#                             by = "ID_ECS")
 ```
 
-The rest of stressors variables are already on the dataset:
+The rest of individual variables are already on the dataset:
 
 ```{r}
 data_2019_test %>% 
@@ -2331,13 +2331,13 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(qol)
+# rm(qol)
 ```
 
 ## Extraversion and neuroticism
 
 ```{r}
-personality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_EPQR-A.dta")
+# personality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_EPQR-A.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2345,9 +2345,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            personality %>% select(ID_ECS, neuroticism, extraversion), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             personality %>% select(ID_ECS, neuroticism, extraversion), 
+#                             by = "ID_ECS")
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2359,7 +2359,7 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(personality)
+# rm(personality)
 ```
 
 ## Self-efficacy
@@ -2384,7 +2384,7 @@ data_2019_test %>%
 ## Material deprivation
 
 ```{r}
-materialdep <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta")
+# materialdep <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_materialdeprivation.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2392,9 +2392,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            materialdep %>% select(ID_ECS, material), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             materialdep %>% select(ID_ECS, material), 
+#                             by = "ID_ECS")
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2406,13 +2406,13 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(materialdep)
+# rm(materialdep)
 ```
 
 ## GAD (anxiety)
 
 ```{r}
-anxiety <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_anxietyDSM4.dta")
+# anxiety <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Ola 3/Outcomes/Cohorte 2019/Outcome datasets/Outcome_anxietyDSM4.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -2420,9 +2420,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(data_2019_test,
-                            anxiety %>% select(ID_ECS, GAD12m, GAD), 
-                            by = "ID_ECS")
+# data_2019_test <- left_join(data_2019_test,
+#                             anxiety %>% select(ID_ECS, GAD12m, GAD), 
+#                             by = "ID_ECS")
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -2434,13 +2434,13 @@ data_2019_test %>%
 ```
 
 ```{r}
-rm(anxiety)
+# rm(anxiety)
 ```
 
 ## Outcome variables related to loneliness and social interaction:
 
 ```{r}
-socialint <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/history/Social_interaction.dta")
+# socialint <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/history/Social_interaction.dta")
 
 ```
 
@@ -2449,17 +2449,17 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_2019_test <- left_join(
-  data_2019_test,
-  socialint %>% select(
-    ID_ECS,
-    size_sn,
-    social_int_ff_pre,
-    social_int_vr_pre,
-    social_int_total_pre
-  ),
-  by = "ID_ECS"
-)
+# data_2019_test <- left_join(
+#   data_2019_test,
+#   socialint %>% select(
+#     ID_ECS,
+#     size_sn,
+#     social_int_ff_pre,
+#     social_int_vr_pre,
+#     social_int_total_pre
+#   ),
+#   by = "ID_ECS"
+# )
 ```
 
 ### Network size (size_sn)
@@ -2840,16 +2840,16 @@ data_COVID_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "below 18 years",
-        "18-44",
-        "45-64",
-        "65-94",
-        "95 years or older",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "below 18 years",
+      #   "18-44",
+      #   "45-64",
+      #   "65-94",
+      #   "95 years or older",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -2911,17 +2911,17 @@ data_COVID_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "have a job (employed or self-employed)",
-        "in education",
-        "care work (familiy) / homeworker/ on parental leave",
-        "on long-term sick leave/disability",
-        "unable to work due to reasons not mentioned elsewhere in this list",
-        "unemployed or job-seeking",
-        "retired",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE),
+      # labels = c(
+      #   "have a job (employed or self-employed)",
+      #   "in education",
+      #   "care work (familiy) / homeworker/ on parental leave",
+      #   "on long-term sick leave/disability",
+      #   "unable to work due to reasons not mentioned elsewhere in this list",
+      #   "unemployed or job-seeking",
+      #   "retired",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE),
     
   )
 )
@@ -2940,15 +2940,15 @@ data_COVID_test <-
          contract = factor(
            x = contract,
            levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-           labels = c(
-             "permanent",
-             "temporary",
-             "self-employed",
-             "other",
-             MISSING_DESIGN,
-             REFUSED_ANSWER,
-             NON_RESPONSE
-           )
+           # labels = c(
+           #   "permanent",
+           #   "temporary",
+           #   "self-employed",
+           #   "other",
+           #   MISSING_DESIGN,
+           #   REFUSED_ANSWER,
+           #   NON_RESPONSE
+           # )
          ))
 ```
 
@@ -2966,15 +2966,15 @@ data_COVID_test <-
     employment_ty = factor(
       x = employment_ty,
       levels = c("1", "2", "3", "4",  MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "permanent",
-        "temporary",
-        "self-employed",
-        "other",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "permanent",
+      #   "temporary",
+      #   "self-employed",
+      #   "other",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -2989,7 +2989,7 @@ Same values as Wave 1.
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
-  left_join(data_2019_test %>% 
+  left_join(data_2019_test %>%
               select(ID_ECS, hc_worker),
             by = "ID_ECS")
 ```
@@ -3004,7 +3004,7 @@ Same values as Wave 1 (as it is something that is stable in time).
 
 ```{r}
 data_COVID_test <- data_COVID_test %>%
-  left_join(data_2019_test %>% 
+  left_join(data_2019_test %>%
               select(ID_ECS, profession),
             by = "ID_ECS")
 ```
@@ -3049,18 +3049,18 @@ data_COVID_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "single",
-        "married/in a civil union",
-        "in a relationship and living together",
-        "in a relationship and living apart",
-        "divorced/separated",
-        "widowed",
-        "other",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "single",
+      #   "married/in a civil union",
+      #   "in a relationship and living together",
+      #   "in a relationship and living apart",
+      #   "divorced/separated",
+      #   "widowed",
+      #   "other",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -3078,11 +3078,11 @@ data_COVID_test <-
          children = factor(
            x = children,
            levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-           labels = c("yes",
-                      "no",
-                      MISSING_DESIGN,
-                      REFUSED_ANSWER,
-                      NON_RESPONSE)
+           # labels = c("yes",
+           #            "no",
+           #            MISSING_DESIGN,
+           #            REFUSED_ANSWER,
+           #            NON_RESPONSE)
          ))
 ```
 
@@ -3100,11 +3100,11 @@ data_COVID_test <-
     children_hh = factor(
       x = children_hh,
       levels = c("1", "2", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c("yes",
-                 "no",
-                 MISSING_DESIGN,
-                 REFUSED_ANSWER,
-                 NON_RESPONSE)
+      # labels = c("yes",
+      #            "no",
+      #            MISSING_DESIGN,
+      #            REFUSED_ANSWER,
+      #            NON_RESPONSE)
     )
   )
 ```
@@ -3123,15 +3123,15 @@ data_COVID_test <-
     nofchildren = factor(
       x = nofchildren,
       levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "no children",
-        "one child",
-        "two or three",
-        "four or more",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "no children",
+      #   "one child",
+      #   "two or three",
+      #   "four or more",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
   )
 ```
@@ -3145,7 +3145,7 @@ data_COVID_test |> freq_table(nofchildren)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-livingalone <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_social interactions_Subestudio_COVID.dta")
+# livingalone <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_social interactions_Subestudio_COVID.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3153,34 +3153,34 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                             livingalone %>% select(ID_ECS, living_alone),
-                             by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                              livingalone %>% select(ID_ECS, living_alone),
+#                              by = "ID_ECS")
 ```
 
 ```{r}
-data_COVID_test <- data_COVID_test %>%
-  mutate(
-    living_alone = as.character(living_alone),
-    living_alone = recode(living_alone,
-                          "0" = "2",
-                          "1" = "1"),
-    living_alone = as.integer(living_alone),
-    living_alone = coalesce(living_alone, NON_RESPONSE),
-    
-    living_alone = factor(
-      x = living_alone,
-      levels = c("1", "2", NON_RESPONSE, MISSING_DESIGN, REFUSED_ANSWER),
-      labels = c(
-        "alone",
-        "not alone",
-        NON_RESPONSE,
-        MISSING_DESIGN,
-        REFUSED_ANSWER
-        
-      )
-    )
-  )
+# data_COVID_test <- data_COVID_test %>%
+#   mutate(
+#     living_alone = as.character(living_alone),
+#     living_alone = recode(living_alone,
+#                           "0" = "2",
+#                           "1" = "1"),
+#     living_alone = as.integer(living_alone),
+#     living_alone = coalesce(living_alone, NON_RESPONSE),
+#     
+#     living_alone = factor(
+#       x = living_alone,
+#       levels = c("1", "2", NON_RESPONSE, MISSING_DESIGN, REFUSED_ANSWER),
+#       # labels = c(
+#       #   "alone",
+#       #   "not alone",
+#       #   NON_RESPONSE,
+#       #   MISSING_DESIGN,
+#       #   REFUSED_ANSWER
+#       #   
+#       # )
+#     )
+#   )
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3192,7 +3192,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-data_COVID_test |> freq_table(living_alone)
+#data_COVID_test |> freq_table(living_alone)
 ```
 
 ## 3.17. Household size
@@ -3213,16 +3213,16 @@ data_COVID_test <-
              REFUSED_ANSWER,
              NON_RESPONSE
            ),
-           labels = c(
-             "one person",
-             "two persons",
-             "three or four persons",
-             "five or more persons",
-             "live in an institution",
-             MISSING_DESIGN,
-             REFUSED_ANSWER,
-             NON_RESPONSE
-           )
+           # labels = c(
+           #   "one person",
+           #   "two persons",
+           #   "three or four persons",
+           #   "five or more persons",
+           #   "live in an institution",
+           #   MISSING_DESIGN,
+           #   REFUSED_ANSWER,
+           #   NON_RESPONSE
+           # )
          ))
 ```
 
@@ -3243,15 +3243,15 @@ data_COVID_test <-
     hhquartile = factor(
       x = hhquartile,
       levels = c("1", "2", "3", "4", MISSING_DESIGN, REFUSED_ANSWER, NON_RESPONSE),
-      labels = c(
-        "first quartile",
-        "second quartile",
-        "third quartile",
-        "fourth quartile",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "first quartile",
+      #   "second quartile",
+      #   "third quartile",
+      #   "fourth quartile",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     ),
     
     hhquintile = factor(
@@ -3266,16 +3266,16 @@ data_COVID_test <-
         REFUSED_ANSWER,
         NON_RESPONSE
       ),
-      labels = c(
-        "first quintile",
-        "second quintile",
-        "third quintile",
-        "fourth quintile",
-        "fifth quintile",
-        MISSING_DESIGN,
-        REFUSED_ANSWER,
-        NON_RESPONSE
-      )
+      # labels = c(
+      #   "first quintile",
+      #   "second quintile",
+      #   "third quintile",
+      #   "fourth quintile",
+      #   "fifth quintile",
+      #   MISSING_DESIGN,
+      #   REFUSED_ANSWER,
+      #   NON_RESPONSE
+      # )
     )
     
   )
@@ -3311,7 +3311,7 @@ data_COVID_test %>%
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-economic <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_economic.dta")
+# economic <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_economic.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3319,9 +3319,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            economic %>% select(ID_ECS, economy, unemployment), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             economic %>% select(ID_ECS, economy, unemployment), 
+#                             by = "ID_ECS")
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3333,7 +3333,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(economic, livingalone, occ_unique)
+# rm(economic, livingalone, occ_unique)
 ```
 
 ### COVID
@@ -3344,7 +3344,7 @@ Five variables: `infected`, `severity_raw`, `rel_isolated`, `rel_deceased`,
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-covidcc <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_ailment.dta")
+# covidcc <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_ailment.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3352,18 +3352,18 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(
-  data_COVID_test,
-  covidcc %>% select(
-    ID_ECS,
-    infected,
-    severity_raw,
-    rel_isolated,
-    rel_deceased,
-    rel_concerned
-  ),
-  by = "ID_ECS"
-)
+# data_COVID_test <- left_join(
+#   data_COVID_test,
+#   covidcc %>% select(
+#     ID_ECS,
+#     infected,
+#     severity_raw,
+#     rel_isolated,
+#     rel_deceased,
+#     rel_concerned
+#   ),
+#   by = "ID_ECS"
+# )
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3375,7 +3375,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(covidcc)
+# rm(covidcc)
 ```
 
 ### Noise
@@ -3391,7 +3391,7 @@ data_COVID_test %>%
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-brsw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_brief resilience scale_Subestudio_COVID.dta")
+# brsw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_brief resilience scale_Subestudio_COVID.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3399,9 +3399,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            brsw2 %>% select(ID_ECS, resilience_scale), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             brsw2 %>% select(ID_ECS, resilience_scale), 
+#                             by = "ID_ECS")
 ```
 
 The rest of stressors variables are already on the dataset:
@@ -3413,7 +3413,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(brsw2)
+# rm(brsw2)
 ```
 
 ## Social support (OSLO-3) & loneliness
@@ -3421,7 +3421,7 @@ rm(brsw2)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-socialsupw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_loneliness and social support_Subestudio_COVID.dta")
+# socialsupw2 <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_loneliness and social support_Subestudio_COVID.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3429,9 +3429,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            socialsupw2 %>%  select(ID_ECS, social_support, loneliness), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             socialsupw2 %>%  select(ID_ECS, social_support, loneliness), 
+#                             by = "ID_ECS")
 ```
 
 The rest of separated variables are already on the dataset:
@@ -3449,17 +3449,17 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(socialsupw2)
+# rm(socialsupw2)
 ```
 
 ## Social interaction
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            socialint %>% select(ID_ECS,
-                                                 pers_rel_affected,
-                                                 time_alone), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             socialint %>% select(ID_ECS,
+#                                                  pers_rel_affected,
+#                                                  time_alone), 
+#                             by = "ID_ECS")
 ```
 
 ### Change in personal relationships (post-lockdown)
@@ -3516,7 +3516,7 @@ data_COVID_test %>%
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_depression_ICD10.dta")
+# depression <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_depression_ICD10.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3524,9 +3524,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            depression %>% select(ID_ECS, d_30d_severity, depression_30d), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             depression %>% select(ID_ECS, d_30d_severity, depression_30d), 
+#                             by = "ID_ECS")
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3538,7 +3538,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(depression)
+# rm(depression)
 ```
 
 ## Suicidality
@@ -3546,7 +3546,7 @@ rm(depression)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-suicidality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_Suicidalideation.dta")
+# suicidality <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_Suicidalideation.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3554,9 +3554,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            suicidality %>% select(ID_ECS, suicidal), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             suicidality %>% select(ID_ECS, suicidal), 
+#                             by = "ID_ECS")
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3568,7 +3568,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(suicidality)
+# rm(suicidality)
 ```
 
 ## Negative and positive affect
@@ -3576,7 +3576,7 @@ rm(suicidality)
 We have to import this outcome (already created) from OneDrive.
 
 ```{r}
-negposaffect <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_ positive and negative affect_Subestudio_COVID.dta")
+# negposaffect <- read_dta("~/../UAM/Marta Miret Garcia - Documentacion Edad con Salud/Edad con salud - Subestudio COVID/Outcomes/Outcome datasets/Outcome_ positive and negative affect_Subestudio_COVID.dta")
 ```
 
 We join this dataset to the one containing the new variables already harmonized
@@ -3584,9 +3584,9 @@ with left_join. The variable they have in common is ID_ECS and it is the one
 that serves as link.
 
 ```{r}
-data_COVID_test <- left_join(data_COVID_test,
-                            negposaffect %>% select(ID_ECS, negativeaffect, positiveaffect, netaffect), 
-                            by = "ID_ECS")
+# data_COVID_test <- left_join(data_COVID_test,
+#                             negposaffect %>% select(ID_ECS, negativeaffect, positiveaffect, netaffect), 
+#                             by = "ID_ECS")
 ```
 
 The rest of individual variables are already on the dataset:
@@ -3604,7 +3604,7 @@ data_COVID_test %>%
 ```
 
 ```{r}
-rm(negposaffect)
+# rm(negposaffect)
 ```
 
 ## Quality of life
