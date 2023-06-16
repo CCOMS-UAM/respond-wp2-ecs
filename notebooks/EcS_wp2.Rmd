@@ -4795,7 +4795,176 @@ labels_codebook <- ecs_variablelist %>%
 labelled::var_label(df) <- labels_codebook
 ```
 
-# Step 10. Save .RDS
+#Step 12. Comments from the central quality checks
+
+Delete duplicated variables:
+```{r}
+df <- df %>% select(everything(), -c(q1011_age,
+                               q1010_birth_date,
+                               q1504_reason,
+                               q1503_work_now,
+                               q1510e_workday,
+                               q1510b_contract_earner,
+                             q1510_occ,
+                             q1510_catoccu,
+                             q1012_mar_stat,
+                             q1016_highest,
+                             q1018_country,
+                             q1058,
+                             q1056,
+                             q1057,
+                             q1059,
+                             q0407_age_01:q0407_age_10,
+                             q0401_hh_total,
+                             q0410i_ss:q0410k_other,
+                             q0410g_total,
+                             # resilience_scale,
+                             # social_support, 
+                             # flourishing_scale, 
+                             # negativeaffect, 
+                             # positiveaffect, 
+                             # extraversion, 
+                             # neuroticism, 
+                             # loneliness 
+                             ))
+```
+
+
+Allegedly there are missing values not well recoded in following variables:
+q4211, q4222d, q4222g, q4222u, q4222v, q4224a, q4224b, q4700a, q4700b, 
+q4700c, q4700d, q4573_episode12, q4587_ideat12, q4589_planification, q4591_planif12, q4596_type, q4599a_damage, q4599b_attention, q4599c_hospi. "They have system missings that
+haven't been replaced by -991, -992, -993". However, if we describe these variables
+from **Wave 1**:
+```{r}
+freq_table(df, q4211)
+
+freq_table(df, q4222d)
+
+freq_table(df, q4222g)
+
+freq_table(df, q4222u)
+
+freq_table(df, q4222v)
+
+freq_table(df, q4224a)
+
+freq_table(df, q4224b)
+
+#These have "Not applicable" values (MISSIGN_DESIGN)
+freq_table(df, q4700a)
+
+freq_table(df, q4700b)
+
+freq_table(df, q4700c)
+
+freq_table(df, q4700d)
+
+#These doesn't have any NAs
+freq_table(df, q4573_episode12)
+
+freq_table(df, q4587_ideat12)
+
+freq_table(df, q4589_planification)
+
+freq_table(df, q4591_planif12)
+
+freq_table(df, q4596_type)
+
+freq_table(df, q4599a_damage)
+
+
+freq_table(df, q4599b_attention)
+
+freq_table(df, q4599c_hospi)
+```
+
+
+For variables in wave 2, the following ones have been detected:
+SM8_1, SM8_2, SM8_3, SM8_4, SM8_5, SM8_6, SM8_7, SM8_8, SM8_9, SM8_10,
+
+SM_3, SM4, SM5, SM6, SM7, 
+
+SM22_1, SM22_2, SM22_3, SM22_4,	SM22_5,	SM22_6, SM22_7, SM21,	
+q7008d_cantril, SOLO7_1, SOLO7_2, SOLO7_3, SUE2, SUE3, DOLOR1, DOLOR3, DOLOR4,
+ECON4,  COVID1,  SOLO1_0 until SOLO1_999, 
+COVID4, COVID5, COVID3, COVID1B, COVID1C_1, COVID1C_2, ECON5, ECON1_1, q1059,
+all q0407 variables, resilience_scale, all SM26 variables, q4573_episode12, 
+q4586_age, q4587_ideat12, q4588_age, q4589_planification, q4590_age, q4591_planif12, 
+q4592_age, q4594_times, q4595_age, q4596_type, q4597_type12, q4598_age,	q4599a_damage,
+q4599b_attention, q4599c_hospi, SM9, SOLO3, SOLO4, SOLO5, SOLO5B, SOLO6, SOLO6B, 
+SOLO8A, SOLO8B, SOLO9A, SOLO9B, SOLO9C, q6613_club, q6618_relig, q6619_leave, 
+q6621_assoc, SOLO2, SOLO2A, q3009a until q3009g, ALCOH1, FUM1A, FUM1B, q4211, 
+q4222u, q4222v, q4224a, q4224b, q4700a, q4700b, q4700c, q4700d,
+have system missings that haven’t been replaced by -991, -992, -993:
+
+```{r}
+#No NAs
+freq_table(df, SM8_1)
+freq_table(df, SM8_2)
+freq_table(df, SM8_3)
+freq_table(df, SM8_4)
+freq_table(df, SM8_5)
+freq_table(df, SM8_6)
+freq_table(df, SM8_7)
+freq_table(df, SM8_8)
+freq_table(df, SM8_9)
+freq_table(df, SM8_10)
+
+freq_table(df, SM_3)
+freq_table(df, SM4)
+freq_table(df, SM5)
+freq_table(df, SM6)
+freq_table(df, SM7)
+
+freq_table(df, SM22_1)
+freq_table(df, SM22_2)
+freq_table(df, SM22_3)
+freq_table(df, SM22_4)
+freq_table(df, SM22_5)
+freq_table(df, SM22_6)
+freq_table(df, SM22_7)
+
+#This have to be modified
+freq_table(df, SM21)
+freq_table(df, q7008d_cantril)
+
+#These doesn't have any NAs
+freq_table(df, SOLO7_1)
+freq_table(df, SOLO7_2)
+freq_table(df, SOLO7_3)
+freq_table(df, SUE2)
+freq_table(df, SUE3)
+freq_table(df, DOLOR1)
+freq_table(df, DOLOR3)
+freq_table(df, DOLOR4)
+freq_table(df, ECON4)
+freq_table(df, COVID1)
+freq_table(df, SOLO1_0)
+freq_table(df, SOLO1_1)
+freq_table(df, SOLO1_2)
+freq_table(df, SOLO1_3)
+freq_table(df, SOLO1_4)
+freq_table(df, SOLO1_5)
+freq_table(df, SOLO1_6)
+freq_table(df, SOLO1_7)
+freq_table(df, SOLO1_9)
+freq_table(df, SOLO1_10)
+freq_table(df, SOLO1_11)
+freq_table(df, SOLO1_12)
+freq_table(df, SOLO1_13)
+freq_table(df, SOLO1_999)
+
+```
+
+
+All variables have to be in lowercase:
+
+```{r}
+df <- df %>% rename_all(tolower)
+```
+
+
+# Step 13. Save .RDS
 
 ```{r}
 saveRDS(df, "./dat/EcS_df_anonymised.rds")
