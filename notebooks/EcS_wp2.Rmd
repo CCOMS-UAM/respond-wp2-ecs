@@ -237,6 +237,26 @@ data_COVID_test <- data_COVID_test %>%
          FECHAFIN = lubridate::dmy(FECHAFIN)) 
 ```
 
+## Record year and week of measurement
+
+```{r}
+data_2019_test <- data_2019_test %>% 
+  mutate(
+    year = lubridate::isoyear(q0006_date),
+    weekno = lubridate::isoweek(q0006_date)
+  )
+```
+
+```{r}
+data_COVID_test <- data_COVID_test %>% 
+  mutate(
+    year = lubridate::isoyear(FECHAFIN),
+    weekno = lubridate::isoweek(FECHAFIN)
+  )
+```
+
+
+
 # Step 2. Wave 1 harmonization
 
 Variables to be harmonized are the following:
